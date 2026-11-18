@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     template: "%s | BMG APIs",
   },
   description: "Discover, design and manage APIs in one developer workspace.",
+  icons: { icon: "/bmg-apis-mark.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
