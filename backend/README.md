@@ -1,22 +1,20 @@
-# Node.js Backend — Planned
+# Node.js Backend — Planned (TypeScript)
 
-This directory is reserved for the dedicated Node.js API management service.
+This folder is reserved for the API-management service architecture. No runtime is implemented in the frontend-only stage.
 
 Planned responsibilities:
-- API definition CRUD and validation
-- API publishing and version lifecycle
-- Authentication, ownership and access control
-- Request testing and runtime dispatch
-- Usage counters, rate limits and audit logs
-- Monitoring and status collection
+- API definition CRUD, schemas and validation
+- Publishing/version lifecycle
+- Authentication, ownership and permission checks
+- API request testing and safe runtime dispatch
+- Usage counters, rate limiting and audit logs
+- Service health and monitoring
 
-The backend is intentionally not implemented in this UI-only stage. Keep secrets and execution logic server-side; never place them in the Next.js browser bundle.
-
-Planned service layout (to be created during backend phase):
+Proposed structure:
 ```
 backend/
   src/
-    server.js
+    server.ts
     routes/
     controllers/
     services/
@@ -24,3 +22,5 @@ backend/
     validators/
     storage/
 ```
+
+The production hosting target is Vercel Hobby. Prefer short request handlers, avoid long-lived processes, background jobs, heavy native dependencies and persistent local disk writes. Store secrets server-side and never expose them to client components. External storage/database selection will be based on free-tier limits and project needs.
