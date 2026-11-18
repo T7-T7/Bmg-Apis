@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -30,7 +31,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     <div className="shell">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <Link className="brand" href="/" onClick={() => setMenuOpen(false)}>
-          <span className="brand-mark" aria-hidden="true">B</span>
+          <Image className="brand-mark-image" src="/bmg-apis-mark.svg" width={38} height={38} alt="" priority />
           <span className="brand-copy">
             <span className="brand-title">BMG <span>APIs</span></span>
             <span className="brand-sub">Developer Platform</span>
