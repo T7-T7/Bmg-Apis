@@ -6,7 +6,7 @@ import { useState } from "react";
 const nav = [
   { label: "Overview", title: "Platform", links: [
     { href: "/", name: "Dashboard", icon: "⌂" },
-    { href: "/apis", name: "Explore APIs", icon: "⌘", count: "12" },
+    { href: "/apis", name: "Explore APIs", icon: "⌘", count: "06" },
     { href: "/status", name: "Service Status", icon: "◉" }
   ]},
   { label: "Workspace", links: [
