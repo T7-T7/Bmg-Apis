@@ -21,7 +21,7 @@ function unpack(value?: string): SessionState | null {
   } catch { return null; }
 }
 function cleanText(value: string) {
-  return value.replace(/\\\"/g, '"').replace(/\\n/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
+  return value.replace(/\\\"/g, '"').replace(/\n/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
 }
 function buildBody(message: string, resume: unknown[], uid: string) {
   const inner = [
@@ -82,10 +82,10 @@ function buildBodyAlt(message: string, instruction = "", resumeArray: unknown[] 
 }
 
 function parseMethod2(raw: string) {
-  const lines = raw.split("\\n");
+  const lines = raw.split("\n");
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     const line = lines[index].trim();
-    if (!line || /^\\d+$/.test(line) || line.startsWith(")]}'")) continue;
+    if (!line || /^\d+$/.test(line) || line.startsWith(")]}'")) continue;
     try {
       const outer = JSON.parse(line);
       const candidate = outer?.[0]?.[2];
@@ -181,7 +181,7 @@ export async function askGemini(input: { prompt: string; instruction?: string; s
     const cookie = previous?.cookie || boot.cookie;
     const uid = previous?.uid || boot.uid;
     const resume = previous?.resume || ["", "", "", null, null, null, null, null, null, ""];
-    const message = instruction ? `${instruction}\\n\\n${prompt}` : prompt;
+    const message = instruction ? `${instruction}\n\n${prompt}` : prompt;
     const url = new URL(CONFIG.endpoint);
     url.searchParams.set("bl", boot.bl);
     url.searchParams.set("f.sid", boot.fsid);
