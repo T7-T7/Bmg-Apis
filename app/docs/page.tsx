@@ -1,34 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpLeft, BookOpen, Braces, ExternalLink, FileJson2, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowUpLeft, BookOpen, Braces, FileJson2, LockKeyhole, Terminal } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "توثيق المطورين",
+  description: "مرجع BMG APIs الرسمي: المصادقة، البداية السريعة، واجهة Gemini، أمثلة JavaScript وcURL، رموز الأخطاء وملف OpenAPI.",
+  alternates: { canonical: "/docs" },
+  robots: { index: true, follow: true },
+};
 
 const baseUrl = "https://bmg-apis.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
   -H "Authorization: Bearer YOUR_BMG_API_KEY" \\\
   -H "Content-Type: application/json" \\\
-  -d '{
-    "prompt": "اشرح لي الفرق بين let و const",
-    "instruction": "أجب باللغة العربية"
-  }'`;
-
-const jsExample = `const response = await fetch(
-  "${baseUrl}/api/v1/ai/gemini",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer YOUR_BMG_API_KEY"
-    },
-    body: JSON.stringify({
-      prompt: "اشرح لي الفرق بين let و const",
-      instruction: "أجب باللغة العربية"
-    })
-  }
-);
+  -d '{"prompt":"اشرح الفرق بين let و const","instruction":"أجب بالعربية"}'`;
+const jsExample = `const response = await fetch("${baseUrl}/api/v1/ai/gemini", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer YOUR_BMG_API_KEY"
+  },
+  body: JSON.stringify({
+    prompt: "اشرح الفرق بين let و const",
+    instruction: "أجب باللغة العربية"
+  })
+});
 
 const data = await response.json();
 console.log(data.response);
-console.log(data.sessionId); // أرسله في الطلب التالي لمتابعة المحادثة`;
-
+console.log(data.sessionId); // استخدمه لمتابعة المحادثة`;
 const responseExample = `{
   "success": true,
   "response": "الفرق بين let و const ...",
@@ -39,107 +39,108 @@ const responseExample = `{
 }`;
 
 function CodeBlock({ label, code }: { label: string; code: string }) {
-  return <div className="public-docs-code"><div className="public-docs-code-head"><span>{label}</span><span aria-hidden="true">{label === "JSON" ? <Braces size={15}/> : <Terminal size={15}/>}</span></div><pre dir="ltr"><code>{code}</code></pre></div>;
+  return <div className="public-docs-code"><div className="public-docs-code-head"><span>{label}</span><span aria-hidden="true">{label.includes("JSON") ? <Braces size={15}/> : <Terminal size={15}/>}</span></div><pre dir="ltr"><code>{code}</code></pre></div>;
 }
+
+const sections = [
+  ["overview", "نظرة عامة"],
+  ["quickstart", "البداية السريعة"],
+  ["authentication", "المصادقة"],
+  ["gemini", "Gemini API"],
+  ["request", "حقول الطلب"],
+  ["responses", "الاستجابات والأخطاء"],
+  ["openapi", "OpenAPI"],
+];
 
 export default function DocsPage() {
   return (
     <div className="public-docs">
       <header className="public-docs-nav">
         <Link href="/" className="public-docs-brand"><span className="public-docs-mark">B</span><span>BMG <b>APIs</b></span></Link>
-        <nav aria-label="التنقل في التوثيق">
-          <Link href="/apis">واجهات API</Link>
-          <a href="#quickstart">البداية السريعة</a>
-          <a href="#reference">مرجع API</a>
-          <Link href="/status">حالة الخدمات</Link>
-        </nav>
+        <nav aria-label="التنقل الرئيسي"><Link href="/apis">كتالوج الواجهات</Link><Link href="/status">حالة الخدمات</Link><Link href="/docs">التوثيق</Link></nav>
         <Link href="/dashboard/api-keys" className="public-docs-nav-cta">مفاتيح API <ArrowUpLeft size={15}/></Link>
       </header>
 
-      <main className="public-docs-main">
-        <div className="public-docs-breadcrumb"><Link href="/">BMG APIs</Link><span>/</span><span>التوثيق</span></div>
-        <section className="public-docs-hero">
-          <div className="public-docs-eyebrow"><BookOpen size={15}/> مركز المطورين</div>
-          <h1>ابنِ باستخدام<br/><em>BMG APIs.</em></h1>
-          <p>كل ما تحتاجه للاتصال بخدمات BMG APIs، من أول طلب إلى دمج الواجهة في تطبيقك.</p>
-          <div className="public-docs-hero-actions">
-            <a href="#quickstart" className="public-docs-primary">ابدأ الآن <ArrowUpLeft size={16}/></a>
-            <a href="/api/openapi.json" target="_blank" rel="noreferrer" className="public-docs-secondary"><FileJson2 size={16}/> OpenAPI JSON <ExternalLink size={13}/></a>
+      <div className="public-docs-frame">
+        <aside className="public-docs-sidebar" aria-label="أقسام التوثيق">
+          <div className="public-docs-sidebar-title"><BookOpen size={16}/> التوثيق</div>
+          <div className="public-docs-sidebar-group"><span>ابدأ هنا</span>
+            <a href="#overview">نظرة عامة</a><a href="#quickstart">البداية السريعة</a><a href="#authentication">المصادقة ومفاتيح API</a>
           </div>
-        </section>
+          <div className="public-docs-sidebar-group"><span>واجهات API</span>
+            <a href="#gemini">Gemini · توليد النصوص</a>
+          </div>
+          <div className="public-docs-sidebar-group"><span>المراجع</span>
+            <a href="#request">حقول الطلب</a><a href="#responses">الاستجابات والأخطاء</a><a href="#openapi">OpenAPI Specification</a>
+          </div>
+          <div className="public-docs-sidebar-bottom"><span className="public-docs-live-dot"/> مرجع الواجهات المنشورة</div>
+        </aside>
 
-        <div className="public-docs-layout">
-          <aside className="public-docs-toc">
-            <span>في هذه الصفحة</span>
-            <a href="#quickstart">البداية السريعة</a>
-            <a href="#authentication">المصادقة</a>
-            <a href="#reference">مرجع الواجهة</a>
-            <a href="#responses">الاستجابات والأخطاء</a>
-            <a href="#openapi">تعريف OpenAPI</a>
-          </aside>
+        <main className="public-docs-content">
+          <div className="public-docs-breadcrumb"><Link href="/">BMG APIs</Link><span>/</span><span>المطورون</span><span>/</span><strong>التوثيق</strong></div>
+          <section id="overview" className="public-docs-intro">
+            <div className="public-docs-eyebrow"><span/> وثائق المطورين</div>
+            <h1>توثيق <em>BMG APIs</em></h1>
+            <p>مرجع عملي لربط تطبيقاتك بواجهات BMG APIs. ستجد هنا تفاصيل المصادقة، وبنية الطلبات، وأمثلة قابلة للنسخ، والاستجابات المتوقعة.</p>
+            <div className="public-docs-meta"><span>REST API</span><span>JSON</span><span>HTTPS</span><a href="/docs.md">نسخة Markdown <ArrowUpLeft size={13}/></a></div>
+          </section>
 
-          <article className="public-docs-article">
-            <section id="quickstart" className="public-docs-section">
-              <div className="public-docs-section-kicker">01 / البداية</div>
-              <h2>أرسل أول طلب API</h2>
-              <p>تعمل واجهات BMG APIs عبر HTTP. أرسل الطلب إلى عنوان الخدمة مع مفتاحك في ترويسة Authorization، ثم اقرأ الاستجابة بصيغة JSON.</p>
-              <CodeBlock label="BASH · CURL" code={curlExample}/>
-            </section>
+          <section id="quickstart" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>01</span><h2>البداية السريعة</h2></div>
+            <p>أرسل طلب HTTP من الخادم إلى نقطة النهاية، وأرفق مفتاح BMG في ترويسة Authorization. جميع أجسام الطلبات والاستجابات تستخدم JSON.</p>
+            <CodeBlock label="BASH · CURL" code={curlExample}/>
+          </section>
 
-            <section id="authentication" className="public-docs-section">
-              <div className="public-docs-section-kicker">02 / الأمان</div>
-              <h2>المصادقة باستخدام مفتاح API</h2>
-              <p>كل طلب إلى الخدمة يتطلب مفتاحًا نشطًا. أنشئ مفتاحًا من لوحة التحكم، واحتفظ به على الخادم ولا تضعه في كود المتصفح أو المستودعات العامة.</p>
-              <div className="public-docs-callout"><ShieldCheck size={19}/><div><strong>حافظ على سرية مفتاحك</strong><p>أرسل المفتاح في الترويسة <code>Authorization: Bearer YOUR_BMG_API_KEY</code>. لا ترسله ضمن عنوان URL أو جسم الطلب.</p></div></div>
-            </section>
+          <section id="authentication" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>02</span><h2>المصادقة</h2></div>
+            <p>تتطلب الواجهة مفتاح API نشطًا. أنشئ المفتاح من لوحة التحكم ثم خزّنه في متغير بيئة على الخادم. لا تضع المفتاح في كود المتصفح أو مستودع عام.</p>
+            <div className="public-docs-callout"><LockKeyhole size={18}/><div><strong>استخدم Bearer Authentication</strong><p>أرسل الترويسة بالشكل التالي: <code dir="ltr">Authorization: Bearer YOUR_BMG_API_KEY</code></p></div></div>
+          </section>
 
-            <section id="reference" className="public-docs-section">
-              <div className="public-docs-section-kicker">03 / مرجع API</div>
-              <h2>عقل — Gemini</h2>
-              <p>توليد رد نصي باستخدام Gemini، مع دعم التعليمات الاختيارية ومتابعة المحادثة عبر معرّف الجلسة.</p>
-              <div className="public-docs-endpoint"><span>POST</span><code dir="ltr">{baseUrl}/api/v1/ai/gemini</code></div>
-              <div className="public-docs-facts">
-                <div><small>نوع المحتوى</small><strong>application/json</strong></div>
-                <div><small>الحد الأقصى لـ prompt</small><strong>30,000 حرف</strong></div>
-                <div><small>معدل الطلبات</small><strong>30 طلبًا / دقيقة لكل مفتاح</strong></div>
-              </div>
-              <h3>جسم الطلب</h3>
-              <div className="public-docs-params">
-                <div><code>prompt</code><b>string · مطلوب</b><p>النص أو السؤال المراد إرساله إلى النموذج.</p></div>
-                <div><code>instruction</code><b>string · اختياري</b><p>تعليمات تحدد أسلوب الرد أو سياقه.</p></div>
-                <div><code>sessionId</code><b>string · اختياري</b><p>معرّف الجلسة الذي تعيده الاستجابة السابقة لمتابعة المحادثة.</p></div>
-              </div>
-              <h3>مثال JavaScript</h3>
-              <CodeBlock label="JAVASCRIPT · FETCH" code={jsExample}/>
-            </section>
+          <section id="gemini" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>03</span><h2>Gemini · توليد النصوص</h2></div>
+            <p>يرسل هذا المسار prompt إلى خدمة Gemini ويعيد النص الناتج ومعرّف جلسة يمكن استخدامه في الطلب التالي لمتابعة المحادثة.</p>
+            <div className="public-docs-endpoint"><b>POST</b><code dir="ltr">{baseUrl}/api/v1/ai/gemini</code></div>
+            <div className="public-docs-facts"><div><small>Content-Type</small><strong>application/json</strong></div><div><small>الحد الأقصى لـ prompt</small><strong>30,000 حرف</strong></div><div><small>معدل الطلبات</small><strong>30 / دقيقة لكل مفتاح</strong></div></div>
+            <h3>مثال JavaScript</h3>
+            <CodeBlock label="JAVASCRIPT · FETCH" code={jsExample}/>
+          </section>
 
-            <section id="responses" className="public-docs-section">
-              <div className="public-docs-section-kicker">04 / النتائج</div>
-              <h2>الاستجابة الناجحة</h2>
-              <p>عند نجاح الطلب، تعيد الخدمة النص الناتج ومعرّف الجلسة والبيانات المرجعية المتاحة.</p>
-              <CodeBlock label="JSON · 200 OK" code={responseExample}/>
-              <h3>رموز الأخطاء</h3>
-              <div className="public-docs-errors">
-                <div><code>400</code><span>بيانات الطلب غير صحيحة أو ينقصها حقل مطلوب.</span></div>
-                <div><code>401</code><span>مفتاح API مفقود أو غير صالح أو ملغى.</span></div>
-                <div><code>413</code><span>تجاوز prompt الحد الأقصى المسموح.</span></div>
-                <div><code>429</code><span>تجاوز حد 30 طلبًا في الدقيقة.</span></div>
-                <div><code>502</code><span>تعذر الحصول على استجابة من مزود النموذج.</span></div>
-                <div><code>503</code><span>الخدمة أو التحقق من المفتاح غير متاح مؤقتًا.</span></div>
-              </div>
-            </section>
+          <section id="request" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>04</span><h2>حقول الطلب</h2></div>
+            <p>أرسل الحقول التالية داخل جسم الطلب بصيغة JSON.</p>
+            <div className="public-docs-params">
+              <div><code>prompt</code><b>string · مطلوب</b><p>النص أو السؤال المراد إرساله إلى النموذج. من حرف واحد حتى 30,000 حرف.</p></div>
+              <div><code>instruction</code><b>string · اختياري</b><p>تعليمات إضافية لتحديد أسلوب الرد أو لغته أو سياقه.</p></div>
+              <div><code>sessionId</code><b>string · اختياري</b><p>معرّف الجلسة الذي أعادته الاستجابة السابقة لمتابعة المحادثة.</p></div>
+            </div>
+          </section>
 
-            <section id="openapi" className="public-docs-section public-docs-openapi">
-              <div className="public-docs-section-kicker">05 / للأدوات والمساعدات</div>
-              <h2>تعريف OpenAPI</h2>
-              <p>استخدم ملف OpenAPI للحصول على تعريف آلي للمسارات والطرق والحقول والمصادقة. هذا الملف يصف الواجهة المنشورة فعليًا فقط، ولا يدرج أمثلة الكتالوج التجريبية كواجهات متاحة.</p>
-              <a href="/api/openapi.json" target="_blank" rel="noreferrer" className="public-docs-openapi-link"><FileJson2 size={18}/><span><strong>openapi.json</strong><small>{baseUrl}/api/openapi.json</small></span><ExternalLink size={15}/></a>
-            </section>
-          </article>
-        </div>
+          <section id="responses" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>05</span><h2>الاستجابات والأخطاء</h2></div>
+            <p>مثال توضيحي لبنية الاستجابة الناجحة.</p>
+            <CodeBlock label="JSON · 200 OK" code={responseExample}/>
+            <div className="public-docs-errors">
+              <div><code>400</code><span>بيانات الطلب غير صحيحة أو حقل مطلوب مفقود.</span></div>
+              <div><code>401</code><span>مفتاح API مفقود أو غير صالح أو ملغى.</span></div>
+              <div><code>413</code><span>تجاوز prompt الحد الأقصى المسموح.</span></div>
+              <div><code>429</code><span>تجاوز حد 30 طلبًا في الدقيقة لكل مفتاح.</span></div>
+              <div><code>502</code><span>تعذر الحصول على استجابة من مزود النموذج.</span></div>
+              <div><code>503</code><span>الخدمة أو التحقق من المفتاح غير متاح مؤقتًا.</span></div>
+            </div>
+          </section>
 
-        <footer className="public-docs-footer"><span>© 2026 BMG APIs</span><span>توثيق واجهات البرمجة</span><Link href="/apis">استكشف الكتالوج <ArrowUpLeft size={13}/></Link></footer>
-      </main>
+          <section id="openapi" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>06</span><h2>OpenAPI Specification</h2></div>
+            <p>لأدوات المطورين والمساعدات البرمجية، يتوفر تعريف آلي للمسار المنشور وحقول الطلب والمصادقة والاستجابات.</p>
+            <a className="public-docs-openapi-link" href="/api/openapi.json"><FileJson2 size={19}/><span><strong>openapi.json</strong><small>{baseUrl}/api/openapi.json</small></span><ArrowUpLeft size={15}/></a>
+            <a className="public-docs-text-link" href="/docs.md">قراءة التوثيق كنص Markdown <ArrowUpLeft size={13}/></a>
+          </section>
+          <footer className="public-docs-footer"><span>© 2026 BMG APIs</span><span>توثيق المطورين</span><Link href="/apis">استكشف الواجهات <ArrowUpLeft size={13}/></Link></footer>
+        </main>
+
+        <aside className="public-docs-right" aria-label="على هذه الصفحة"><strong>على هذه الصفحة</strong>{sections.map(([id,label])=><a key={id} href={`#${id}`}>{label}</a>)}<a className="public-docs-download" href="/api/openapi.json"><Braces size={14}/> OpenAPI JSON</a></aside>
+      </div>
     </div>
   );
 }
