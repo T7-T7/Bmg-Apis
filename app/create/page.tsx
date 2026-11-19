@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ArrowUpLeft, Braces, Check, Code2, Eye, FileCode2, Info, Layers3, Rocket, WandSparkles } from "lucide-react";
+import { ArrowUpLeft, Braces, Check, Code2, Eye, Info, Rocket } from "lucide-react";
 import type { HttpMethod, ApiCategory } from "@/lib/api-data";
 
 type ApiDraft = { name: string; slug: string; description: string; category: ApiCategory; method: HttpMethod; endpoint: string };
