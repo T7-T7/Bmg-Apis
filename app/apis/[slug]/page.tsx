@@ -24,7 +24,10 @@ export default async function ApiDetailPage({ params }: DetailProps) {
   "https://bmg-apis.vercel.app/api/v1/ai/gemini",
   {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_BMG_API_KEY"
+    },
     body: JSON.stringify({
       prompt: "اشرح لي الفرق بين let و const",
       instruction: "أجب باللغة العربية",
