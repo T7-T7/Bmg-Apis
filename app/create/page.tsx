@@ -83,7 +83,7 @@ export default function CreatePage() {
               {submitted && errors.endpoint && <small className="form-error">المسار غير صالح. مثال صحيح: /api/v1/weather</small>}
             </div>
           </div>
-          <div className="builder-actions"><p>لن يتم نشر أو حفظ أي شيء عند المعاينة.</p><button type="button" className="button-primary" onClick={handlePreview} disabled={!valid}><Eye size={15} /> تحديث المعاينة</button></div>
+          <div className="builder-actions"><p>لن يتم نشر أو حفظ أي شيء عند المعاينة.</p><button type="button" className="button-primary" onClick={handlePreview}><Eye size={15} /> التحقق ومعاينة التعريف</button></div>
         </section>
 
         <aside className="builder-aside builder-preview">
