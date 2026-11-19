@@ -1,4 +1,4 @@
-import { Activity, BookOpen, Boxes, CircleCheck, CircleDashed, Code2, Database, Gauge, Radio, Timer } from "lucide-react";
+import { Activity, BookOpen, Boxes, CircleDashed, Code2, Database, Gauge, Radio, Timer } from "lucide-react";
 
 const services = [
   { name: "واجهة كتالوج API", description: "استعراض النماذج والبحث والتصفية.", state: "متاح للمعاينة", ready: true, icon: Boxes },
