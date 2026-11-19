@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { ArrowUpLeft, Code2, FolderPlus } from "lucide-react";
+import { ArrowUpLeft, Clock3, FileCode2, ShieldCheck } from "lucide-react";
 
 export default function MyApisPage() {
   return (
     <div>
-      <div className="page-heading"><div><div className="eyebrow">مساحة المطور / إدارة المشاريع</div><h1>واجهاتي</h1><p>مكان واحد لمتابعة تعريفات واجهاتك وإصداراتها وحالة نشرها.</p></div><Link href="/create" className="button-primary"><FolderPlus size={15} /> واجهة جديدة</Link></div>
+      <div className="page-heading"><div><div className="eyebrow">مساحة المطور / سجل المساهمات</div><h1>مساهماتي</h1><p>تابع الواجهات التي اقترحتها وحالة مراجعتها واعتمادها.</p></div><Link href="/create" className="button-primary"><FileCode2 size={15} /> اقتراح API</Link></div>
       <div className="workspace-empty">
-        <span className="workspace-empty-icon"><Code2 size={27} /></span>
-        <h2>مساحة العمل جاهزة لمشروعك الأول</h2>
-        <p>لم تُنشأ واجهات بعد. ابدأ بإنشاء تعريف جديد، وستظهر هنا بعد تفعيل نظام الحفظ وربطه بحسابك.</p>
-        <Link href="/create" className="button-primary">إنشاء أول واجهة <ArrowUpLeft size={15} /></Link>
+        <span className="workspace-empty-icon"><Clock3 size={27} /></span>
+        <h2>سجل المساهمات سيظهر هنا</h2>
+        <p>نظام الحسابات وحفظ الطلبات لم يُربط بعد. عند تفعيله ستتمكن من متابعة حالة كل مساهمة وملاحظات المشرف ونتائج الفحص.</p>
+        <Link href="/create" className="button-primary">إرسال اقتراح جديد <ArrowUpLeft size={15} /></Link>
       </div>
+      <div className="docs-note"><ShieldCheck size={14} /> كل مساهمة تمر بمراجعة بشرية، ثم اختبار تقني، قبل ظهورها في الكتالوج العام.</div>
     </div>
   );
 }
