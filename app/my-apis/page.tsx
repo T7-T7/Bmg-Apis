@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpLeft, FileCode2, Plus, Sparkles } from "lucide-react";
+import { ArrowUpLeft, FileCode2, Plus } from "lucide-react";
 
 export default function MyApisPage() {
   return (
