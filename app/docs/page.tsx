@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpLeft, BookOpen, Braces, ExternalLink, FileJson2, Terminal } from "lucide-react";
+import { ArrowUpLeft, BookOpen, Braces, ExternalLink, FileJson2, ShieldCheck, Terminal } from "lucide-react";
 
 const baseUrl = "https://bmg-apis.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
