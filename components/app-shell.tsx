@@ -38,6 +38,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  if (pathname === "/docs") return <>{children}</>;
+
   return (
     <div className="app-frame">
       {menuOpen && <button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => setMenuOpen(false)} />}
@@ -56,7 +58,6 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
           <div className="sidebar-profile"><span className="profile-avatar">B</span><span><strong>حساب المطور</strong><small>تسجيل الدخول أو إنشاء حساب</small></span><Link href="/login" aria-label="تسجيل الدخول"><ArrowUpLeft size={15} /></Link></div>
         </div>
       </aside>
-
       <main className="main-area">
         <header className="topbar">
           <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
