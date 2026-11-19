@@ -5,9 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
-  Activity, ArrowUpLeft, BookOpen, Boxes, Braces, ChevronLeft,
-  CirclePlus, Code2, Command, FileCode2, LayoutDashboard,
-  Menu, X, Zap,
+  Activity, BookOpen, Boxes, ChevronLeft, CirclePlus, FileCode2,
+  LayoutDashboard, Menu, X, Zap,
 } from "lucide-react";
 
 type NavLink = { href: string; name: string; icon: typeof LayoutDashboard; count?: string };
