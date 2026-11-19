@@ -1,28 +1,38 @@
 import Link from "next/link";
-import { ArrowUpLeft, BookOpen, Braces, Code2, Layers3 } from "lucide-react";
+import { ArrowUpLeft, Braces, BookOpen, Code2, Layers3, ShieldCheck } from "lucide-react";
 
-const guideCards = [
-  { title: "البداية السريعة", text: "تصفّح الكتالوج، وافتح تفاصيل الواجهة، واطّلع على مثال الطلب.", href: "/apis", icon: Code2 },
-  { title: "منشئ الواجهات", text: "أنشئ تعريفًا أوليًا وحدّد المسار وطريقة الطلب ثم عاين الإعدادات.", href: "/create", icon: Braces },
-  { title: "دورة حياة الواجهة", text: "تعرّف على مراحل إعداد الواجهات واختبارها ونشرها وإدارتها.", href: "/my-apis", icon: Layers3 },
+const guides = [
+  { title: "البداية السريعة", description: "تعرّف على الكتالوج وافتح تفاصيل الواجهة وطريقة قراءة المسارات.", href: "/apis", icon: Code2 },
+  { title: "إنشاء واجهة", description: "جهّز اسم الواجهة ومعرّفها وطريقة الطلب ومسار نقطة الاتصال.", href: "/create", icon: Braces },
+  { title: "إدارة الواجهات", description: "افهم دورة حياة الواجهة من التعريف إلى الاختبار والنشر.", href: "/my-apis", icon: Layers3 },
 ];
 
+const requestExample = `const response = await fetch(
+  "https://api.example.com/api/v1/echo?message=hello",
+  { method: "GET" }
+);
+
+const result = await response.json();
+console.log(result);`;
+
+const responseExample = `{
+  "status": "preview",
+  "data": {
+    "message": "hello"
+  },
+  "requestId": "demo-request"
+}`;
+
 export default function DocsPage() {
-  const requestExample = `// مثال توضيحي فقط — لا توجد واجهة API فعلية متصلة
-fetch("https://api.example.com/api/v1/echo?message=hello")
-  .then((res) => res.json())
-  .then((data) => console.log(data));`;
-  const responseExample = { status: "preview", data: { message: "hello" }, requestId: "demo-request" };
   return (
-    <>
-      <div className="page-heading"><div><div className="eyebrow">دليل المطور</div><h1>التوثيق</h1><p>تعرّف على مكونات المنصة وطريقة استكشاف الواجهات ودمجها في مشاريعك.</p></div><span className="docs-heading-icon"><BookOpen size={21} /></span></div>
-      <div className="card-grid">{guideCards.map(card => {
-        const Icon = card.icon;
-        return <div className="panel docs-card" key={card.title}><span className="docs-icon"><Icon size={19} /></span><h3>{card.title}</h3><p>{card.text}</p><Link href={card.href} className="mini-btn">فتح القسم <ArrowUpLeft size={12} /></Link></div>;
-      })}</div>
-      <div className="section-title"><div><h2>مثال على إرسال طلب</h2><p>نموذج توضيحي باستخدام JavaScript</p></div></div><pre className="code-block">{requestExample}</pre>
-      <div className="section-title"><div><h2>مثال على الاستجابة</h2><p>بيانات JSON توضيحية</p></div></div><pre className="code-block" dir="ltr">{JSON.stringify(responseExample, null, 2)}</pre>
-      <p className="note-text">الأمثلة الواردة في هذه الصفحة للتوضيح فقط، ولا تشير إلى وجود خادم API فعلي متصل حاليًا.</p>
-    </>
+    <div>
+      <div className="page-heading"><div><div className="eyebrow">مركز المعرفة / المطورون</div><h1>مركز التوثيق</h1><p>مرجع مبسط لفهم مكونات المنصة، والتعامل مع مسارات API، وقراءة أمثلة الطلب والاستجابة.</p></div></div>
+      <div className="docs-grid">{guides.map(guide => { const Icon=guide.icon; return <article className="docs-card" key={guide.title}><span className="docs-card-icon"><Icon size={19} /></span><h3>{guide.title}</h3><p>{guide.description}</p><Link href={guide.href}>فتح الدليل <ArrowUpLeft size={13} /></Link></article>; })}</div>
+      <div className="section-heading"><div><span className="section-overline">أمثلة عملية</span><h2>إرسال طلب HTTP</h2><p>نموذج JavaScript باستخدام Fetch API.</p></div></div>
+      <div className="code-panel"><div className="code-panel-head"><span>JavaScript · Fetch API</span><span>مثال توضيحي</span></div><pre>{requestExample}</pre></div>
+      <div className="section-heading"><div><span className="section-overline">بنية البيانات</span><h2>مثال على الاستجابة</h2><p>شكل JSON افتراضي لتوضيح تنظيم النتيجة.</p></div></div>
+      <div className="code-panel"><div className="code-panel-head"><span>JSON</span><span>مثال توضيحي</span></div><pre>{responseExample}</pre></div>
+      <div className="docs-note"><ShieldCheck size={14} /> جميع الأمثلة هنا تعليمية فقط. لا توجد نقطة اتصال حقيقية متصلة حاليًا، ولا تستخدم عنوان المثال لإرسال بيانات حقيقية.</div>
+    </div>
   );
 }
