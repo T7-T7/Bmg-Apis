@@ -970,3 +970,5 @@ html[data-locale="en"] code, html[data-locale="en"] pre, html[data-locale="en"] 
 .public-docs-nav-actions { display: flex; align-items: center; gap: 10px; }
 .public-docs-nav .theme-toggle { width: 35px; height: 35px; flex-basis: 35px; }
 @media(max-width:720px) { .public-docs-nav-actions { margin-inline-start: auto; } .public-docs-nav-cta { display: none; } }
+
+.brand-copy strong, .public-docs-brand, .public-docs-intro h1 em, .public-docs-nav-cta { font-family: "Mathematical Bold Serif", "Bodoni Moda", Georgia, serif; font-weight: 700; }
