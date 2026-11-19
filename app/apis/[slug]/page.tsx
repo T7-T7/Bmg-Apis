@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, Braces, ChevronRight, Code2, ExternalLink } from "lucide-react";
+import { Braces, ChevronRight } from "lucide-react";
 import { apiCatalog } from "@/lib/api-data";
 
 type DetailProps = { params: Promise<{ slug: string }> };
