@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, ArrowUpLeft, Boxes, CirclePlus, Command, Gauge, Layers3, Radio, Sparkles } from "lucide-react";
+import { ArrowUpLeft, Boxes, CirclePlus, Command, Gauge, Layers3, Radio } from "lucide-react";
 import ApiCard from "@/components/api-card";
 import { apiCatalog, categories } from "@/lib/api-data";
 
