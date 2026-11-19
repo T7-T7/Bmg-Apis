@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Activity, ArrowUpLeft, BookOpen, Boxes, ChevronLeft, Command, FileCode2, LayoutDashboard, Menu, Search, ShieldCheck, Users, X } from "lucide-react";
+import ThemeToggle from "@/components/theme-toggle";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 type NavGroup = { label: string; items: NavItem[] };
@@ -30,6 +31,13 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
 
   useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
   useEffect(() => {
+    if (pathname !== "/") {
+      document.documentElement.dir = "rtl";
+      document.documentElement.lang = "ar";
+      document.documentElement.dataset.locale = "ar";
+    }
+  }, [pathname]);
+  useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setSearchOpen(value => !value); }
       if (event.key === "Escape") { setSearchOpen(false); setMenuOpen(false); }
@@ -38,7 +46,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  if (pathname === "/docs") return <>{children}</>;
+  if (pathname === "/" || pathname === "/docs") return <>{children}</>;
 
   return (
     <div className="app-frame">
@@ -61,7 +69,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       <main className="main-area">
         <header className="topbar">
           <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
-          <div className="topbar-actions"><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard/api-keys" className="top-create"><ShieldCheck size={15} /><span>مفاتيح API</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
+          <div className="topbar-actions"><ThemeToggle /><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard/api-keys" className="top-create"><ShieldCheck size={15} /><span>مفاتيح API</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
         </header>
         {searchOpen && <div className="command-overlay" role="dialog" aria-modal="true" aria-label="البحث السريع" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}><div className="command-panel"><div className="command-input"><Search size={18} /><input autoFocus placeholder="ابحث أو اكتب اسم القسم..." onKeyDown={event => { if (event.key === "Enter") { const value = event.currentTarget.value.trim(); if (/api|واجهة|كتالوج/i.test(value)) window.location.href = "/apis"; else if (/مساهمة|اقتراح|إضافة/i.test(value)) window.location.href = "/create"; else if (/توثيق|docs/i.test(value)) window.location.href = "/docs"; else if (/حالة|status/i.test(value)) window.location.href = "/status"; else window.location.href = "/"; } }} /><kbd>ESC</kbd></div><div className="command-hint">انتقال سريع إلى أقسام المنصة</div>{groups.flatMap(group => group.items).map(item => { const Icon = item.icon; return <Link className="command-link" href={item.href} key={item.href} onClick={() => setSearchOpen(false)}><Icon size={16} /><span>{item.label}</span><ArrowUpLeft size={13} /></Link>; })}</div></div>}
         <div className="page-content">{children}</div>
