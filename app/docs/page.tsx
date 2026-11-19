@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpLeft, BookOpen, Braces, FileJson2, LockKeyhole, Terminal } from "lucide-react";
+import ThemeToggle from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "توثيق المطورين",
@@ -58,7 +59,7 @@ export default function DocsPage() {
       <header className="public-docs-nav">
         <Link href="/" className="public-docs-brand"><span className="public-docs-mark">B</span><span>BMG <b>APIs</b></span></Link>
         <nav aria-label="التنقل الرئيسي"><Link href="/apis">كتالوج الواجهات</Link><Link href="/status">حالة الخدمات</Link><Link href="/docs">التوثيق</Link></nav>
-        <Link href="/dashboard/api-keys" className="public-docs-nav-cta">مفاتيح API <ArrowUpLeft size={15}/></Link>
+        <div className="public-docs-nav-actions"><ThemeToggle /><Link href="/dashboard/api-keys" className="public-docs-nav-cta">مفاتيح API <ArrowUpLeft size={15}/></Link></div>
       </header>
 
       <div className="public-docs-frame">
