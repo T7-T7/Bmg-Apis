@@ -69,7 +69,7 @@ const content = {
   }
 };
 
-const reveal = { hidden: { opacity: 0, y: 26 }, visible: { opacity: 1, y: 0, transition: { duration: .62, ease: [0.22, 1, 0.36, 1] } } };
+const reveal = { hidden: { opacity: 0, y: 26 }, visible: { opacity: 1, y: 0, transition: { duration: .62, ease: [0.22, 1, 0.36, 1] as const } } } as const;
 
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>("ar");
