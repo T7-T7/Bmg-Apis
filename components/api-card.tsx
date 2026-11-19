@@ -25,7 +25,6 @@ export default function ApiCard({ api }: { api: ApiDefinition }) {
       <div className="api-route">
         <span className={`method method-${api.method.toLowerCase()}`}>{api.method}</span>
         <code dir="ltr">{api.endpoint}</code>
-        <span className="route-copy"><Copy size={13} /></span>
       </div>
       <div className="api-card-bottom">
         <span className="method-caption">{methodLabels[api.method]} · REST API</span>
