@@ -1,14 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <defs>
-    <linearGradient id="aqua" x1="12" y1="8" x2="53" y2="57" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B8FFF5"/><stop offset=".52" stop-color="#55DCD1"/><stop offset="1" stop-color="#169EAA"/>
-    </linearGradient>
-    <linearGradient id="panel" x1="5" y1="4" x2="59" y2="60" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#153846"/><stop offset="1" stop-color="#081923"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="19" fill="url(#panel)" stroke="#2D6670" stroke-width="1.5"/>
-  <path d="M42.8 12.8c-3.1 1.3-5.8 3.5-7.7 6.3-6.7 9.6-4.3 22.8 5.3 29.5 2.3 1.6 4.9 2.7 7.7 3.2-4.2 2.5-9.2 3.5-14.3 2.6C21.4 52.2 13.2 40.7 15.4 28.3 17.6 15.9 29.1 7.7 41.5 9.9c.5.1.9.2 1.3.3Z" fill="url(#aqua)"/>
-  <path d="m46.8 14.8 1.8 5.1 5.1 1.8-5.1 1.8-1.8 5.1-1.8-5.1-5.1-1.8 5.1-1.8 1.8-5.1Z" fill="#D5FFFA"/>
-  <circle cx="20.2" cy="47.3" r="2.2" fill="#A4F7ED"/>
+  <rect width="64" height="64" rx="18" fill="#121212"/>
+  <path d="M14 13h36v9H24v7h20v8H24v14h-10V13Z" fill="#fff"/>
+  <path d="M43 43h8v8h-8z" fill="#007CFF"/>
+  <path d="M14 13h10v10H14z" fill="#00A1FF"/>
 </svg>
