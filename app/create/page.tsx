@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertCircle, Braces, Check, Code2, Eye, Info, Rocket } from "lucide-react";
+import { AlertCircle, Braces, Check, Code2, Eye, Info } from "lucide-react";
 import type { ApiCategory, HttpMethod } from "@/lib/api-data";
 
 type ApiDraft = {
