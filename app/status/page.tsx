@@ -1,34 +1,32 @@
-import { Activity, Gauge, Timer } from "lucide-react";
+import { Activity, BookOpen, Boxes, CircleCheck, CircleDashed, Code2, Database, Gauge, Radio, Timer } from "lucide-react";
 
-type ServiceStatus = { name: string; description: string; state: "جاهز للمعاينة" | "غير متصل" };
-
-const services: ServiceStatus[] = [
-  { name: "واجهة كتالوج API", description: "البحث والتصفية وبطاقات الواجهات", state: "جاهز للمعاينة" },
-  { name: "منشئ الواجهات", description: "محرر تعريف الواجهة والمعاينة", state: "جاهز للمعاينة" },
-  { name: "واجهة التوثيق", description: "صفحات الإرشادات والأمثلة", state: "جاهز للمعاينة" },
-  { name: "مشغّل واجهات API", description: "تنفيذ نقاط الاتصال العامة", state: "غير متصل" },
+const services = [
+  { name: "واجهة كتالوج API", description: "استعراض النماذج والبحث والتصفية.", state: "متاح للمعاينة", ready: true, icon: Boxes },
+  { name: "منشئ الواجهات", description: "إنشاء تعريف محلي ومعاينته في المتصفح.", state: "متاح للمعاينة", ready: true, icon: Code2 },
+  { name: "مركز التوثيق", description: "عرض الأدلة والأمثلة التوضيحية.", state: "متاح للمعاينة", ready: true, icon: BookOpen },
+  { name: "مشغّل API", description: "تنفيذ الطلبات وتوجيهها إلى الخدمات.", state: "غير مفعّل", ready: false, icon: Radio },
+  { name: "قاعدة البيانات", description: "حفظ التعريفات والمستخدمين والمفاتيح.", state: "غير مفعّل", ready: false, icon: Database },
 ];
 
-const plannedMonitoring = [
-  { title: "فحص التوفّر المباشر", icon: Activity },
-  { title: "قياس زمن الاستجابة", icon: Timer },
-  { title: "متابعة عدد الطلبات", icon: Gauge },
+const futureChecks = [
+  { title: "زمن الاستجابة", description: "قياس زمن تنفيذ كل نقطة اتصال.", icon: Timer },
+  { title: "معدل التوفّر", description: "متابعة حالة الخدمات بصورة دورية.", icon: Activity },
+  { title: "مراقبة الاستخدام", description: "إحصاء الطلبات والأخطاء والحصص.", icon: Gauge },
 ];
 
 export default function StatusPage() {
   return (
-    <>
-      <div className="page-heading"><div><div className="eyebrow">مراقبة النظام</div><h1>حالة الخدمات</h1><p>تعرض هذه الصفحة حالة واجهة المنصة فقط؛ لا توجد فحوصات تشغيل أو قياسات مباشرة حتى الآن.</p></div></div>
-      <div className="panel status-summary"><div className="status-summary-title"><span className="status-dot amber-dot" /><strong>واجهة المعاينة متاحة</strong></div><p>لم يتم ربط خادم خلفي أو نظام فحص التوفّر أو تحليلات الطلبات بعد.</p></div>
-      <div className="panel">{services.map(service => {
-        const ready = service.state === "جاهز للمعاينة";
-        return <div className="status-row" key={service.name}><span className={`status-dot ${ready ? "purple-dot" : "amber-dot"}`} /><div className="status-description"><div className="status-meta">{service.name}</div><div className="status-sub">{service.description}</div></div><div className={`status-result ${ready ? "purple-text" : "amber-text"}`}>{service.state}</div></div>;
-      })}</div>
-      <div className="section-title"><div><h2>خطة المراقبة</h2><p>مزايا مخططة لمرحلة الخادم الخلفي</p></div></div>
-      <div className="card-grid">{plannedMonitoring.map(item => {
-        const Icon = item.icon;
-        return <div className="panel monitoring-card" key={item.title}><span className="monitoring-icon"><Icon size={18} /></span><div>{item.title}</div><p>سيتم تفعيل هذه الميزة بعد ربط الخادم.</p></div>;
-      })}</div>
-    </>
+    <div>
+      <div className="page-heading"><div><div className="eyebrow">مركز المتابعة / البنية التحتية</div><h1>حالة المنصة</h1><p>نظرة شفافة على ما يعمل حاليًا وما لم يتم تفعيله بعد.</p></div></div>
+      <div className="status-summary"><CircleDashed size={19} /><div><strong>المنصة في مرحلة المعاينة</strong><p>الصفحات تعمل كواجهة أمامية، بينما خدمات التشغيل والحفظ لم تُربط بعد. لا توجد قياسات مباشرة في هذه المرحلة.</p></div></div>
+      <section className="page-panel">
+        {services.map(service => {
+          const Icon = service.icon;
+          return <div className="service-row" key={service.name}><span className="service-icon"><Icon size={17} /></span><div className="service-copy"><strong>{service.name}</strong><p>{service.description}</p></div><span className={`service-state ${service.ready ? "ready" : ""}`}><i />{service.state}</span></div>;
+        })}
+      </section>
+      <div className="section-heading"><div><span className="section-overline">المرحلة التالية</span><h2>مراقبة التشغيل</h2><p>مؤشرات سيتم تفعيلها عند توصيل الخادم وقاعدة البيانات.</p></div></div>
+      <div className="docs-grid">{futureChecks.map(item => { const Icon=item.icon; return <article className="docs-card" key={item.title}><span className="docs-card-icon"><Icon size={18} /></span><h3>{item.title}</h3><p>{item.description}</p></article>; })}</div>
+    </div>
   );
 }
