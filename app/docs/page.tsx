@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpLeft, BookOpen, Braces, Code2, FileCode2, Layers3 } from "lucide-react";
+import { ArrowUpLeft, BookOpen, Braces, Code2, Layers3 } from "lucide-react";
 
 const guideCards = [
   { title: "البداية السريعة", text: "تصفّح الكتالوج، وافتح تفاصيل الواجهة، واطّلع على مثال الطلب.", href: "/apis", icon: Code2 },
