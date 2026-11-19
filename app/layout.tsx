@@ -5,16 +5,16 @@ import AppShell from "@/components/app-shell";
 
 export const metadata: Metadata = {
   title: {
-    default: "BMG APIs — Developer Platform",
+    default: "BMG APIs — منصة واجهات البرمجة",
     template: "%s | BMG APIs",
   },
-  description: "Discover, design and manage APIs in one developer workspace.",
+  description: "منصة عربية لاستكشاف واجهات البرمجة وإدارتها وتجهيزها للمطورين.",
   icons: { icon: "/bmg-apis-mark.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl">
       <body>
         <AppShell>{children}</AppShell>
       </body>
