@@ -1,11 +1,16 @@
 import Link from "next/link";
-import { ArrowUpLeft, FileCode2, Plus } from "lucide-react";
+import { ArrowUpLeft, Code2, FolderPlus } from "lucide-react";
 
 export default function MyApisPage() {
   return (
-    <>
-      <div className="page-heading"><div><div className="eyebrow">مساحة العمل</div><h1>واجهاتي</h1><p>تابع تعريفات واجهاتك التجريبية والمنشورة. تخزين البيانات غير متصل حاليًا.</p></div><Link href="/create" className="primary-btn"><Plus size={15} /> واجهة جديدة</Link></div>
-      <div className="panel empty-state workspace-empty"><span className="empty-illustration"><FileCode2 size={30} /></span><strong className="empty-title">مساحة العمل فارغة حاليًا</strong><p>ستظهر الواجهات التي تنشئها هنا بعد تنفيذ نظام التخزين وربطه بالخادم.</p><Link href="/create" className="primary-btn empty-action">إنشاء أول واجهة <ArrowUpLeft size={14} /></Link></div>
-    </>
+    <div>
+      <div className="page-heading"><div><div className="eyebrow">مساحة المطور / إدارة المشاريع</div><h1>واجهاتي</h1><p>مكان واحد لمتابعة تعريفات واجهاتك وإصداراتها وحالة نشرها.</p></div><Link href="/create" className="button-primary"><FolderPlus size={15} /> واجهة جديدة</Link></div>
+      <div className="workspace-empty">
+        <span className="workspace-empty-icon"><Code2 size={27} /></span>
+        <h2>مساحة العمل جاهزة لمشروعك الأول</h2>
+        <p>لم تُنشأ واجهات بعد. ابدأ بإنشاء تعريف جديد، وستظهر هنا بعد تفعيل نظام الحفظ وربطه بحسابك.</p>
+        <Link href="/create" className="button-primary">إنشاء أول واجهة <ArrowUpLeft size={15} /></Link>
+      </div>
+    </div>
   );
 }
