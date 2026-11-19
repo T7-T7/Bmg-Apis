@@ -110,7 +110,7 @@ export default function LandingPage() {
         <AnimatePresence>
           {menuOpen && <motion.div className="mobile-nav-panel glass-panel" initial={{ opacity: 0, y: -10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: .98 }} transition={{ duration: .2 }}>
             {navLinks.map(link => <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}<ArrowUpLeft size={14} /></a>)}
-            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")}><Globe2 size={15} />{ar ? "English" : "العربية"}</button><Link href="/signup?next=/dashboard/api-keys" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
+            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")}><Globe2 size={15} />{ar ? "English" : "العربية"}</button><ThemeToggle /><Link href="/signup?next=/dashboard/api-keys" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
           </motion.div>}
         </AnimatePresence>
       </header>
