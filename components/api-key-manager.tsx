@@ -41,7 +41,7 @@ export default function ApiKeyManager() {
   useEffect(() => { void load(); }, []);
 
   async function createKey() {
-    setWorking(true); setError(""); setNewKey("");
+    setWorking(true); setError(""); setNewKey(""); setCopied(false);
     try {
       const key = makeKey();
       const { error: rpcError } = await getSupabaseBrowserClient().rpc("bmg_create_api_key", { p_key: key, p_label: label.trim() || "Default key" });
