@@ -10,7 +10,7 @@ const MAX_REQUESTS_PER_WINDOW = 8;
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
 
 function jsonError(message: string, status: number) {
-  return NextResponse.json({ success: false, error: message }, { status });
+  return NextResponse.json({ success: false, error: message }, { status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
 }
 
 function getClientKey(request: NextRequest) {
@@ -20,7 +20,7 @@ function getClientKey(request: NextRequest) {
 
 function allowRequest(key: string) {
   const now = Date.now();
-  const current = requestWindows.get(key);
+  if (requestWindows.size > 10_000) {\n    for (const [storedKey, value] of requestWindows) {\n      if (value.resetAt <= now) requestWindows.delete(storedKey);\n    }\n    if (requestWindows.size > 10_000) requestWindows.delete(requestWindows.keys().next().value as string);\n  }\n  const current = requestWindows.get(key);
   if (!current || current.resetAt <= now) {
     requestWindows.set(key, { count: 1, resetAt: now + WINDOW_MS });
     return true;
