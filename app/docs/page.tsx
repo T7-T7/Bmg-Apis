@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpLeft, BookOpen, Braces, Check, Code2, ExternalLink, FileJson2, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowUpLeft, BookOpen, Braces, ExternalLink, FileJson2, Terminal } from "lucide-react";
 
 const baseUrl = "https://bmg-apis.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
@@ -39,7 +39,7 @@ const responseExample = `{
 }`;
 
 function CodeBlock({ label, code }: { label: string; code: string }) {
-  return <div className="public-docs-code"><div className="public-docs-code-head"><span>{label}</span><button type="button" onClick={undefined} aria-label="مثال برمجي">{label === "JSON" ? <Braces size={15}/> : <Terminal size={15}/>}</button></div><pre dir="ltr"><code>{code}</code></pre></div>;
+  return <div className="public-docs-code"><div className="public-docs-code-head"><span>{label}</span><span aria-hidden="true">{label === "JSON" ? <Braces size={15}/> : <Terminal size={15}/>}</span></div><pre dir="ltr"><code>{code}</code></pre></div>;
 }
 
 export default function DocsPage() {
