@@ -1,44 +1,51 @@
 # BMG APIs
 
-TypeScript-first API platform interface built with Next.js App Router.
+بوابة عربية للمطورين لاستكشاف واجهات برمجة التطبيقات وتجهيز تعريفاتها وإدارة تكاملاتها.
 
-## Stack
-- Next.js 16.4.6
+## التقنيات
+
+- Next.js 16 مع App Router
 - React 19
-- TypeScript strict mode
-- Node.js runtime for server-side operations
-- CSS responsive interface
+- TypeScript بوضع Strict
+- Lucide React للأيقونات
+- CSS مخصص ومتجاوب مع RTL
+- Vercel للنشر
 
-## Requirements
-- Node.js 20.9+
+## المتطلبات
+
+- Node.js 20.9 أو أحدث
 - npm
 
-## Local development
+## التشغيل محليًا
+
 ```bash
 npm install
 npm run dev
 ```
 
-## Validation
+## فحوصات المشروع
+
 ```bash
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-GitHub Actions CI runs these checks on pushes and pull requests to `main`.
+## الصفحات
 
-## Pages
-- Dashboard: `/`
-- API catalog: `/apis`
-- API details: `/apis/[slug]`
-- Builder preview: `/create`
-- Workspace: `/my-apis`
-- Documentation: `/docs`
-- Status: `/status`
+| المسار | الوظيفة |
+| --- | --- |
+| `/` | لوحة النظرة العامة |
+| `/apis` | كتالوج الواجهات والبحث والتصفية |
+| `/apis/[slug]` | تفاصيل كل واجهة |
+| `/create` | منشئ تعريف الواجهة والمعاينة |
+| `/my-apis` | مساحة إدارة الواجهات |
+| `/docs` | مركز التوثيق |
+| `/status` | حالة مكونات المنصة |
 
-## Project tree
-```
+## الهيكلة
+
+```text
 app/
   apis/
     [slug]/page.tsx
@@ -62,7 +69,12 @@ public/
   bmg-apis-mark.svg
 ```
 
-All application source files use TypeScript (`.ts` / `.tsx`). API runtime, storage, authentication and publishing are not implemented yet; the catalog is sample data.
+## حالة التنفيذ الحالية
 
-## Hosting target
-Target: Vercel Hobby free plan, subject to its free-plan limits and personal/non-commercial use policy. Prefer short serverless-compatible requests; do not depend on long-running processes, background workers, or persistent local filesystem writes. Use external durable storage only after selecting a free-tier-compatible service and reviewing its limits. Keep secrets in server-side environment variables only.
+الواجهة الأمامية وصفحاتها التفاعلية جاهزة للمعاينة. بيانات الكتالوج الحالية نماذج تجريبية، ومنشئ الواجهات ينشئ معاينة محلية فقط.
+
+لم يتم بعد تنفيذ خدمات الخادم الخلفي، أو المصادقة، أو قاعدة البيانات، أو إدارة مفاتيح API، أو تشغيل ونشر نقاط الاتصال التي ينشئها المستخدم. لا تعتبر المسارات المعروضة واجهات تشغيلية قبل ربط هذه المكونات واختبارها.
+
+## النشر
+
+المشروع معد للنشر على Vercel. يجب حفظ مفاتيح الخدمات وقيم البيئة الحساسة في إعدادات الخادم فقط، وعدم تضمينها في مكونات المتصفح.
