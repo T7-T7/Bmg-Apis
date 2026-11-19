@@ -1,7 +1,7 @@
 import { Activity, BookOpen, Boxes, CircleDashed, Code2, Database, Gauge, Radio, ShieldCheck, Timer, Users } from "lucide-react";
 
 const services = [
-  { name: "كتالوج واجهات API", description: "استعراض الخدمات والبحث والتصفية.", state: "واجهة جاهزة", ready: true, icon: Boxes },
+  { name: "عقل — Gemini API", description: "واجهة محادثة فعلية بحد 30 ألف حرف للطلب.", state: "متاحة", ready: true, icon: Radio },\n  { name: "كتالوج واجهات API", description: "استعراض الخدمات والبحث والتصفية.", state: "واجهة جاهزة", ready: true, icon: Boxes },
   { name: "التوثيق", description: "شرح الاستخدام وأمثلة الطلبات.", state: "واجهة جاهزة", ready: true, icon: BookOpen },
   { name: "مراجعة مساهمات المجتمع", description: "مراجعة المشرف واعتماد الواجهات المقترحة.", state: "قيد التنفيذ", ready: false, icon: ShieldCheck },
   { name: "مشغّل API", description: "تنفيذ الطلبات وتوجيهها إلى الخدمات.", state: "غير مفعّل", ready: false, icon: Radio },
