@@ -8,7 +8,7 @@ const CONFIG = {
 };
 
 type SessionState = { cookie: string; resume?: unknown[]; resumeArray?: unknown[]; uid: string; instruction?: string };
-type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-web"; conversationId: string | null; responseId: string | null };
+type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
 
 const hex = (bytes: number) => randomBytes(bytes).toString("hex");
 const pack = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
