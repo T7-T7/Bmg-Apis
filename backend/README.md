@@ -1,26 +1,43 @@
-# Node.js Backend — Planned (TypeScript)
+# الخادم الخلفي — مخطط التنفيذ
 
-This folder is reserved for the API-management service architecture. No runtime is implemented in the frontend-only stage.
+هذا المجلد مخصص لخدمات إدارة واجهات API. لم يتم تنفيذ خادم تشغيل فعلي حتى الآن.
 
-Planned responsibilities:
-- API definition CRUD, schemas and validation
-- Publishing/version lifecycle
-- Authentication, ownership and permission checks
-- API request testing and safe runtime dispatch
-- Usage counters, rate limiting and audit logs
-- Service health and monitoring
+## المسؤوليات المطلوبة
 
-Proposed structure:
-```
+- إنشاء تعريفات الواجهات وتعديلها وحذفها.
+- التحقق من مخططات الطلب والاستجابة.
+- إدارة إصدارات الواجهات ودورة النشر.
+- المصادقة والتحقق من ملكية الموارد والصلاحيات.
+- تشغيل الطلبات عبر موجّه آمن ومقيّد.
+- تحديد معدلات الطلبات والحصص.
+- تسجيل الاستخدام والأخطاء وسجل التدقيق.
+- توفير مؤشرات صحة الخدمات.
+
+## الهيكلة المقترحة
+
+```text
 backend/
   src/
-    server.ts
     routes/
     controllers/
     services/
     middleware/
     validators/
+    runtime/
     storage/
+    types/
 ```
 
-The production hosting target is Vercel Hobby. Prefer short request handlers, avoid long-lived processes, background jobs, heavy native dependencies and persistent local disk writes. Store secrets server-side and never expose them to client components. External storage/database selection will be based on free-tier limits and project needs.
+## متطلبات الأمان والتشغيل
+
+1. التحقق من جميع المدخلات على الخادم، وعدم الثقة في بيانات المتصفح.
+2. عدم تنفيذ شيفرات المستخدم مباشرة داخل عملية الخادم.
+3. عزل تشغيل الواجهات وتقييد الشبكة والوقت والذاكرة.
+4. تخزين الأسرار في متغيرات بيئة خادمية فقط.
+5. تطبيق حدود للطلبات والحجم والمهلة الزمنية.
+6. استخدام تخزين دائم خارجي عند اختيار قاعدة البيانات.
+7. تصميم المعالجات لتناسب بيئة Serverless على Vercel، دون الاعتماد على عمليات طويلة أو ملفات محلية دائمة.
+
+## ملاحظة
+
+لا توجد في هذه المرحلة قاعدة بيانات أو مصادقة أو محرك تنفيذ API متصل. يجب تنفيذ هذه الطبقات واختبارها قبل وصف المنصة بأنها منصة نشر APIs مكتملة.
