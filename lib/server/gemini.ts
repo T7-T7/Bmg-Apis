@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, randomInt } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, randomInt } from "node:crypto";
 
 const CONFIG = {
   home: "https://gemini.google.com/app",
@@ -11,11 +11,32 @@ type SessionState = { cookie: string; resume?: unknown[]; resumeArray?: unknown[
 type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
 
 const hex = (bytes: number) => randomBytes(bytes).toString("hex");
-const pack = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
+
+function sessionEncryptionKey() {
+  const secret = process.env.GEMINI_SESSION_SECRET;
+  if (!secret || secret.length < 32) throw new Error("GEMINI_SESSION_SECRET is not configured.");
+  return createHash("sha256").update(secret, "utf8").digest();
+}
+
+function pack(value: unknown) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", sessionEncryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString("base64url");
+}
+
 function unpack(value?: string): SessionState | null {
   if (!value || value.length > 12_000) return null;
   try {
-    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+    const packed = Buffer.from(value, "base64url");
+    if (packed.length < 29) return null;
+    const iv = packed.subarray(0, 12);
+    const tag = packed.subarray(12, 28);
+    const encrypted = packed.subarray(28);
+    const decipher = createDecipheriv("aes-256-gcm", sessionEncryptionKey(), iv);
+    decipher.setAuthTag(tag);
+    const plaintext = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    const parsed = JSON.parse(plaintext.toString("utf8"));
     if (!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.resume) && !Array.isArray(parsed.resumeArray))) return null;
     return parsed as SessionState;
   } catch { return null; }
