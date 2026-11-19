@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { ArrowUpLeft, FileCode2, Plus, Sparkles } from "lucide-react";
 
 export default function MyApisPage() {
   return (
     <>
-      <div className="page-heading"><div><div className="eyebrow">WORKSPACE</div><h1>My APIs</h1><p>Manage drafts and published APIs. Workspace data is not connected yet.</p></div><Link href="/create" className="primary-btn">＋ New API</Link></div>
-      <div className="panel"><div className="empty-state"><div className="empty-icon">▤</div><strong className="empty-title">Your workspace is empty</strong><p>Created APIs will appear here once API storage is implemented.</p><Link href="/create" className="primary-btn empty-action">Create first API</Link></div></div>
+      <div className="page-heading"><div><div className="eyebrow">مساحة العمل</div><h1>واجهاتي</h1><p>تابع تعريفات واجهاتك التجريبية والمنشورة. تخزين البيانات غير متصل حاليًا.</p></div><Link href="/create" className="primary-btn"><Plus size={15} /> واجهة جديدة</Link></div>
+      <div className="panel empty-state workspace-empty"><span className="empty-illustration"><FileCode2 size={30} /></span><strong className="empty-title">مساحة العمل فارغة حاليًا</strong><p>ستظهر الواجهات التي تنشئها هنا بعد تنفيذ نظام التخزين وربطه بالخادم.</p><Link href="/create" className="primary-btn empty-action">إنشاء أول واجهة <ArrowUpLeft size={14} /></Link></div>
     </>
   );
 }
