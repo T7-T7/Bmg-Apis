@@ -11,7 +11,10 @@ const requestExample = `const response = await fetch(
   "https://bmg-apis.vercel.app/api/v1/ai/gemini",
   {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_BMG_API_KEY"
+    },
     body: JSON.stringify({
       prompt: "اشرح لي الفرق بين let و const",
       instruction: "أجب باللغة العربية",
@@ -42,7 +45,7 @@ export default function DocsPage() {
       <div className="code-panel"><div className="code-panel-head"><span>JavaScript · Fetch API</span><span>POST</span></div><pre>{requestExample}</pre></div>
       <div className="section-heading"><div><span className="section-overline">الاستجابة الناجحة</span><h2>بنية JSON</h2><p>احتفظ بـ sessionId لإرسال رسالة متابعة ضمن نفس المحادثة.</p></div></div>
       <div className="code-panel"><div className="code-panel-head"><span>JSON</span><span>200 OK</span></div><pre>{responseExample}</pre></div>
-      <div className="docs-note"><ShieldCheck size={14} /> حد prompt هو 30,000 حرف. الخدمة تعتمد على نقطة اتصال Gemini Web غير موثقة رسميًا وقد تتغير من جهة Google. يوجد حد مؤقت أولي للطلبات لكل عنوان IP، وسيتم استبداله بنظام مفاتيح وحصص مركزي قبل فتح الاستخدام الواسع.</div>
+      <div className="docs-note"><ShieldCheck size={14} /> حد prompt هو 30,000 حرف. الخدمة تعتمد على نقطة اتصال Gemini Web غير موثقة رسميًا وقد تتغير من جهة Google. يتطلب الاستخدام مفتاحًا من صفحة مفاتيح API، والحد الحالي 30 طلبًا في الدقيقة لكل مفتاح. أرسل المفتاح في Authorization: Bearer ولا تضعه في كود المتصفح أو مستودع عام.</div>
       <div className="section-heading"><div><span className="section-overline">مساهمات المجتمع</span><h2>اقتراح واجهة جديدة</h2><p>كل API يضيفها المجتمع تمر بمراجعة المشرف وفحص كود الاختبار قبل النشر.</p></div><Link href="/create" className="text-link">إرسال مساهمة <ArrowUpLeft size={14} /></Link></div>
     </div>
   );
