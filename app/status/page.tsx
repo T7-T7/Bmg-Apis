@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2, Clock3, Gauge, Radio, Server, Timer } from "lucide-react";
+import { Activity, Gauge, Timer } from "lucide-react";
 
 type ServiceStatus = { name: string; description: string; state: "جاهز للمعاينة" | "غير متصل" };
 
