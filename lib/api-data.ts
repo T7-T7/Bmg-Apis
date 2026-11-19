@@ -13,7 +13,8 @@ export type ApiDefinition = {
   updated: string;
 };
 
-export const apiCatalog: ApiDefinition[] = [\n  { slug: "aql-gemini", name: "عقل — Gemini", symbol: "ع", category: "ذكاء اصطناعي", method: "POST", endpoint: "/api/v1/ai/gemini", description: "مساعد ذكاء اصطناعي للمحادثة النصية، يدعم التعليمات واستمرار المحادثة عبر sessionId، بحد أقصى 30 ألف حرف للطلب.", status: "متاحة", latency: "—", updated: "أول خدمة فعلية" },
+export const apiCatalog: ApiDefinition[] = [
+  { slug: "aql-gemini", name: "عقل — Gemini", symbol: "ع", category: "ذكاء اصطناعي", method: "POST", endpoint: "/api/v1/ai/gemini", description: "مساعد ذكاء اصطناعي للمحادثة النصية، يدعم التعليمات واستمرار المحادثة عبر sessionId، بحد أقصى 30 ألف حرف للطلب.", status: "متاحة", latency: "—", updated: "أول خدمة فعلية" },
   { slug: "echo", name: "واجهة صدى", symbol: "E", category: "أدوات مساعدة", method: "GET", endpoint: "/api/v1/echo", description: "إرجاع الرسالة المرسلة وفحص معاملات الطلب لاختبار التكامل مع التطبيقات.", status: "معاينة", latency: "—", updated: "عينة" },
   { slug: "text-tools", name: "أدوات النصوص", symbol: "T", category: "نصوص", method: "POST", endpoint: "/api/v1/text", description: "أدوات لمعالجة النصوص وتحويل حالة الأحرف وتنظيف المحتوى وتنسيقه.", status: "معاينة", latency: "—", updated: "عينة" },
   { slug: "random", name: "بيانات عشوائية", symbol: "R", category: "أدوات مساعدة", method: "GET", endpoint: "/api/v1/random", description: "إنشاء قيم وبيانات عشوائية لاستخدامها في التطوير وبناء النماذج الأولية.", status: "معاينة", latency: "—", updated: "عينة" },
