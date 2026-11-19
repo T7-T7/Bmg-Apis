@@ -8,7 +8,13 @@ export function getSupabaseBrowserClient() {
   if (!url || !key) throw new Error("إعدادات Supabase غير مكتملة على الخادم.");
   if (!client) {
     client = createClient(url, key, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        // The callback page exchanges the PKCE code explicitly to avoid a race
+        // between automatic URL detection and exchangeCodeForSession().
+        detectSessionInUrl: false,
+      },
     });
   }
   return client;
