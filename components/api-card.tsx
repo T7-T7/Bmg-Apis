@@ -1,23 +1,35 @@
 import Link from "next/link";
-import { ArrowUpLeft, Braces, Code2, ExternalLink } from "lucide-react";
+import { ArrowUpLeft, Braces, ChevronLeft, Copy, ExternalLink } from "lucide-react";
 import type { ApiDefinition } from "@/lib/api-data";
+
+const methodLabels: Record<ApiDefinition["method"], string> = {
+  GET: "قراءة",
+  POST: "إنشاء",
+  PUT: "تحديث",
+  PATCH: "تعديل",
+  DELETE: "حذف",
+};
 
 export default function ApiCard({ api }: { api: ApiDefinition }) {
   return (
     <article className="api-card">
-      <div className="api-card-head">
-        <div className="api-symbol"><Braces size={19} strokeWidth={1.8} /></div>
-        <div className="api-card-title"><div className="api-name">{api.name}</div><div className="api-category">{api.category}</div></div>
-        <span className="preview-tag">تجريبية</span>
+      <div className="api-card-top">
+        <div className="api-glyph"><Braces size={20} strokeWidth={1.7} /></div>
+        <span className="api-state"><i /> نموذج أولي</span>
+        <button className="card-more" type="button" aria-label={`خيارات ${api.name}`}>•••</button>
+      </div>
+      <div className="api-card-title">
+        <div><h3>{api.name}</h3><span>{api.category}</span></div>
       </div>
       <p className="api-description">{api.description}</p>
-      <div className="endpoint" dir="ltr">{api.endpoint}</div>
-      <div className="api-footer">
+      <div className="api-route">
         <span className={`method method-${api.method.toLowerCase()}`}>{api.method}</span>
-        <div className="api-links">
-          <Link className="mini-btn" href={`/apis/${api.slug}`}>التفاصيل <ArrowUpLeft size={12} /></Link>
-          <Link className="mini-btn" href="/docs">التوثيق <ExternalLink size={11} /></Link>
-        </div>
+        <code dir="ltr">{api.endpoint}</code>
+        <span className="route-copy"><Copy size={13} /></span>
+      </div>
+      <div className="api-card-bottom">
+        <span className="method-caption">{methodLabels[api.method]} · REST API</span>
+        <Link href={`/apis/${api.slug}`} className="card-link">عرض التفاصيل <ChevronLeft size={14} /></Link>
       </div>
     </article>
   );
