@@ -5,6 +5,36 @@ import { askGemini } from "@/lib/server/gemini";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MAX_PROMPT_CHARS = 30_000;
+const MAX_BODY_BYTES = 1_048_576;
+
+class PayloadTooLargeError extends Error {}
+
+async function readJsonBody(request: NextRequest): Promise<unknown> {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) throw new PayloadTooLargeError();
+  const reader = request.body?.getReader();
+  if (!reader) throw new SyntaxError("Request body is empty.");
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new PayloadTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ success: false, error: message }, { status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
