@@ -1,57 +1,105 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUpLeft, Braces, Check, Code2, Eye, Info, Rocket } from "lucide-react";
-import type { HttpMethod, ApiCategory } from "@/lib/api-data";
+import { useMemo, useState } from "react";
+import { AlertCircle, Braces, Check, Code2, Eye, Info, Rocket } from "lucide-react";
+import type { ApiCategory, HttpMethod } from "@/lib/api-data";
 
-type ApiDraft = { name: string; slug: string; description: string; category: ApiCategory; method: HttpMethod; endpoint: string };
+type ApiDraft = {
+  name: string;
+  slug: string;
+  description: string;
+  category: ApiCategory;
+  method: HttpMethod;
+  endpoint: string;
+};
+
+const methods: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+const categories: ApiCategory[] = ["ذكاء اصطناعي", "وسائط", "نصوص", "أدوات مساعدة", "ترفيه"];
 
 export default function CreatePage() {
-  const [method, setMethod] = useState<HttpMethod>("GET");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [endpoint, setEndpoint] = useState("/api/v1/my-endpoint");
   const [category, setCategory] = useState<ApiCategory>("أدوات مساعدة");
-  const [preview, setPreview] = useState<ApiDraft | null>(null);
+  const [method, setMethod] = useState<HttpMethod>("GET");
+  const [endpoint, setEndpoint] = useState("/api/v1/my-endpoint");
+  const [submitted, setSubmitted] = useState(false);
 
-  function showPreview() {
-    setPreview({ name, slug, description, category, method, endpoint });
+  const normalizedSlug = useMemo(() => slug.trim() || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), [slug, name]);
+  const draft: ApiDraft = { name: name.trim(), slug: normalizedSlug, description: description.trim(), category, method, endpoint: endpoint.trim() };
+  const errors = {
+    name: name.trim().length < 2,
+    endpoint: !/^\/[a-zA-Z0-9/_-]+$/.test(endpoint.trim()),
+  };
+  const valid = !errors.name && !errors.endpoint;
+
+  function handlePreview() {
+    setSubmitted(true);
   }
 
   return (
-    <>
-      <div className="page-heading"><div><div className="eyebrow">منشئ الواجهات / معاينة</div><h1>إنشاء واجهة API</h1><p>أنشئ تعريفًا أوليًا لنقطة اتصال API من خلال خطوات واضحة. لن يتم حفظ البيانات حاليًا.</p></div></div>
-      <div className="builder-steps">
-        <span className="builder-step active"><span>01</span> المعلومات الأساسية</span>
-        <span className="builder-step"><span>02</span> نقطة الاتصال</span>
-        <span className="builder-step"><span>03</span> المدخلات</span>
-        <span className="builder-step"><span>04</span> الاستجابة</span>
-        <span className="builder-step"><span>05</span> الاختبار والنشر</span>
+    <div className="builder-page">
+      <div className="page-heading">
+        <div><div className="eyebrow">مساحة المطور / أدوات الإنشاء</div><h1>منشئ واجهات API</h1><p>عرّف واجهتك خطوة بخطوة، وراقب شكل نقطة الاتصال قبل الانتقال إلى مرحلة التنفيذ.</p></div>
       </div>
+      <div className="builder-intro">
+        <span className="builder-intro-icon"><Braces size={21} /></span>
+        <div className="builder-intro-copy"><strong>تعريف واجهة جديد</strong><p>الحقول التالية تنشئ مسودة محلية قابلة للمعاينة، ولا تحفظها على الخادم بعد.</p></div>
+      </div>
+
       <div className="builder-layout">
-        <section className="panel builder-main">
-          <div className="section-title section-title-first"><div><h2>المعلومات الأساسية</h2><p>أدخل بيانات تساعد المطورين على فهم واجهتك.</p></div><span className="required-hint">* حقل مطلوب</span></div>
+        <section className="builder-main">
+          <div className="builder-section-head"><div><h2>إعدادات الواجهة</h2><p>أدخل البيانات الأساسية وحدد طريقة الوصول إلى المورد.</p></div><span className="required-label">* مطلوب</span></div>
           <div className="form-grid">
-            <div className="form-field"><label htmlFor="api-name">اسم الواجهة <span>*</span></label><input id="api-name" value={name} onChange={event => setName(event.target.value)} placeholder="مثال: واجهة الطقس" autoComplete="off" required /></div>
-            <div className="form-field"><label htmlFor="api-slug">المعرّف المختصر</label><input id="api-slug" value={slug} onChange={event => setSlug(event.target.value)} placeholder="weather-api" dir="ltr" autoComplete="off" /><small>يُستخدم في عنوان الواجهة.</small></div>
-            <div className="form-field"><label htmlFor="api-category">التصنيف</label><select id="api-category" value={category} onChange={event => setCategory(event.target.value as ApiCategory)}>{(["ذكاء اصطناعي", "وسائط", "نصوص", "أدوات مساعدة", "ترفيه"] as const).map(item => <option key={item} value={item}>{item}</option>)}</select></div>
-            <div className="form-field"><label htmlFor="api-method">طريقة الطلب <span>*</span></label><select id="api-method" value={method} onChange={event => setMethod(event.target.value as HttpMethod)}>{(["GET", "POST", "PUT", "PATCH", "DELETE"] as const).map(item => <option key={item} value={item}>{item}</option>)}</select><small>طرق HTTP القياسية.</small></div>
-            <div className="form-field full"><label htmlFor="api-description">وصف الواجهة</label><textarea id="api-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="اشرح وظيفة الواجهة والنتيجة التي تقدمها..." /></div>
-            <div className="form-field full"><label htmlFor="api-endpoint">مسار نقطة الاتصال <span>*</span></label><div className="input-with-prefix"><Code2 size={15} /><input id="api-endpoint" value={endpoint} onChange={event => setEndpoint(event.target.value)} placeholder="/api/v1/your-route" dir="ltr" /></div><small>يجب أن يبدأ المسار بعلامة /.</small></div>
+            <div className="form-field">
+              <label htmlFor="api-name">اسم الواجهة <em>*</em></label>
+              <input id="api-name" value={name} onChange={event => setName(event.target.value)} placeholder="مثال: خدمة الطقس" autoComplete="off" aria-invalid={submitted && errors.name} />
+              {submitted && errors.name && <small className="form-error">أدخل اسمًا لا يقل عن حرفين.</small>}
+            </div>
+            <div className="form-field">
+              <label htmlFor="api-slug">المعرّف المختصر</label>
+              <input id="api-slug" className="input-ltr" value={slug} onChange={event => setSlug(event.target.value)} placeholder="weather-service" autoComplete="off" />
+              <small>يُستخدم كمعرّف ثابت للواجهة.</small>
+            </div>
+            <div className="form-field">
+              <label htmlFor="api-category">مجال الواجهة</label>
+              <select id="api-category" value={category} onChange={event => setCategory(event.target.value as ApiCategory)}>{categories.map(item => <option key={item} value={item}>{item}</option>)}</select>
+            </div>
+            <div className="form-field">
+              <label>طريقة الطلب</label>
+              <div className="method-picker" role="group" aria-label="طريقة طلب HTTP">
+                {methods.map(item => <button key={item} type="button" className="method-option" onClick={() => setMethod(item)} aria-pressed={method === item}>{item}</button>)}
+              </div>
+            </div>
+            <div className="form-field full">
+              <label htmlFor="api-description">وصف الواجهة</label>
+              <textarea id="api-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="اشرح ما الذي تفعله الواجهة، وما نوع البيانات التي تعيدها..." />
+              <small>اكتب وصفًا واضحًا يساعد المطورين على فهم الاستخدام المتوقع.</small>
+            </div>
+            <div className="form-field full">
+              <label htmlFor="api-endpoint">مسار نقطة الاتصال <em>*</em></label>
+              <input id="api-endpoint" className="input-ltr" value={endpoint} onChange={event => setEndpoint(event.target.value)} placeholder="/api/v1/resource" spellCheck={false} />
+              <small>استخدم مسارًا يبدأ بـ / ويحتوي على أحرف إنجليزية وأرقام وشرطات فقط.</small>
+              {submitted && errors.endpoint && <small className="form-error">المسار غير صالح. مثال صحيح: /api/v1/weather</small>}
+            </div>
           </div>
-          <div className="form-actions"><button className="primary-btn" onClick={showPreview} disabled={!name.trim() || !endpoint.trim()}>معاينة التعريف <Eye size={15} /></button></div>
-          {preview && <div className="panel definition-preview"><div className="section-title section-title-first"><div><h2>معاينة التعريف</h2><p>بيانات الواجهة بصيغة JSON</p></div><span className="preview-tag"><Check size={12} /> جاهز للمعاينة</span></div><pre className="code-block" dir="ltr">{JSON.stringify(preview, null, 2)}</pre><p className="note-text"><Info size={13} /> هذه معاينة داخل المتصفح فقط؛ لم يتم ربط الحفظ أو إنشاء نقاط الاتصال بالخادم.</p></div>}
+          <div className="builder-actions"><p>لن يتم نشر أو حفظ أي شيء عند المعاينة.</p><button type="button" className="button-primary" onClick={handlePreview} disabled={!valid}><Eye size={15} /> تحديث المعاينة</button></div>
         </section>
-        <aside className="panel builder-side">
-          <div className="section-title section-title-first"><div><h2>ملخص نقطة الاتصال</h2><p>معاينة مباشرة للمسار</p></div><Braces size={17} /></div>
-          <div className="endpoint endpoint-large" dir="ltr"><strong>{method}</strong> {endpoint}</div>
-          <div className="muted-box side-note"><Info size={15} /><span>سيقوم الخادم مستقبلًا بالتحقق من التعريف وحفظه وإنشاء المسارات ونشر الواجهات بصورة آمنة.</span></div>
-          <div className="section-title"><div><h2>الخطوات التالية</h2><p>مراحل إعداد الواجهة</p></div></div>
-          {["تحديد معاملات الطلب", "تعريف بنية الاستجابة", "تنفيذ طلب تجريبي", "نشر نقطة الاتصال"].map((item, index) => <div className="status-row" key={item}><span className="step-number">{index + 1}</span><div className="status-meta">{item}</div></div>)}
-          <div className="builder-coming"><Rocket size={16} /><span>النشر الفعلي متاح بعد تجهيز الخادم.</span></div>
+
+        <aside className="builder-aside builder-preview">
+          <div className="preview-head"><strong>معاينة مباشرة</strong><span className="preview-live"><i /> محلي</span></div>
+          <div className="preview-endpoint"><span className={`method method-${method.toLowerCase()}`}>{method}</span><code>{endpoint || "/api/v1/..."}</code></div>
+          <div className="preview-details">
+            <div className="preview-detail"><span>اسم الواجهة</span><strong>{name.trim() || "غير محدد"}</strong></div>
+            <div className="preview-detail"><span>المعرّف</span><strong dir="ltr">{normalizedSlug || "—"}</strong></div>
+            <div className="preview-detail"><span>التصنيف</span><strong>{category}</strong></div>
+            <div className="preview-detail"><span>طريقة الطلب</span><strong dir="ltr">{method}</strong></div>
+          </div>
+          <pre className="preview-json">{JSON.stringify(draft, null, 2)}</pre>
+          {submitted && valid ? <div className="builder-warning" style={{borderColor:"rgba(101,230,189,.25)",background:"rgba(101,230,189,.05)",color:"#a9dccc"}}><Check size={14} /><span>التعريف صالح للمعاينة. لم يتم حفظه أو نشره.</span></div> : <div className="builder-warning"><Info size={14} /><span>المعاينة تتحدث تلقائيًا. اضغط تحديث المعاينة للتحقق من الحقول المطلوبة.</span></div>}
+          {submitted && !valid && <div className="builder-warning"><AlertCircle size={14} /><span>راجع الحقول المحددة قبل اعتماد المعاينة.</span></div>}
         </aside>
       </div>
-    </>
+    </div>
   );
 }
