@@ -12,22 +12,47 @@ export default function AuthCallbackPage() {
 
     async function finish() {
       const url = new URL(window.location.href);
-      const oauthError = url.searchParams.get("error_description") || url.searchParams.get("error");
-      if (oauthError) {
-        throw new Error(decodeURIComponent(oauthError.replace(/\+/g, " ")));
-      }
+      const fragment = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+      const queryError =
+        url.searchParams.get("error_description") ||
+        url.searchParams.get("error");
+      const fragmentError =
+        fragment.get("error_description") ||
+        fragment.get("error");
+
+      const code = url.searchParams.get("code");
+      const accessToken = fragment.get("access_token");
+      const refreshToken = fragment.get("refresh_token");
+
+      // Remove OAuth credentials from the visible URL and browser history immediately.
+      const cleanUrl = new URL(url);
+      cleanUrl.hash = "";
+      cleanUrl.searchParams.delete("code");
+      cleanUrl.searchParams.delete("error");
+      cleanUrl.searchParams.delete("error_description");
+      window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+
+      const oauthError = queryError || fragmentError;
+      if (oauthError) throw new Error(oauthError);
 
       const supabase = getSupabaseBrowserClient();
-      const code = url.searchParams.get("code");
 
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) throw exchangeError;
+      } else if (accessToken && refreshToken) {
+        // Backward compatibility for Supabase's implicit-flow callback URLs.
+        const { data, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) throw sessionError;
+        if (!data.session) throw new Error("لم يتمكن Supabase من إنشاء جلسة تسجيل الدخول.");
       } else {
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         if (!data.session) {
-          throw new Error("وصلنا إلى صفحة العودة من Google بدون رمز تسجيل أو جلسة محفوظة. ابدأ تسجيل الدخول من جديد.");
+          throw new Error("لم يصل رمز تسجيل الدخول من Google. ابدأ تسجيل الدخول من جديد.");
         }
       }
 
