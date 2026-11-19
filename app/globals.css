@@ -381,3 +381,8 @@ code, pre, kbd { font-family: "IBM Plex Mono", monospace; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+.button-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.builder-success { border-color: rgba(101,230,189,.25); background: rgba(101,230,189,.05); color: #a9dccc; }
+.builder-success svg { color: var(--mint); }
+.catalog-reset:disabled { opacity: .4; cursor: not-allowed; }
+.card-more { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
