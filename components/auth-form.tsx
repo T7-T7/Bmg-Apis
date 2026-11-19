@@ -35,7 +35,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-symbol" aria-hidden="true">
-          <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 9h26v7H19v6h15v7H19v10h-8V9Z" fill="currentColor"/><circle cx="36" cy="36" r="4" fill="#007CFF"/></svg>
+          <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 9h26v7H19v6h15v7H19v10h-8V9Z" fill="currentColor"/><circle cx="36" cy="36" r="4" fill="currentColor"/></svg>
         </div>
         <span className="eyebrow">BMG APIs / حساب المطور</span>
         <h1>{signup ? "إنشاء حساب" : "تسجيل الدخول"}</h1>
