@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, ArrowRight, ArrowUpLeft, ArrowUpRight, BookOpen, Braces, Check, ChevronDown, Code2, Github, Globe2, KeyRound, Layers3, LockKeyhole, Menu, ShieldCheck, Sparkles, Terminal, Workflow, X, Zap } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpLeft, ArrowUpRight, BookOpen, Braces, Check, ChevronDown, Code2, GitBranch, Globe2, KeyRound, Layers3, LockKeyhole, Menu, ShieldCheck, Sparkles, Terminal, Workflow, X, Zap } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 
 type Locale = "ar" | "en";
@@ -181,7 +181,7 @@ export default function LandingPage() {
           <div className="footer-link-group"><strong>{ar ? "المطورون" : "DEVELOPERS"}</strong><Link href="/status">{t.footerLinks[2]}</Link><Link href="/create">{t.footerLinks[3]}</Link><Link href="/dashboard/api-keys">{ar ? "مفاتيح API" : "API keys"}</Link></div>
           <div className="footer-link-group"><strong>{ar ? "الحساب" : "ACCOUNT"}</strong><Link href="/login">{t.signIn}</Link><Link href="/signup">{t.getStarted}</Link></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 BMG APIs. {t.rights}</span><span className="footer-built"><span />{ar ? "مبني للمطورين" : "BUILT FOR BUILDERS"}</span><a href="https://github.com/T7-T7/Bmg-Apis" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={17} /></a></div>
+        <div className="footer-bottom"><span>© 2026 BMG APIs. {t.rights}</span><span className="footer-built"><span />{ar ? "مبني للمطورين" : "BUILT FOR BUILDERS"}</span><a href="https://github.com/T7-T7/Bmg-Apis" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={17} /></a></div>
       </footer>
     </main>
   );
