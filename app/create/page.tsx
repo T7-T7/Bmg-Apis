@@ -10,7 +10,7 @@ const starterTest = `// اكتب اختبارًا يتحقق من استجابة
 // سيتم تشغيله لاحقًا داخل بيئة معزولة وآمنة.
 const response = await fetch("https://example.com/health");
 if (!response.ok) {
-  throw new Error(`API returned ${response.status}`);
+  throw new Error('API returned ' + response.status);
 }
 const data = await response.json();
 console.log(data);`;
