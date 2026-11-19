@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, Braces, ChevronRight } from "lucide-react";
+import { ArrowUpLeft, Braces, ChevronLeft, Code2, ShieldCheck } from "lucide-react";
 import { apiCatalog } from "@/lib/api-data";
 
 type DetailProps = { params: Promise<{ slug: string }> };
@@ -15,17 +15,36 @@ export default async function ApiDetailPage({ params }: DetailProps) {
   if (!api) notFound();
 
   const exampleResponse = { status: "preview", data: { example: "Sample response data" }, note: "Illustrative only — not a live API" };
-  const jsExample = `fetch("https://your-domain.example${api.endpoint}")
-  .then(response => response.json())
-  .then(data => console.log(data));`;
+  const jsExample = `const response = await fetch(
+  "https://api.example.com${api.endpoint}",
+  { method: "${api.method}" }
+);
+
+const result = await response.json();
+console.log(result);`;
 
   return (
-    <>
-      <div className="page-heading detail-heading"><div><div className="eyebrow">تفاصيل الواجهة <ChevronRight size={12} /> {api.category}</div><h1>{api.name}</h1><p>{api.description}</p></div><Link className="secondary-btn" href="/apis">العودة إلى الكتالوج <ArrowUpRight size={14} /></Link></div>
-      <div className="panel api-detail-panel"><div className="api-card-head"><div className="api-symbol"><Braces size={20} /></div><div><div className="api-name">{api.name}</div><div className="api-category">{api.category} · نسخة تجريبية</div></div><span className="preview-tag">تجريبية</span></div><div className="endpoint" dir="ltr">{api.endpoint}</div><div className="method-wrap"><span className={`method method-${api.method.toLowerCase()}`}>{api.method}</span></div></div>
-      <div className="section-title"><div><h2>نقطة الاتصال</h2><p>مسار توضيحي · غير متصل بالخادم بعد</p></div></div><div className="panel"><div className="endpoint" dir="ltr">{api.endpoint}</div><p className="note-text">سيتم إعداد المصادقة والمعاملات والتنفيذ الفعلي خلال مرحلة تطوير الخادم الخلفي.</p></div>
-      <div className="section-title"><div><h2>مثال على الاستجابة</h2><p>معاينة توضيحية بصيغة JSON</p></div></div><pre className="code-block" dir="ltr">{JSON.stringify(exampleResponse, null, 2)}</pre>
-      <div className="section-title"><div><h2>مثال برمجي باستخدام JavaScript</h2><p>نموذج طلب من تطبيق خارجي</p></div></div><pre className="code-block">{jsExample}</pre>
-    </>
+    <div className="api-detail-page">
+      <div className="page-heading">
+        <div><div className="eyebrow">كتالوج الواجهات / {api.category}</div><h1>{api.name}</h1><p>{api.description}</p></div>
+        <Link href="/apis" className="button-secondary"><ArrowUpLeft size={14} /> العودة للكتالوج</Link>
+      </div>
+      <section className="page-panel">
+        <div className="builder-section-head"><div><h2>معلومات نقطة الاتصال</h2><p>تفاصيل تعريف الواجهة الحالي.</p></div><span className="service-state"><i /> نموذج أولي</span></div>
+        <div className="preview-endpoint"><span className={`method method-${api.method.toLowerCase()}`}>{api.method}</span><code>{api.endpoint}</code></div>
+        <div className="preview-details">
+          <div className="preview-detail"><span>اسم الواجهة</span><strong>{api.name}</strong></div>
+          <div className="preview-detail"><span>التصنيف</span><strong>{api.category}</strong></div>
+          <div className="preview-detail"><span>طريقة HTTP</span><strong dir="ltr">{api.method}</strong></div>
+          <div className="preview-detail"><span>حالة التنفيذ</span><strong>غير متصل بالخادم</strong></div>
+        </div>
+      </section>
+      <div className="section-heading"><div><span className="section-overline">الاستجابة المتوقعة</span><h2>بنية بيانات JSON</h2><p>مثال توضيحي فقط، وليس نتيجة طلب حقيقي.</p></div></div>
+      <div className="code-panel"><div className="code-panel-head"><span>JSON</span><span>مثال استجابة</span></div><pre>{JSON.stringify(exampleResponse, null, 2)}</pre></div>
+      <div className="section-heading"><div><span className="section-overline">دمج الواجهة</span><h2>مثال باستخدام JavaScript</h2><p>نموذج أولي لطريقة إرسال الطلب.</p></div></div>
+      <div className="code-panel"><div className="code-panel-head"><span><Code2 size={13} /> JavaScript · Fetch</span><span>ES2022</span></div><pre>{jsExample}</pre></div>
+      <div className="docs-note"><ShieldCheck size={14} /> هذه الصفحة تعرض تعريفًا تجريبيًا فقط. لم يتم تنفيذ نقطة الاتصال أو ربطها بمصدر بيانات حقيقي بعد.</div>
+      <div className="section-heading"><div><h2>استكشف المزيد</h2><p>ارجع إلى الكتالوج لاختيار واجهة أخرى.</p></div><Link className="text-link" href="/apis">جميع الواجهات <ChevronLeft size={14} /></Link></div>
+    </div>
   );
 }
