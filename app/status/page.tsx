@@ -1,32 +1,28 @@
-import { Activity, BookOpen, Boxes, CircleDashed, Code2, Database, Gauge, Radio, Timer } from "lucide-react";
+import { Activity, BookOpen, Boxes, CircleDashed, Code2, Database, Gauge, Radio, ShieldCheck, Timer, Users } from "lucide-react";
 
 const services = [
-  { name: "واجهة كتالوج API", description: "استعراض النماذج والبحث والتصفية.", state: "متاح للمعاينة", ready: true, icon: Boxes },
-  { name: "منشئ الواجهات", description: "إنشاء تعريف محلي ومعاينته في المتصفح.", state: "متاح للمعاينة", ready: true, icon: Code2 },
-  { name: "مركز التوثيق", description: "عرض الأدلة والأمثلة التوضيحية.", state: "متاح للمعاينة", ready: true, icon: BookOpen },
+  { name: "كتالوج واجهات API", description: "استعراض الخدمات والبحث والتصفية.", state: "واجهة جاهزة", ready: true, icon: Boxes },
+  { name: "التوثيق", description: "شرح الاستخدام وأمثلة الطلبات.", state: "واجهة جاهزة", ready: true, icon: BookOpen },
+  { name: "مراجعة مساهمات المجتمع", description: "مراجعة المشرف واعتماد الواجهات المقترحة.", state: "قيد التنفيذ", ready: false, icon: ShieldCheck },
   { name: "مشغّل API", description: "تنفيذ الطلبات وتوجيهها إلى الخدمات.", state: "غير مفعّل", ready: false, icon: Radio },
-  { name: "قاعدة البيانات", description: "حفظ التعريفات والمستخدمين والمفاتيح.", state: "غير مفعّل", ready: false, icon: Database },
+  { name: "قاعدة البيانات والحسابات", description: "حفظ المساهمات والمفاتيح وسجل الاستخدام.", state: "غير مفعّل", ready: false, icon: Database },
+  { name: "مراقبة الخدمات", description: "فحص دوري وعرض سجل الأعطال.", state: "قيد التنفيذ", ready: false, icon: Activity },
 ];
 
-const futureChecks = [
+const checks = [
   { title: "زمن الاستجابة", description: "قياس زمن تنفيذ كل نقطة اتصال.", icon: Timer },
-  { title: "معدل التوفّر", description: "متابعة حالة الخدمات بصورة دورية.", icon: Activity },
-  { title: "مراقبة الاستخدام", description: "إحصاء الطلبات والأخطاء والحصص.", icon: Gauge },
+  { title: "معدل التوفّر", description: "متابعة نجاح الفحوصات عبر الزمن.", icon: Gauge },
+  { title: "مساهمات المجتمع", description: "مراجعة بشرية ثم اختبار آمن قبل النشر.", icon: Users },
 ];
 
 export default function StatusPage() {
   return (
     <div>
-      <div className="page-heading"><div><div className="eyebrow">مركز المتابعة / البنية التحتية</div><h1>حالة المنصة</h1><p>نظرة شفافة على ما يعمل حاليًا وما لم يتم تفعيله بعد.</p></div></div>
-      <div className="status-summary"><CircleDashed size={19} /><div><strong>المنصة في مرحلة المعاينة</strong><p>الصفحات تعمل كواجهة أمامية، بينما خدمات التشغيل والحفظ لم تُربط بعد. لا توجد قياسات مباشرة في هذه المرحلة.</p></div></div>
-      <section className="page-panel">
-        {services.map(service => {
-          const Icon = service.icon;
-          return <div className="service-row" key={service.name}><span className="service-icon"><Icon size={17} /></span><div className="service-copy"><strong>{service.name}</strong><p>{service.description}</p></div><span className={`service-state ${service.ready ? "ready" : ""}`}><i />{service.state}</span></div>;
-        })}
-      </section>
-      <div className="section-heading"><div><span className="section-overline">المرحلة التالية</span><h2>مراقبة التشغيل</h2><p>مؤشرات سيتم تفعيلها عند توصيل الخادم وقاعدة البيانات.</p></div></div>
-      <div className="docs-grid">{futureChecks.map(item => { const Icon=item.icon; return <article className="docs-card" key={item.title}><span className="docs-card-icon"><Icon size={18} /></span><h3>{item.title}</h3><p>{item.description}</p></article>; })}</div>
+      <div className="page-heading"><div><div className="eyebrow">مركز المتابعة / البنية التحتية</div><h1>حالة المنصة</h1><p>الحالة الفعلية لمكونات المشروع، دون عرض قياسات غير متصلة بمراقبة حقيقية.</p></div></div>
+      <div className="status-summary"><CircleDashed size={19} /><div><strong>المنصة في مرحلة بناء الخدمات</strong><p>الواجهة الأمامية منشورة، لكن تشغيل APIs والمراجعة والحسابات والمراقبة الدورية لم تُفعّل بعد. لا توجد بيانات توفر أو زمن استجابة حقيقية حاليًا.</p></div></div>
+      <section className="page-panel">{services.map(service => { const Icon = service.icon; return <div className="service-row" key={service.name}><span className="service-icon"><Icon size={17} /></span><div className="service-copy"><strong>{service.name}</strong><p>{service.description}</p></div><span className={`service-state ${service.ready ? "ready" : ""}`}><i />{service.state}</span></div>; })}</section>
+      <div className="section-heading"><div><span className="section-overline">مؤشرات المراقبة المطلوبة</span><h2>متابعة كل خدمة</h2><p>سيتم عرض هذه المؤشرات بعد بناء نظام الفحص والجدولة.</p></div></div>
+      <div className="docs-grid">{checks.map(item => { const Icon = item.icon; return <article className="docs-card" key={item.title}><span className="docs-card-icon"><Icon size={18} /></span><h3>{item.title}</h3><p>{item.description}</p></article>; })}</div>
     </div>
   );
 }
