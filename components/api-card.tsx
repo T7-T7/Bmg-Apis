@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpLeft, Braces, ChevronLeft, Copy, ExternalLink } from "lucide-react";
+import { Braces, ChevronLeft } from "lucide-react";
 import type { ApiDefinition } from "@/lib/api-data";
 
 const methodLabels: Record<ApiDefinition["method"], string> = {
