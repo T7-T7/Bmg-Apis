@@ -9,10 +9,9 @@ export function getSupabaseBrowserClient() {
   if (!client) {
     client = createClient(url, key, {
       auth: {
+        flowType: "pkce",
         persistSession: true,
         autoRefreshToken: true,
-        // The callback page exchanges the PKCE code explicitly to avoid a race
-        // between automatic URL detection and exchangeCodeForSession().
         detectSessionInUrl: false,
       },
     });
