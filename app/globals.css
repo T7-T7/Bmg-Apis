@@ -945,3 +945,11 @@ html[data-locale="en"] code, html[data-locale="en"] pre, html[data-locale="en"] 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* API key onboarding */
+.key-usage-panel { display: grid; grid-template-columns: minmax(180px,.55fr) minmax(0,1.45fr); gap: 18px; margin-top: 22px; padding: 17px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--kimi) 5%, var(--panel)); }
+.key-usage-panel strong { font-size: 12px; }
+.key-usage-panel p { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.9; }
+.key-usage-panel pre { min-width: 0; overflow: auto; margin: 0; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); color: var(--text-soft); font: 9px/1.9 "IBM Plex Mono",monospace; text-align: left; }
+@media(max-width:700px) { .key-usage-panel { grid-template-columns: 1fr; gap: 12px; } .key-usage-panel pre { font-size: 8px; } }
