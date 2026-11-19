@@ -16,7 +16,7 @@ export default function ApiCard({ api }: { api: ApiDefinition }) {
       <div className="api-card-top">
         <div className="api-glyph"><Braces size={20} strokeWidth={1.7} /></div>
         <span className="api-state"><i /> نموذج أولي</span>
-        <button className="card-more" type="button" aria-label={`خيارات ${api.name}`}>•••</button>
+        <span className="card-more" aria-hidden="true">•••</span>
       </div>
       <div className="api-card-title">
         <div><h3>{api.name}</h3><span>{api.category}</span></div>
