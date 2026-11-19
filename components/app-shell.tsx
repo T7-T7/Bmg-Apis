@@ -53,14 +53,14 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
         </div>
         <div className="sidebar-bottom">
           <div className="sidebar-callout"><span className="callout-icon"><ShieldCheck size={15} /></span><strong>المساهمات تمر بالمراجعة</strong><p>لا تُنشر أي واجهة يضيفها المجتمع قبل اعتماد المشرف.</p><Link href="/create">إرسال مساهمة <ArrowUpLeft size={13} /></Link></div>
-          <div className="sidebar-profile"><span className="profile-avatar">B</span><span><strong>زائر</strong><small>التصفح العام</small></span></div>
+          <div className="sidebar-profile"><span className="profile-avatar">B</span><span><strong>حساب المطور</strong><small>تسجيل الدخول أو إنشاء حساب</small></span><Link href="/login" aria-label="تسجيل الدخول"><ArrowUpLeft size={15} /></Link></div>
         </div>
       </aside>
 
       <main className="main-area">
         <header className="topbar">
           <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
-          <div className="topbar-actions"><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/apis" className="top-create"><Boxes size={15} /><span>استكشف API</span></Link></div>
+          <div className="topbar-actions"><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard/api-keys" className="top-create"><ShieldCheck size={15} /><span>مفاتيح API</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
         </header>
         {searchOpen && <div className="command-overlay" role="dialog" aria-modal="true" aria-label="البحث السريع" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}><div className="command-panel"><div className="command-input"><Search size={18} /><input autoFocus placeholder="ابحث أو اكتب اسم القسم..." onKeyDown={event => { if (event.key === "Enter") { const value = event.currentTarget.value.trim(); if (/api|واجهة|كتالوج/i.test(value)) window.location.href = "/apis"; else if (/مساهمة|اقتراح|إضافة/i.test(value)) window.location.href = "/create"; else if (/توثيق|docs/i.test(value)) window.location.href = "/docs"; else if (/حالة|status/i.test(value)) window.location.href = "/status"; else window.location.href = "/"; } }} /><kbd>ESC</kbd></div><div className="command-hint">انتقال سريع إلى أقسام المنصة</div>{groups.flatMap(group => group.items).map(item => { const Icon = item.icon; return <Link className="command-link" href={item.href} key={item.href} onClick={() => setSearchOpen(false)}><Icon size={16} /><span>{item.label}</span><ArrowUpLeft size={13} /></Link>; })}</div></div>}
         <div className="page-content">{children}</div>
