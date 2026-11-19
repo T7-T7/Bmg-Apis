@@ -15,7 +15,7 @@ export default function ApiCard({ api }: { api: ApiDefinition }) {
     <article className="api-card">
       <div className="api-card-top">
         <div className="api-glyph"><Braces size={20} strokeWidth={1.7} /></div>
-        <span className="api-state"><i /> نموذج أولي</span>
+        <span className={`api-state ${api.status === "متاحة" ? "is-live" : ""}`}><i /> {api.status}</span>
         <span className="card-more" aria-hidden="true">•••</span>
       </div>
       <div className="api-card-title">
