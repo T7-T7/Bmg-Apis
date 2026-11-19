@@ -14,13 +14,20 @@ function jsonError(message: string, status: number) {
 }
 
 function getClientKey(request: NextRequest) {
+  const realIp = request.headers.get("x-real-ip");
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || request.headers.get("x-real-ip") || "unknown";
+  return realIp || forwarded || "unknown";
 }
 
 function allowRequest(key: string) {
   const now = Date.now();
-  if (requestWindows.size > 10_000) {\n    for (const [storedKey, value] of requestWindows) {\n      if (value.resetAt <= now) requestWindows.delete(storedKey);\n    }\n    if (requestWindows.size > 10_000) requestWindows.delete(requestWindows.keys().next().value as string);\n  }\n  const current = requestWindows.get(key);
+  if (requestWindows.size > 10_000) {
+    for (const [storedKey, value] of requestWindows) {
+      if (value.resetAt <= now) requestWindows.delete(storedKey);
+    }
+    if (requestWindows.size > 10_000) requestWindows.delete(requestWindows.keys().next().value as string);
+  }
+  const current = requestWindows.get(key);
   if (!current || current.resetAt <= now) {
     requestWindows.set(key, { count: 1, resetAt: now + WINDOW_MS });
     return true;
