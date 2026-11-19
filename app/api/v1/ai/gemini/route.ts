@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       error: "تجاوز النص الحد الأقصى المسموح وهو 30000 حرف.",
       maxLength: MAX_PROMPT_CHARS,
       receivedLength: data.prompt.length,
-    }, { status: 413 });
+    }, { status: 413, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
   }
   if (data.instruction !== undefined && typeof data.instruction !== "string") {
     return jsonError("الحقل instruction يجب أن يكون نصًا.", 400);
