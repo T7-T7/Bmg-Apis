@@ -46,7 +46,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  if (pathname === "/" || pathname === "/docs") return <>{children}</>;
+  if (pathname === "/" || pathname === "/docs" || pathname === "/login" || pathname === "/signup") return <>{children}</>;
 
   return (
     <div className="app-frame">
