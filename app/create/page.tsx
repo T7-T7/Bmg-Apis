@@ -96,7 +96,7 @@ export default function CreatePage() {
             <div className="preview-detail"><span>طريقة الطلب</span><strong dir="ltr">{method}</strong></div>
           </div>
           <pre className="preview-json">{JSON.stringify(draft, null, 2)}</pre>
-          {submitted && valid ? <div className="builder-warning" style={{borderColor:"rgba(101,230,189,.25)",background:"rgba(101,230,189,.05)",color:"#a9dccc"}}><Check size={14} /><span>التعريف صالح للمعاينة. لم يتم حفظه أو نشره.</span></div> : <div className="builder-warning"><Info size={14} /><span>المعاينة تتحدث تلقائيًا. اضغط تحديث المعاينة للتحقق من الحقول المطلوبة.</span></div>}
+          {submitted && valid ? <div className="builder-warning builder-success"><Check size={14} /><span>التعريف صالح للمعاينة. لم يتم حفظه أو نشره.</span></div> : <div className="builder-warning"><Info size={14} /><span>المعاينة تتحدث تلقائيًا. اضغط تحديث المعاينة للتحقق من الحقول المطلوبة.</span></div>}
           {submitted && !valid && <div className="builder-warning"><AlertCircle size={14} /><span>راجع الحقول المحددة قبل اعتماد المعاينة.</span></div>}
         </aside>
       </div>
