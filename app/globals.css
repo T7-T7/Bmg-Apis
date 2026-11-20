@@ -257,3 +257,8 @@ textarea{resize:vertical;line-height:1.8}
 .theme-options{display:flex;gap:8px;margin:14px 0}.theme-options button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);padding:9px 13px}
 .factor-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.totp-enroll{display:grid;gap:12px;max-width:360px;margin-top:16px}.totp-enroll img{width:190px;height:190px;background:white;padding:8px}.totp-enroll input{max-width:180px;letter-spacing:5px;text-align:center;direction:ltr}
 body.sidebar-open{overflow:hidden;touch-action:pan-y}
+
+.modal-backdrop{position:fixed;inset:0;z-index:100;background:#0009;display:grid;place-items:center;padding:18px}
+.mfa-dialog{width:min(100%,420px);padding:24px;box-shadow:0 20px 70px #0005}
+.mfa-dialog p{color:var(--muted);margin:8px 0 16px}
+.mfa-dialog input{width:100%;max-width:220px;text-align:center;letter-spacing:7px;direction:ltr}
