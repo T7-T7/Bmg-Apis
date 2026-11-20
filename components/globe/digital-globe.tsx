@@ -34,7 +34,7 @@ export default function DigitalGlobe() {
           <circle cx="320" cy="320" r="286" fill="#030503" />
           <g clipPath="url(#dot-globe-clip)">
             <g className="dot-globe-continents">
-              <rect width="640" height="640" fill="url(#dot-globe-pattern)" mask="url(#dot-globe-land)" />
+              <rect width="1280" height="640" fill="url(#dot-globe-pattern)" mask="url(#dot-globe-land)" />
             </g>
             <circle cx="320" cy="320" r="286" fill="url(#dot-globe-shade)" />
             <ellipse cx="320" cy="320" rx="286" ry="286" fill="none" stroke="#d4ff00" strokeOpacity=".08" strokeWidth="1" />
