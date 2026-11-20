@@ -138,8 +138,8 @@ export default function BmgPlatform() {
     if (error) setNotice(error.message); else { setNotice("تم إلغاء المفتاح."); await loadAccountData(); }
   }
 
-  async function runRequest(event: FormEvent) {
-    event.preventDefault(); setRequestBusy(true); setResponse(""); setRequestMeta("");
+  async function runRequest() {
+    setRequestBusy(true); setResponse(""); setRequestMeta("");
     const started = performance.now();
     try {
       let url = selectedService.endpoint_path;
