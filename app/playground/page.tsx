@@ -38,7 +38,7 @@ export default function PlaygroundPage() {
   const current = apiOptions.find(item => item.id === selected)!;
 
   const snippets = useMemo(() => {
-    const url = "https://bmg-apis.vercel.app" + current.path;
+    const url = "https://bmg-apis-b2-902b.vercel.app" + current.path;
     const body = selected === "gemini" ? JSON.stringify({ prompt }, null, 2) : selected === "image" ? JSON.stringify({ prompt }, null, 2) : "";
     return {
       curl: selected === "currency"
