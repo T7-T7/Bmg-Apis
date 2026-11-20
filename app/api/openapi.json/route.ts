@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 const specification = {
   openapi: "3.1.0",
   info: {
-    title: "BMG APIs",
+    title: "Nox Apis",
     version: "1.0.0",
-    description: "الواجهة المنشورة حاليًا من منصة BMG APIs. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط.",
-    contact: { name: "BMG APIs", url: "https://bmg-apis.vercel.app/docs" },
+    description: "الواجهة المنشورة حاليًا من منصة Nox Apis. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط.",
+    contact: { name: "Nox Apis", url: "https://bmg-apis.vercel.app/docs" },
   },
   servers: [{ url: "https://bmg-apis.vercel.app", description: "Production" }],
   tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
@@ -17,7 +17,7 @@ const specification = {
         operationId: "generateGeminiResponse",
         summary: "إنشاء رد باستخدام Gemini",
         description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API.",
-        security: [{ BmgApiKey: [] }],
+        security: [{ NoxApiKey: [] }],
         requestBody: {
           required: true,
           content: {
@@ -68,11 +68,11 @@ const specification = {
   },
   components: {
     securitySchemes: {
-      BmgApiKey: {
+      NoxApiKey: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "BMG API Key",
-        description: "أنشئ مفتاحًا من لوحة BMG APIs وأرسله في Authorization: Bearer YOUR_BMG_API_KEY."
+        bearerFormat: "Nox Apis API Key",
+        description: "أنشئ مفتاحًا من لوحة Nox Apis وأرسله في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
   }
