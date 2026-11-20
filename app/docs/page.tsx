@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const baseUrl = "https://bmg-apis.vercel.app";
+const baseUrl = "https://bmg-apis-b2-902b.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
   -H "Authorization: Bearer YOUR_NOX_API_KEY" \\\
   -H "Content-Type: application/json" \\\
@@ -48,6 +48,7 @@ const sections = [
   ["quickstart", "البداية السريعة"],
   ["authentication", "المصادقة"],
   ["gemini", "Gemini API"],
+  ["currency", "أسعار العملات"],
   ["request", "حقول الطلب"],
   ["responses", "الاستجابات والأخطاء"],
   ["openapi", "OpenAPI"],
@@ -69,7 +70,7 @@ export default function DocsPage() {
             <a href="#overview">نظرة عامة</a><a href="#quickstart">البداية السريعة</a><a href="#authentication">المصادقة ومفاتيح API</a>
           </div>
           <div className="public-docs-sidebar-group"><span>واجهات API</span>
-            <a href="#gemini">Gemini · توليد النصوص</a>
+            <a href="#gemini">Gemini · توليد النصوص</a><a href="#currency">أسعار العملات</a>
           </div>
           <div className="public-docs-sidebar-group"><span>المراجع</span>
             <a href="#request">حقول الطلب</a><a href="#responses">الاستجابات والأخطاء</a><a href="#openapi">OpenAPI Specification</a>
