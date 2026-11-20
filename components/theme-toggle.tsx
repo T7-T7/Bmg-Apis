@@ -9,12 +9,12 @@ type Theme = "dark" | "light";
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted theme after hydration.
   useEffect(() => {
     const saved = window.localStorage.getItem("nox-apis-theme") || window.localStorage.getItem("bmg-apis-theme");
     const initial: Theme = saved === "light" || saved === "dark"
       ? saved
       : window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted theme after hydration.
     setTheme(initial);
     document.documentElement.dataset.theme = initial;
   }, []);
