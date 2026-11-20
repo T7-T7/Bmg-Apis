@@ -55,8 +55,8 @@ export async function OPTIONS() {
 }
 export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.match(/^Bearer\s+(bmg_live_[A-Za-z0-9_-]+)$/i)?.[1];
-  if (!token) return jsonError("مفتاح BMG API مطلوب في ترويسة Authorization: Bearer.", 401);
+  const token = authorization.match(/^Bearer\s+(nox_live_[A-Za-z0-9_-]+)$/i)?.[1];
+  if (!token) return jsonError("مفتاح Nox API مطلوب في ترويسة Authorization: Bearer.", 401);
 
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400); }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       p_key: token, p_service_slug: "aql-gemini", p_method: "POST",
     });
     if (error) {
-      console.error("[BMG API key validation]", error.message);
+      console.error("[Nox API key validation]", error.message);
       return jsonError("تعذر التحقق من مفتاح API حاليًا.", 503);
     }
     const result = access as { authorized?: boolean; reason?: string } | null;
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       "X-Max-Prompt-Length": String(MAX_PROMPT_CHARS),
     }});
   } catch (error) {
-    console.error("[BMG Gemini API]", error instanceof Error ? error.message : error);
+    console.error("[Nox Gemini API]", error instanceof Error ? error.message : error);
     return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.", 502);
   }
 }
