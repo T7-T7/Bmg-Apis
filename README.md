@@ -1,82 +1,86 @@
-# Nox Apis
+# Bmg-Apis
 
-بوابة عربية للمطورين لاستكشاف واجهات برمجة التطبيقات وتجهيز تعريفاتها وإدارة تكاملاتها.
+منصة مصرية للمطورين لاستكشاف واجهات API واختبارها وإدارة مفاتيح الوصول.
 
-## التقنيات
-
-- Next.js 16 مع App Router
+## التقنية
+- Next.js 16 App Router
 - React 19
-- TypeScript بوضع Strict
-- Lucide React للأيقونات
-- CSS مخصص ومتجاوب مع RTL
+- TypeScript مع Strict Mode
+- Supabase للمصادقة وإدارة مفاتيح API
 - Vercel للنشر
 
-## المتطلبات
-
-- Node.js 20.9 أو أحدث
-- npm
-
-## التشغيل محليًا
-
-```bash
+## التشغيل المحلي
+\`\`\`bash
 npm install
 npm run dev
-```
+\`\`\`
 
-## فحوصات المشروع
-
-```bash
+## فحوصات الجودة
+\`\`\`bash
 npm run typecheck
 npm run lint
 npm run build
-```
+\`\`\`
 
-## الصفحات
-
-| المسار | الوظيفة |
-| --- | --- |
-| `/` | لوحة النظرة العامة |
-| `/apis` | كتالوج الواجهات والبحث والتصفية |
-| `/apis/[slug]` | تفاصيل كل واجهة |
-| `/create` | منشئ تعريف الواجهة والمعاينة |
-| `/my-apis` | مساحة إدارة الواجهات |
-| `/docs` | مركز التوثيق |
-| `/status` | حالة مكونات المنصة |
-
-## الهيكلة
-
-```text
+## شجرة المشروع
+\`\`\`text
 app/
+  api/
+    health/route.ts
+    openapi.json/route.ts
+    v1/
+      ai/gemini/route.ts
+      currency/rate/route.ts
   apis/
     [slug]/page.tsx
     page.tsx
-  create/page.tsx
+  auth/callback/page.tsx
+  dashboard/
+    api-keys/page.tsx
+    page.tsx
   docs/page.tsx
-  my-apis/page.tsx
+  login/page.tsx
+  playground/page.tsx
+  signup/page.tsx
   status/page.tsx
-  globals.css
+  page.tsx
   layout.tsx
-  loading.tsx
-  not-found.tsx
+  globals.css
+
 components/
-  app-shell.tsx
-  api-card.tsx
+  api/
+  dashboard/
+  globe/
+  layout/
+  navigation/
+  ui/
+  auth-form.tsx
+  api-key-manager.tsx
+  landing-page.tsx
+
 lib/
-  api-data.ts
-backend/
-  README.md
-public/
-  bmg-apis-mark.svg
-```
+  api/catalog.ts
+  server/gemini.ts
+  services/health.ts
+  supabase/client.ts
 
-## حالة التنفيذ الحالية
+types/
+  api.ts
+\`\`\`
 
-تم ربط التطبيق بقاعدة Supabase وتشغيل المصادقة وإدارة مفاتيح Nox API، مع تخزين بصمة SHA-256 للمفتاح والتحقق من صلاحيته ومعدل استخدامه على الخادم.
+## الخدمات المنشورة فعليًا
+- **POST /api/v1/ai/gemini** — Gemini text generation، مع مصادقة Bearer API Key.
+- **GET /api/v1/currency/rate?base=USD&target=EUR** — أسعار صرف مرجعية يومية من Frankfurter.
 
-الخدمات التشغيلية الحالية هي Gemini عبر `POST /api/v1/ai/gemini` وأسعار العملات عبر `GET /api/v1/currency/rate`. تدعم المسارات مفاتيح `nox_live_` والتحقق من الخدمة وحد 30 طلبًا في الدقيقة لكل مفتاح. يدعم Gemini حد prompt قدره 30 ألف حرف وحجم جسم طلب أقصى 1 MB. تعتمد أسعار العملات على Frankfurter وتُعد أسعارًا مرجعية يومية وليست أسعار تداول لحظية.
+كلا المسارين يتحققان من مفتاح Nox API وصلاحية الخدمة وحد الطلبات على الخادم. لا يتم تضمين المفاتيح السرية في كود المتصفح.
 
-طلبات إضافة واجهات المجتمع تُحفظ للمراجعة، لكنها لا تُشغّل تلقائيًا. واجهتا توليد الصور وأسعار العملات في Playground ما زالتا معاينتين ولا تمثلان خدمات إنتاجية. لا يوجد حتى الآن Sandbox معزول لتشغيل كود المستخدم أو دورة اعتماد ونشر آلية له.
+بقية عناصر الكتالوج تظهر كـ **قيد التطوير** ولا تُقدَّم على أنها endpoints عاملة. Playground يرسل طلبات حقيقية إلى المسارين المنشورين فقط.
+
+## المصادقة والمفاتيح
+- Google OAuth عبر Supabase.
+- إنشاء وإلغاء مفاتيح API عبر إجراءات قاعدة البيانات الحالية.
+- تخزين بصمة المفتاح بدل المفتاح الأصلي.
+- عرض قيمة المفتاح مرة واحدة عند إنشائه.
 
 ## النشر
-
-المشروع معد للنشر على Vercel. يجب حفظ مفاتيح الخدمات وقيم البيئة الحساسة في إعدادات الخادم فقط، وعدم تضمينها في مكونات المتصفح.
+يتم النشر عبر Vercel المرتبط بفرع **main**. تحفظ متغيرات البيئة الحساسة في إعدادات المشروع، ولا تُضمّن في المستودع.

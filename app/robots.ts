@@ -1,9 +1,5 @@
-import type { MetadataRoute } from "next";
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/dashboard/", "/login", "/auth/"] }],
-    sitemap: "https://bmg-apis.vercel.app/sitemap.xml",
-    host: "https://bmg-apis.vercel.app",
-  };
+import type {MetadataRoute} from "next";
+export default function robots():MetadataRoute.Robots{
+ const base="https://bmg-apis-b2-902b.vercel.app";
+ return {rules:[{userAgent:"*",allow:"/",disallow:["/dashboard/","/login","/signup","/auth/"]}],sitemap:base+"/sitemap.xml",host:base};
 }
