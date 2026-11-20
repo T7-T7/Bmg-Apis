@@ -109,7 +109,7 @@ export default function DashboardPage() {
       </motion.section>
 
       {error && <p className="dashboard-error">{error}</p>}
-      <div className="dashboard-bottom-actions"><Link href="/docs" className="text-link">اقرأ التوثيق <ArrowUpRight size={14} /></Link><button className="button-secondary" onClick={logout}><LogOut size={15} /> تسجيل الخروج</button></div>
+      <div className="dashboard-bottom-actions"><Link href="/docs" className="text-link">اقرأ التوثيق <ArrowUpRight size={14} /></Link><motion.button className="button-secondary" onClick={logout} whileTap={{ scale: .97 }}><LogOut size={15} /> تسجيل الخروج</motion.button></div>
     </div>
   );
 }
