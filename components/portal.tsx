@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -20,7 +20,7 @@ function formatDate(value:string){return new Date(value).toLocaleDateString("ar-
 function Notice({children,type="info"}:{children:React.ReactNode;type?:"info"|"error"|"success"}){return <div className={"notice "+type}>{children}</div>}
 
 export default function Portal(){
- const pathname=usePathname();const router=useRouter();const search=useSearchParams();
+ const pathname=usePathname();const router=useRouter();
  const [user,setUser]=useState<User|null>(null);const [authReady,setAuthReady]=useState(false);const [mobileOpen,setMobileOpen]=useState(false);
  const [keys,setKeys]=useState<ApiKey[]>([]);const [analytics,setAnalytics]=useState<Analytics|null>(null);const [loading,setLoading]=useState(false);const [message,setMessage]=useState("");const [error,setError]=useState("");
  const [keyLabel,setKeyLabel]=useState("مفتاح رئيسي");const [newKey,setNewKey]=useState("");
@@ -31,7 +31,7 @@ export default function Portal(){
  const supabase=useMemo(()=>{try{return getSupabaseBrowserClient()}catch{return null}},[]);
  useEffect(()=>{if(!supabase){setAuthReady(true);return}supabase.auth.getSession().then(({data})=>{setUser(data.session?.user??null);setAuthReady(true)});const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user??null));return()=>subscription.unsubscribe()},[supabase]);
  useEffect(()=>{if(!supabase||!user)return;let alive=true;supabase.rpc("bmg_list_api_keys").then(({data,error})=>{if(alive&&!error)setKeys((data||[]) as ApiKey[])});supabase.rpc("bmg_get_api_analytics",{p_days:30}).then(({data,error})=>{if(alive&&!error)setAnalytics(data as Analytics)});return()=>{alive=false}},[supabase,user]);
- useEffect(()=>{if(pathname==="/auth/callback"&&supabase){const code=search.get("code");if(code)supabase.auth.exchangeCodeForSession(code).then(({error})=>{if(error){setError(error.message);router.replace("/login")}else router.replace("/dashboard")});else router.replace(user?"/dashboard":"/login")}},[pathname,search,supabase,router,user]);
+ useEffect(()=>{if(pathname==="/auth/callback"&&supabase){const code=new URLSearchParams(window.location.search).get("code");if(code)supabase.auth.exchangeCodeForSession(code).then(({error})=>{if(error){setError(error.message);router.replace("/login")}else router.replace("/dashboard")});else router.replace(user?"/dashboard":"/login")}},[pathname,supabase,router,user]);
  const signOut=useCallback(async()=>{if(supabase)await supabase.auth.signOut();setUser(null);router.push("/")},[supabase,router]);
  async function signIn(email:string,password:string){if(!supabase){setError("إعدادات Supabase غير مكتملة.");return}setLoading(true);setError("");const {error}=await supabase.auth.signInWithPassword({email,password});setLoading(false);if(error)setError(error.message);else router.push("/dashboard")}
  async function signUp(email:string,password:string,name:string){if(!supabase){setError("إعدادات Supabase غير مكتملة.");return}setLoading(true);setError("");const {error}=await supabase.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:location.origin+"/auth/callback"}});setLoading(false);if(error)setError(error.message);else setMessage("تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد التسجيل.")}
