@@ -17,7 +17,7 @@
 | الخدمة | الطريقة | المسار | المصدر |
 |---|---|---|---|
 | عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini |
-| أسعار العملات | GET | `/api/v1/currency/rate` | Frankfurter |
+| GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree |
 
 لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.
 
@@ -28,7 +28,7 @@
 | `/` | الصفحة الرئيسية والتعريف بالخدمات |
 | `/apis` | كتالوج الواجهات النشطة |
 | `/apis/aql-gemini` | تفاصيل واجهة Gemini |
-| `/apis/currency-rate` | تفاصيل أسعار العملات |
+| `/apis/gptfree` | تفاصيل واجهة GPTFree |
 | `/playground` | إرسال طلبات حقيقية وعرض JSON |
 | `/docs` | توثيق المطورين وأمثلة الاستخدام |
 | `/status` | حالة التطبيق ومسارات API المسجلة دون ادعاء مراقبة المزودين |
@@ -57,7 +57,7 @@
 │   │   ├── openapi.json/route.ts
 │   │   └── v1/
 │   │       ├── ai/gemini/route.ts
-│   │       └── currency/rate/route.ts
+│   │       ├── ai/gemini/route.ts\n│       └── ai/gptfree/route.ts
 │   ├── apis/
 │   │   ├── [slug]/page.tsx
 │   │   └── page.tsx
@@ -160,14 +160,18 @@ curl -X POST "https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini" \
 - `instruction`: تعليمات اختيارية.
 - `sessionId`: معرّف اختياري من الاستجابة السابقة لمتابعة المحادثة.
 
-### أسعار العملات
+### GPTFree
 
 ```bash
-curl "https://bmg-apis-b2-902b.vercel.app/api/v1/currency/rate?base=USD&target=EUR" \
-  -H "Authorization: Bearer YOUR_NOX_API_KEY"
+curl -X POST "https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gptfree" \
+  -H "Authorization: Bearer YOUR_NOX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"اشرح REST API","history":[]}'
 ```
 
-الأسعار يومية مرجعية وليست أسعار تداول لحظية.
+الحقول:
+- `message`: مطلوب، من 1 إلى 30000 حرف.
+- `history`: سجل اختياري لآخر 20 رسالة، وكل عنصر يحتوي `type` و`content`.
 
 ## حدود الاستخدام والاستجابات
 
