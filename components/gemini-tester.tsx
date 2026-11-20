@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpLeft, Copy, LoaderCircle, Play, RotateCcw, Sparkles } from "lucide-react";
+import { Copy, LoaderCircle, Play, RotateCcw, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 const MAX_CHARS = 30_000;
