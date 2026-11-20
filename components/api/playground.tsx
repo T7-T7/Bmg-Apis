@@ -1,6 +1,6 @@
 "use client";
 import {useState} from "react";
-import Link from "next/link";
+
 import {Copy,LoaderCircle,Play,RotateCcw,KeyRound,Globe2} from "lucide-react";
 import {apiCatalog} from "@/lib/api/catalog";
 type Result={status:number;duration:number;body:unknown};
@@ -26,6 +26,6 @@ export default function Playground(){
  {error&&<div className="source-error">{error}</div>}
  <div className="source-result-head"><b>الاستجابة</b>{result&&<span>{result.status} · {result.duration} ms</span>}{result&&<button onClick={()=>navigator.clipboard.writeText(JSON.stringify(result.body,null,2))}><Copy size={13}/> نسخ</button>}</div>
  <pre dir="ltr"><code>{result?JSON.stringify(result.body,null,2):"// ستظهر استجابة الخادم هنا بعد تنفيذ طلب حقيقي."}</code></pre>
- <div className="source-demo-foot">تحتاج إلى مفتاح لاستخدام الخدمة من تطبيقك؟ <Link href="/login?next=/dashboard/api-keys"><KeyRound size={13}/> سجّل الدخول لإدارة مفاتيح API</Link></div>
+ <div className="source-demo-foot">تحتاج إلى مفتاح لاستخدام الخدمة من تطبيقك؟ <button type="button" onClick={()=>window.dispatchEvent(new CustomEvent("bmg:auth-required",{detail:{message:"سجّل الدخول لإنشاء مفاتيح API وإدارتها واستخدام الخدمات المحمية."}}))}><KeyRound size={13}/> تسجيل الدخول لإدارة مفاتيح API</button></div>
  </section></div></div>;
 }
