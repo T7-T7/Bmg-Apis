@@ -40,6 +40,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- close transient navigation UI after route changes.
   useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the saved locale after hydration.
   useEffect(() => {
     const saved = window.localStorage.getItem("nox-apis-locale");
     const next = saved === "en" ? "en" : "ar";
