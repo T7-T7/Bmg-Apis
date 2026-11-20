@@ -5,21 +5,21 @@ import ThemeToggle from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "توثيق المطورين",
-  description: "مرجع BMG APIs الرسمي: المصادقة، البداية السريعة، واجهة Gemini، أمثلة JavaScript وcURL، رموز الأخطاء وملف OpenAPI.",
+  description: "مرجع Nox Apis الرسمي: المصادقة، البداية السريعة، واجهة Gemini، أمثلة JavaScript وcURL، رموز الأخطاء وملف OpenAPI.",
   alternates: { canonical: "/docs" },
   robots: { index: true, follow: true },
 };
 
 const baseUrl = "https://bmg-apis.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
-  -H "Authorization: Bearer YOUR_BMG_API_KEY" \\\
+  -H "Authorization: Bearer YOUR_NOX_API_KEY" \\\
   -H "Content-Type: application/json" \\\
   -d '{"prompt":"اشرح الفرق بين let و const","instruction":"أجب بالعربية"}'`;
 const jsExample = `const response = await fetch("${baseUrl}/api/v1/ai/gemini", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": "Bearer YOUR_BMG_API_KEY"
+    "Authorization": "Bearer YOUR_NOX_API_KEY"
   },
   body: JSON.stringify({
     prompt: "اشرح الفرق بين let و const",
@@ -57,7 +57,7 @@ export default function DocsPage() {
   return (
     <div className="public-docs">
       <header className="public-docs-nav">
-        <Link href="/" className="public-docs-brand"><span className="public-docs-mark">B</span><span>BMG <b>APIs</b></span></Link>
+        <Link href="/" className="public-docs-brand"><span className="public-docs-mark">N</span><span>BMG <b>APIs</b></span></Link>
         <nav aria-label="التنقل الرئيسي"><Link href="/apis">كتالوج الواجهات</Link><Link href="/status">حالة الخدمات</Link><Link href="/docs">التوثيق</Link></nav>
         <div className="public-docs-nav-actions"><ThemeToggle /><Link href="/dashboard/api-keys" className="public-docs-nav-cta">مفاتيح API <ArrowUpLeft size={15}/></Link></div>
       </header>
@@ -78,24 +78,24 @@ export default function DocsPage() {
         </aside>
 
         <main className="public-docs-content">
-          <div className="public-docs-breadcrumb"><Link href="/">BMG APIs</Link><span>/</span><span>المطورون</span><span>/</span><strong>التوثيق</strong></div>
+          <div className="public-docs-breadcrumb"><Link href="/">Nox Apis</Link><span>/</span><span>المطورون</span><span>/</span><strong>التوثيق</strong></div>
           <section id="overview" className="public-docs-intro">
             <div className="public-docs-eyebrow"><span/> وثائق المطورين</div>
-            <h1>توثيق <em>BMG APIs</em></h1>
-            <p>مرجع عملي لربط تطبيقاتك بواجهات BMG APIs. ستجد هنا تفاصيل المصادقة، وبنية الطلبات، وأمثلة قابلة للنسخ، والاستجابات المتوقعة.</p>
+            <h1>توثيق <em>Nox Apis</em></h1>
+            <p>مرجع عملي لربط تطبيقاتك بواجهات Nox Apis. ستجد هنا تفاصيل المصادقة، وبنية الطلبات، وأمثلة قابلة للنسخ، والاستجابات المتوقعة.</p>
             <div className="public-docs-meta"><span>REST API</span><span>JSON</span><span>HTTPS</span><a href="/docs.md">نسخة Markdown <ArrowUpLeft size={13}/></a></div>
           </section>
 
           <section id="quickstart" className="public-docs-section">
             <div className="public-docs-section-heading"><span>01</span><h2>البداية السريعة</h2></div>
-            <p>أرسل طلب HTTP من الخادم إلى نقطة النهاية، وأرفق مفتاح BMG في ترويسة Authorization. جميع أجسام الطلبات والاستجابات تستخدم JSON.</p>
+            <p>أرسل طلب HTTP من الخادم إلى نقطة النهاية، وأرفق مفتاح Nox في ترويسة Authorization. جميع أجسام الطلبات والاستجابات تستخدم JSON.</p>
             <CodeBlock label="BASH · CURL" code={curlExample}/>
           </section>
 
           <section id="authentication" className="public-docs-section">
             <div className="public-docs-section-heading"><span>02</span><h2>المصادقة</h2></div>
             <p>تتطلب الواجهة مفتاح API نشطًا. أنشئ المفتاح من لوحة التحكم ثم خزّنه في متغير بيئة على الخادم. لا تضع المفتاح في كود المتصفح أو مستودع عام.</p>
-            <div className="public-docs-callout"><LockKeyhole size={18}/><div><strong>استخدم Bearer Authentication</strong><p>أرسل الترويسة بالشكل التالي: <code dir="ltr">Authorization: Bearer YOUR_BMG_API_KEY</code></p></div></div>
+            <div className="public-docs-callout"><LockKeyhole size={18}/><div><strong>استخدم Bearer Authentication</strong><p>أرسل الترويسة بالشكل التالي: <code dir="ltr">Authorization: Bearer YOUR_NOX_API_KEY</code></p></div></div>
           </section>
 
           <section id="gemini" className="public-docs-section">
@@ -137,7 +137,7 @@ export default function DocsPage() {
             <a className="public-docs-openapi-link" href="/api/openapi.json"><FileJson2 size={19}/><span><strong>openapi.json</strong><small>{baseUrl}/api/openapi.json</small></span><ArrowUpLeft size={15}/></a>
             <a className="public-docs-text-link" href="/docs.md">قراءة التوثيق كنص Markdown <ArrowUpLeft size={13}/></a>
           </section>
-          <footer className="public-docs-footer"><span>© 2026 BMG APIs</span><span>توثيق المطورين</span><Link href="/apis">استكشف الواجهات <ArrowUpLeft size={13}/></Link></footer>
+          <footer className="public-docs-footer"><span>© 2026 Nox Apis</span><span>توثيق المطورين</span><Link href="/apis">استكشف الواجهات <ArrowUpLeft size={13}/></Link></footer>
         </main>
 
         <aside className="public-docs-right" aria-label="على هذه الصفحة"><strong>على هذه الصفحة</strong>{sections.map(([id,label])=><a key={id} href={`#${id}`}>{label}</a>)}<a className="public-docs-download" href="/api/openapi.json"><Braces size={14}/> OpenAPI JSON</a></aside>
