@@ -1,0 +1,1 @@
+import SecuritySettings from "@/components/dashboard/security-settings";export const metadata={title:"إعدادات الحساب"};export default function Page(){return <div className="source-page"><div className="source-page-head"><span className="source-overline">ACCOUNT / SETTINGS</span><h1>إعدادات الحساب</h1><p>إدارة وسائل حماية الوصول إلى حسابك.</p></div><SecuritySettings/></div>}

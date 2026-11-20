@@ -1,16 +1,16 @@
-"use client";
-import {useEffect,useRef} from "react";
-type Dot={x:number;y:number;z:number};
-export default function DigitalGlobe(){
- const ref=useRef<HTMLCanvasElement>(null);
- useEffect(()=>{
-  const canvas=ref.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;
-  let w=0,h=0,angle=0,frame=0,stopped=false;const points:Dot[]=[];const n=920,golden=Math.PI*(3-Math.sqrt(5));
-  for(let i=0;i<n;i++){const y=1-(i/(n-1))*2,r=Math.sqrt(1-y*y),t=golden*i;points.push({x:Math.cos(t)*r,y,z:Math.sin(t)*r})}
-  const resize=()=>{const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);w=r.width;h=r.height;canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0)};
-  const draw=()=>{if(stopped)return;ctx.clearRect(0,0,w,h);angle+=.0027;const radius=Math.min(w,h)*.405,cx=w/2,cy=h/2,c=Math.cos(angle),s=Math.sin(angle);const projected=points.map(p=>({x:p.x*c-p.z*s,y:p.y,z:p.x*s+p.z*c})).sort((a,b)=>a.z-b.z);for(const p of projected){const depth=(p.z+1)/2;ctx.beginPath();ctx.fillStyle="rgba(212,255,0,"+(.12+depth*.82)+")";ctx.arc(cx+p.x*radius,cy+p.y*radius,.65+depth*1.45,0,Math.PI*2);ctx.fill()}ctx.beginPath();ctx.strokeStyle="rgba(212,255,0,.12)";ctx.lineWidth=1;ctx.ellipse(cx,cy,radius*1.23,radius*.34,-.32,0,Math.PI*2);ctx.stroke();frame=requestAnimationFrame(draw)};
-  resize();draw();const observer=new ResizeObserver(resize);observer.observe(canvas);const visibility=()=>{if(document.hidden)cancelAnimationFrame(frame);else if(!stopped)draw()};document.addEventListener("visibilitychange",visibility);
-  return()=>{stopped=true;cancelAnimationFrame(frame);observer.disconnect();document.removeEventListener("visibilitychange",visibility)};
- },[]);
- return <div className="source-globe"><canvas ref={ref} role="img" aria-label="كرة أرضية رقمية متحركة"/><span className="globe-coordinate">30°02′N · 31°14′E</span><span className="globe-caption">EGYPT / CONNECTED GLOBALLY</span></div>;
-}
+"use client";import{useEffect,useRef}from"react";type P=[number,number];
+const continents:P[][]=[
+[[-168,65],[-145,70],[-125,58],[-120,48],[-110,32],[-98,18],[-82,8],[-78,25],[-90,48],[-110,60],[-140,70]],
+[[-80,12],[-65,8],[-50,-2],[-44,-15],[-52,-30],[-66,-55],[-75,-40],[-78,-15]],
+[[-10,36],[-5,45],[10,50],[25,60],[45,65],[70,70],[100,70],[130,60],[155,55],[175,50],[160,40],[140,35],[125,25],[115,15],[100,5],[85,10],[75,20],[60,25],[50,30],[40,35],[25,38],[10,38]],
+[[-17,35],[5,37],[25,32],[38,20],[50,10],[42,-12],[32,-30],[20,-35],[10,-34],[-1,-20],[-10,0],[-17,15]],
+[[112,-11],[130,-12],[145,-18],[153,-28],[140,-38],[120,-35],[113,-25]],
+[[-52,60],[-40,65],[-20,65],[-30,80],[-50,80]]
+];
+export default function DigitalGlobe(){const ref=useRef<HTMLCanvasElement>(null);useEffect(()=>{const canvas=ref.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;let w=0,h=0,a=0,frame=0,stop=false;const dots:{lon:number;lat:number}[]=[];for(let lat=-82;lat<=82;lat+=3.4)for(let lon=-180;lon<180;lon+=3.4)dots.push({lon,lat});
+const resize=()=>{const b=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);w=b.width;h=b.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0)};
+const project=(lon:number,lat:number,r:number,cx:number,cy:number)=>{const L=lon*Math.PI/180+a,B=lat*Math.PI/180,x=Math.cos(B)*Math.sin(L),y=Math.sin(B),z=Math.cos(B)*Math.cos(L),c=Math.cos(a),s=Math.sin(a);return{x:cx+(x*c+z*s)*r,y:cy-y*r,front:z*c-x*s>0,depth:z*c-x*s}};
+const draw=()=>{if(stop)return;ctx.clearRect(0,0,w,h);a+=.002;const r=Math.min(w,h)*.405,cx=w/2,cy=h/2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle="rgba(212,255,0,.025)";ctx.fill();ctx.strokeStyle="rgba(212,255,0,.2)";ctx.stroke();
+for(const poly of continents){ctx.beginPath();let first=true;for(const [lon,lat]of poly){const p=project(lon,lat,r,cx,cy);if(!p.front){first=true;continue}if(first){ctx.moveTo(p.x,p.y);first=false}else ctx.lineTo(p.x,p.y)}ctx.closePath();ctx.fillStyle="rgba(212,255,0,.19)";ctx.strokeStyle="rgba(212,255,0,.8)";ctx.lineWidth=1.2;ctx.fill();ctx.stroke()}
+for(const d of dots){const p=project(d.lon,d.lat,r,cx,cy);if(!p.front)continue;let land=false;for(const poly of continents){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if((yi>d.lat)!==(yj>d.lat)&&d.lon<(xj-xi)*(d.lat-yi)/(yj-yi)+xi)inside=!inside}if(inside){land=true;break}}if(!land)continue;ctx.beginPath();ctx.fillStyle="rgba(212,255,0,.6)";ctx.arc(p.x,p.y,.75,0,Math.PI*2);ctx.fill()}
+ctx.beginPath();ctx.strokeStyle="rgba(212,255,0,.13)";ctx.ellipse(cx,cy,r*1.22,r*.31,-.32,0,Math.PI*2);ctx.stroke();frame=requestAnimationFrame(draw)};resize();draw();const ro=new ResizeObserver(resize);ro.observe(canvas);const vis=()=>{if(document.hidden)cancelAnimationFrame(frame);else if(!stop)draw()};document.addEventListener("visibilitychange",vis);return()=>{stop=true;cancelAnimationFrame(frame);ro.disconnect();document.removeEventListener("visibilitychange",vis)}},[]);return <div className="source-globe"><canvas ref={ref} role="img" aria-label="كرة أرضية تظهر آسيا وأفريقيا وأوروبا"/><span className="globe-coordinate">30°02′N · 31°14′E</span><span className="globe-caption">EGYPT / CONNECTED GLOBALLY</span></div>}

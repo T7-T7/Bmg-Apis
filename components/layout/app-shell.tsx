@@ -6,7 +6,7 @@ import {ArrowLeft,BookOpen,Command,Menu,Search,X} from "lucide-react";
 import Sidebar from "@/components/navigation/sidebar";
 export default function AppShell({children}:Readonly<{children:ReactNode}>){
  const pathname=usePathname();const [menu,setMenu]=useState(false);const [search,setSearch]=useState(false);
- const title=pathname==="/"?"الرئيسية":pathname.startsWith("/apis/")?"تفاصيل الواجهة":pathname==="/apis"?"الواجهات":pathname==="/docs"?"التوثيق":pathname==="/playground"?"Playground":pathname==="/status"?"حالة النظام":pathname==="/dashboard/api-keys"?"مفاتيح API":pathname==="/dashboard"?"لوحة المطور":"Bmg-Apis";
+ const title=pathname==="/"?"الرئيسية":pathname.startsWith("/apis/")?"تفاصيل الواجهة":pathname==="/apis"?"الواجهات":pathname==="/docs"?"التوثيق":pathname==="/playground"?"Playground":pathname==="/status"?"حالة النظام":pathname==="/dashboard/api-keys"?"مفاتيح API":pathname==="/dashboard"?"لوحة المطور":pathname.startsWith("/settings")?"إعدادات الحساب":"Bmg-Apis";
  useEffect(()=>{setMenu(false);setSearch(false)},[pathname]);
  useEffect(()=>{const fn=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();setSearch(v=>!v)}if(e.key==="Escape"){setSearch(false);setMenu(false)}};window.addEventListener("keydown",fn);return()=>window.removeEventListener("keydown",fn)},[]);
  if(pathname==="/login"||pathname==="/signup"||pathname==="/auth/callback")return <>{children}</>;
