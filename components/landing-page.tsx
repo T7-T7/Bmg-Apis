@@ -143,11 +143,11 @@ export default function LandingPage() {
             <div className="code-window-top"><div className="window-dots"><i /><i /><i /></div><span className="window-file"><Terminal size={13} /> request.ts</span><span className="window-language">TYPESCRIPT</span></div>
             <div className="code-window-body" dir="ltr">
               <div className="code-line"><span className="line-number">01</span><span><b className="code-pink">const</b> <b className="code-lime">response</b> = <b className="code-blue">await</b> fetch(</span></div>
-              <div className="code-line"><span className="line-number">02</span><span className="code-string">  "https://bmg-apis.vercel.app/api/v1/ai/gemini",</span></div>
+              <div className="code-line"><span className="line-number">02</span><span className="code-string">  &quot;https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini&quot;,</span></div>
               <div className="code-line"><span className="line-number">03</span><span>  {"{"}</span></div>
-              <div className="code-line"><span className="line-number">04</span><span>    method: <b className="code-string">"POST"</b>,</span></div>
+              <div className="code-line"><span className="line-number">04</span><span>    method: <b className="code-string">&quot;POST&quot;</b>,</span></div>
               <div className="code-line"><span className="line-number">05</span><span>    headers: {"{"}</span></div>
-              <div className="code-line"><span className="line-number">06</span><span>      Authorization: <b className="code-string">"Bearer YOUR_NOX_API_KEY"</b></span></div>
+              <div className="code-line"><span className="line-number">06</span><span>      Authorization: <b className="code-string">&quot;Bearer YOUR_NOX_API_KEY&quot;</b></span></div>
               <div className="code-line"><span className="line-number">07</span><span>    {"}"},</span></div>
               <div className="code-line"><span className="line-number">08</span><span>    body: JSON.stringify({"{"} prompt {"}"})</span></div>
               <div className="code-line"><span className="line-number">09</span><span>  {"}"}</span></div>
