@@ -59,7 +59,13 @@ export async function POST(request: NextRequest) {
   if (!token) return jsonError("مفتاح Nox API مطلوب في ترويسة Authorization: Bearer.", 401);
 
   let body: unknown;
-  try { body = await request.json(); } catch { return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400); }
+  try {
+    body = await readJsonBody(request);
+  } catch (cause) {
+    if (cause instanceof PayloadTooLargeError) return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (1 MB).", 413);
+    if (cause instanceof SyntaxError) return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400);
+    return jsonError("تعذر قراءة جسم الطلب.", 400);
+  }
   if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("يجب أن يكون جسم الطلب كائن JSON.", 400);
 
   const data = body as Record<string, unknown>;
