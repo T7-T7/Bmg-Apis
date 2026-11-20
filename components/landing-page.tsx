@@ -78,9 +78,9 @@ export default function LandingPage() {
   const t = content[locale];
   const ar = locale === "ar";
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the saved locale after hydration.
   useEffect(() => {
     const saved = window.localStorage.getItem("nox-apis-locale");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted locale after hydration.
     if (saved === "en" || saved === "ar") setLocale(saved);
   }, []);
   useEffect(() => {
