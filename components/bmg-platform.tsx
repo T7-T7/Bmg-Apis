@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/client";
 
 type View = "home" | "explorer" | "playground" | "docs" | "dashboard" | "keys" | "status";
