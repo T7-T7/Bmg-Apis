@@ -16,12 +16,12 @@ const apiOptions: { id: ApiId; name: string; method: string; path: string; descr
 const reveal = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: .48, ease: "easeOut" as const } } };
 
 function highlightJson(value: string) {
-  return value.split(/("(?:\\.|[^"\\])*"(?=\\s*:)|"(?:\\.|[^"\\])*"|\\b(?:true|false|null)\\b|-?\\d+(?:\\.\\d+)?)/g).map((part, index) => {
+  return value.split(/("(?:\\.|[^"\\])*"(?=\s*:)|"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\d+(?:\.\d+)?)/g).map((part, index) => {
     let kind = "json-punctuation";
     if (/^".*"$/.test(part) && /:$/.test(part)) kind = "json-key";
     else if (/^".*"$/.test(part)) kind = "json-string";
     else if (/^(true|false|null)$/.test(part)) kind = "json-boolean";
-    else if (/^-?\\d/.test(part)) kind = "json-number";
+    else if (/^-?\d/.test(part)) kind = "json-number";
     return <span className={kind} key={index}>{part}</span>;
   });
 }
