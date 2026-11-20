@@ -127,7 +127,7 @@ export default function PlaygroundPage() {
       <motion.section className="playground-code-section" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
         <div className="section-heading"><div><span className="section-overline">INTEGRATION SNIPPETS</span><h2>استخدمها في مشروعك</h2><p>أمثلة قابلة للنسخ للواجهة المحددة.</p></div></div>
         <div className="playground-code-card glass-panel">
-          <div className="playground-code-tabs">{(["curl", "js", "python"] as CodeLang[]).map(lang => <motion.button type="button" key={lang} className={language === lang ? "active" : ""} onClick={() => setLanguage(lang)} whileTap={{ scale: .97 }}>{lang === "js" ? "JavaScript" : lang === "curl" ? "cURL" : "Python"}</button>)}</div>
+          <div className="playground-code-tabs">{(["curl", "js", "python"] as CodeLang[]).map(lang => <motion.button type="button" key={lang} className={language === lang ? "active" : ""} onClick={() => setLanguage(lang)} whileTap={{ scale: .97 }}>{lang === "js" ? "JavaScript" : lang === "curl" ? "cURL" : "Python"}</motion.button>)}</div>
           <div className="playground-code-content"><pre dir="ltr">{snippets[language]}</pre><motion.button type="button" className="playground-copy-code" onClick={() => copy(snippets[language])} whileTap={{ scale: .97 }}>{copied ? <Check size={14} /> : <Copy size={14} />} نسخ الكود</motion.button></div>
         </div>
         <p className="playground-code-warning">أمثلة image وcurrency توثيقية فقط حاليًا؛ لا توجد مسارات تشغيل لهذه الخدمات في الخادم حتى الآن.</p>
