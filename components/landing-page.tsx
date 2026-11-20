@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
+import EarthGlobe from "@/components/earth-globe";
 import { Activity, ArrowRight, ArrowUpLeft, ArrowUpRight, BookOpen, Braces, Check, ChevronDown, Code2, GitBranch, Globe2, KeyRound, Layers3, LockKeyhole, Menu, ShieldCheck, Sparkles, Terminal, Workflow, X, Zap } from "lucide-react";
-import ThemeToggle from "@/components/theme-toggle";
 
 type Locale = "ar" | "en";
 
@@ -111,7 +111,7 @@ export default function LandingPage() {
           <div className="landing-nav-links">{navLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}</div>
           <div className="landing-nav-actions">
             <motion.button className="locale-toggle" onClick={() => toggleLocale()} type="button" aria-label="Change language" whileTap={{ scale: .97 }}><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></motion.button>
-            <ThemeToggle />
+            
             <Link href="/login" className="nav-signin">{t.signIn}</Link>
             <Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link>
           </div>
@@ -138,13 +138,13 @@ export default function LandingPage() {
         </div>
 
         <motion.div className="hero-visual" initial={{ opacity: 0, scale: .94, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: .85, delay: .18, ease: [0.22, 1, 0.36, 1] }}>
-          <div className="visual-orbit visual-orbit-a" /><div className="visual-orbit visual-orbit-b" />
+          <div className="visual-orbit visual-orbit-a" /><div className="visual-orbit visual-orbit-b" /><EarthGlobe />
           <div className="visual-float visual-float-top"><span className="float-icon"><ShieldCheck size={15} /></span><span>AUTHENTICATED</span><i /></div>
           <div className="code-window glass-panel">
             <div className="code-window-top"><div className="window-dots"><i /><i /><i /></div><span className="window-file"><Terminal size={13} /> request.ts</span><span className="window-language">TYPESCRIPT</span></div>
             <div className="code-window-body" dir="ltr">
               <div className="code-line"><span className="line-number">01</span><span><b className="code-pink">const</b> <b className="code-lime">response</b> = <b className="code-blue">await</b> fetch(</span></div>
-              <div className="code-line"><span className="line-number">02</span><span className="code-string">  &quot;https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini&quot;,</span></div>
+              <div className="code-line"><span className="line-number">02</span><span className="code-string">  &quot;/api/v1/ai/gemini&quot;,</span></div>
               <div className="code-line"><span className="line-number">03</span><span>  {"{"}</span></div>
               <div className="code-line"><span className="line-number">04</span><span>    method: <b className="code-string">&quot;POST&quot;</b>,</span></div>
               <div className="code-line"><span className="line-number">05</span><span>    headers: {"{"}</span></div>
@@ -154,7 +154,7 @@ export default function LandingPage() {
               <div className="code-line"><span className="line-number">09</span><span>  {"}"}</span></div>
               <div className="code-line"><span className="line-number">10</span><span>);</span></div>
             </div>
-            <div className="code-window-bottom"><span><span className="terminal-live-dot" />{ar ? "استجابة تجريبية" : "SAMPLE RESPONSE"}</span><span className="response-status"><Check size={12} /> HTTP 200</span></div>
+            <div className="code-window-bottom"><span><span className="terminal-live-dot" />{ar ? "مثال على الطلب" : "REQUEST EXAMPLE"}</span><span className="response-status">EXAMPLE ONLY</span></div>
           </div>
           <motion.div className="visual-float visual-float-bottom" animate={{ y: [0, -7, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}><span className="float-method">POST</span><span>/api/v1/ai/gemini</span><span className="float-arrow">↗</span></motion.div>
           <div className="visual-glow" />

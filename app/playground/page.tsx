@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowDownToLine, Check, Copy, Image as ImageIcon, LoaderCircle, Play, RefreshCw, Sparkles, Terminal, WalletCards } from "lucide-react";
+import { ArrowDownToLine, Check, Copy, LoaderCircle, Play, RefreshCw, Sparkles, Terminal, WalletCards } from "lucide-react";
 
-type ApiId = "gemini" | "image" | "currency";
+type ApiId = "gemini" | "currency";
 type CodeLang = "curl" | "js" | "python";
 
 const apiOptions: { id: ApiId; name: string; method: string; path: string; description: string; live: boolean }[] = [
   { id: "gemini", name: "Gemini Text", method: "POST", path: "/api/v1/ai/gemini", description: "توليد النصوص والمحادثة مع تعليمات اختيارية.", live: true },
-  { id: "image", name: "AI Image", method: "POST", path: "/api/v1/ai/image", description: "معاينة شكل واجهة توليد الصور — لم يتم ربط محرك توليد بعد.", live: false },
   { id: "currency", name: "Currency Rate", method: "GET", path: "/api/v1/currency/rate", description: "سعر صرف مرجعي يومي بين عملتين عبر Frankfurter.", live: true },
 ];
 
@@ -38,7 +37,8 @@ export default function PlaygroundPage() {
   const current = apiOptions.find(item => item.id === selected)!;
 
   const snippets = useMemo(() => {
-    const url = "https://bmg-apis-b2-902b.vercel.app" + current.path;
+    const origin = typeof window === "undefined" ? "https://YOUR_NOX_API_DOMAIN" : window.location.origin;
+    const url = origin + current.path;
     return {
       curl: selected === "currency"
         ? "curl -X GET '" + url + "?base=USD&target=EUR' -H 'Authorization: Bearer YOUR_NOX_API_KEY'"
@@ -53,33 +53,27 @@ export default function PlaygroundPage() {
   }, [current.path, prompt, selected]);
 
   async function run() {
-    if (busy || (selected !== "currency" && !prompt.trim())) return;
-    if (selected === "currency" && !apiKey.trim()) { setError("أدخل مفتاح Nox API لتشغيل خدمة أسعار العملات."); return; }
-    setBusy(true);
-    setError("");
-    setResponse(null);
+    if (busy) return;
+    if (!apiKey.trim()) { setError("أدخل مفتاح Nox API صالحًا لتشغيل الخدمة."); return; }
+    if (selected === "gemini" && !prompt.trim()) { setError("اكتب نص الطلب أولًا."); return; }
+    setBusy(true); setError(""); setResponse(null);
     try {
-      if (selected !== "image" && apiKey.trim()) {
-        const isCurrency = selected === "currency";
-        const result = await fetch(isCurrency ? current.path + "?base=USD&target=EUR" : current.path, {
-          method: isCurrency ? "GET" : "POST",
-          headers: { Authorization: "Bearer " + apiKey.trim(), ...(isCurrency ? {} : { "Content-Type": "application/json" }) },
-          ...(isCurrency ? {} : { body: JSON.stringify({ prompt }) }),
-        });
-        const data = await result.json();
-        if (!result.ok || !data.success) throw new Error(data.error || "HTTP " + result.status);
-        setResponse({ ...data, _mode: "live", _httpStatus: result.status });
-      } else {
-        await new Promise(resolve => window.setTimeout(resolve, 450));
-        if (selected === "gemini") setResponse({ success: true, demo: true, provider: "NOX Playground", response: "هذه استجابة تجريبية توضح شكل المخرجات فقط. أدخل مفتاح Nox API صالحًا لتشغيل Gemini الفعلي.", prompt, _mode: "mock", _httpStatus: 200 });
-        if (selected === "image") setResponse({ success: true, demo: true, status: "preview_only", prompt, image: null, message: "واجهة توليد الصور غير متصلة حاليًا. هذه بيانات توضيحية وليست صورة مولدة.", _mode: "mock", _httpStatus: 200 });
-        if (selected === "currency") setResponse({ success: true, demo: true, base: "USD", target: "EUR", rate: 0.92, source: "sample_data", updatedAt: new Date().toISOString(), message: "سعر توضيحي غير صالح للاستخدام المالي.", _mode: "mock", _httpStatus: 200 });
+      const isCurrency = selected === "currency";
+      const result = await fetch(isCurrency ? current.path + "?base=USD&target=EUR" : current.path, {
+        method: isCurrency ? "GET" : "POST",
+        headers: { Authorization: "Bearer " + apiKey.trim(), ...(isCurrency ? {} : { "Content-Type": "application/json" }) },
+        ...(isCurrency ? {} : { body: JSON.stringify({ prompt }) }),
+        cache: "no-store",
+      });
+      const data: unknown = await result.json();
+      if (!result.ok || !data || typeof data !== "object" || !("success" in data) || data.success !== true) {
+        const message = data && typeof data === "object" && "error" in data && typeof data.error === "string" ? data.error : "HTTP " + result.status;
+        throw new Error(message);
       }
+      setResponse({ ...(data as Record<string, unknown>), _mode: "live", _httpStatus: result.status });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "تعذر تنفيذ الطلب.");
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
   async function copy(value: string) {
@@ -96,28 +90,28 @@ export default function PlaygroundPage() {
 
       <motion.section className="playground-layout" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
         <aside className="playground-api-list glass-panel">
-          <div className="playground-panel-title"><strong>اختر API</strong><small>3 endpoints</small></div>
+          <div className="playground-panel-title"><strong>اختر API</strong><small>2 connected endpoints</small></div>
           {apiOptions.map(api => <motion.button key={api.id} type="button" className={"playground-api-option " + (selected === api.id ? "active" : "")} onClick={() => { setSelected(api.id); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}>
-            <span className="playground-api-icon">{api.id === "gemini" ? <Sparkles size={17} /> : api.id === "image" ? <ImageIcon size={17} /> : <WalletCards size={17} />}</span>
+            <span className="playground-api-icon">{api.id === "gemini" ? <Sparkles size={17} /> : <WalletCards size={17} />}</span>
             <span className="playground-api-info"><strong>{api.name}</strong><small dir="ltr">{api.method} {api.path}</small></span>
             <i className={api.live ? "api-live-dot" : "api-preview-dot"} />
           </motion.button>)}
-          <div className="playground-list-note">الخدمات المتصلة فعليًا: Gemini وأسعار العملات. توليد الصور ما زال معاينة.</div>
+          <div className="playground-list-note">الخدمات المتصلة فعليًا: Gemini وأسعار العملات. لا تظهر هنا واجهات المعاينة غير القابلة للتشغيل.</div>
         </aside>
 
         <div className="playground-workspace">
           <section className="playground-editor glass-panel">
             <div className="playground-editor-head"><div><span className={"method method-" + current.method.toLowerCase()}>{current.method}</span><code dir="ltr">{current.path}</code></div><span className={current.live ? "service-state ready" : "service-state"}><i />{current.live ? "Live API" : "Preview"}</span></div>
             <p className="playground-api-description">{current.description}</p>
-            {selected !== "image" && <label className="playground-field"><span>مفتاح Nox API <small>مطلوب للتشغيل الفعلي</small></span><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." autoComplete="off" dir="ltr" /></label>}
-            <label className="playground-field"><span>{selected === "currency" ? "ملاحظة الطلب" : "Prompt"}</span><textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={5} placeholder="اكتب محتوى الطلب..." /></label>
-            <div className="playground-editor-actions"><motion.button type="button" className="button-primary" onClick={run} disabled={busy || (selected !== "currency" && !prompt.trim()) || (selected === "currency" && !apiKey.trim())} whileTap={{ scale: .97 }}>{busy ? <LoaderCircle size={16} className="spin" /> : <Play size={15} />}{busy ? "جارٍ التنفيذ..." : "Run request"}</motion.button><motion.button type="button" className="button-secondary" onClick={() => { setPrompt(""); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}><RefreshCw size={14} /> مسح</motion.button></div>
+            <label className="playground-field"><span>مفتاح Nox API <small>مطلوب للتشغيل الفعلي</small></span><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." autoComplete="off" dir="ltr" /></label>
+            {selected === "gemini" && <label className="playground-field"><span>Prompt</span><textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={5} placeholder="اكتب محتوى الطلب..." /></label>}
+            <div className="playground-editor-actions"><motion.button type="button" className="button-primary" onClick={run} disabled={busy || !apiKey.trim() || (selected === "gemini" && !prompt.trim())} whileTap={{ scale: .97 }}>{busy ? <LoaderCircle size={16} className="spin" /> : <Play size={15} />}{busy ? "جارٍ التنفيذ..." : "Run request"}</motion.button><motion.button type="button" className="button-secondary" onClick={() => { setPrompt(""); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}><RefreshCw size={14} /> مسح</motion.button></div>
             <p className="playground-security-note">المفتاح لا يُحفظ في localStorage ولا يُرسل إلا إلى نقطة API المحددة على نفس الموقع.</p>
           </section>
 
           <section className="playground-response glass-panel">
             <div className="playground-panel-title"><div><strong>Response</strong><small>JSON output</small></div><span className="response-format-tag">application/json</span></div>
-            {busy ? <div className="playground-empty"><LoaderCircle size={22} className="spin" /><span>جارٍ انتظار الاستجابة...</span></div> : response ? <div className="playground-json"><div className="playground-json-toolbar"><span className={(response._mode === "live") ? "live-response" : "mock-response"}>{response._mode === "live" ? "LIVE RESPONSE" : "MOCK RESPONSE"}</span><span>HTTP {String(response._httpStatus || 200)}</span><motion.button type="button" onClick={() => copy(JSON.stringify(response, null, 2))} whileTap={{ scale: .97 }}><Copy size={13} /> نسخ JSON</motion.button></div><pre dir="ltr">{highlightJson(JSON.stringify(response, null, 2))}</pre></div> : error ? <div className="playground-error">{error}</div> : <div className="playground-empty"><ArrowDownToLine size={23} /><strong>لا توجد استجابة بعد</strong><span>اختر API ثم اضغط Run request لعرض JSON هنا.</span></div>}
+            {busy ? <div className="playground-empty"><LoaderCircle size={22} className="spin" /><span>جارٍ انتظار الاستجابة...</span></div> : response ? <div className="playground-json"><div className="playground-json-toolbar"><span className="live-response"}>LIVE RESPONSE</span><span>HTTP {String(response._httpStatus || 200)}</span><motion.button type="button" onClick={() => copy(JSON.stringify(response, null, 2))} whileTap={{ scale: .97 }}><Copy size={13} /> نسخ JSON</motion.button></div><pre dir="ltr">{highlightJson(JSON.stringify(response, null, 2))}</pre></div> : error ? <div className="playground-error">{error}</div> : <div className="playground-empty"><ArrowDownToLine size={23} /><strong>لا توجد استجابة بعد</strong><span>اختر API ثم اضغط Run request لعرض JSON هنا.</span></div>}
           </section>
         </div>
       </motion.section>
@@ -128,7 +122,7 @@ export default function PlaygroundPage() {
           <div className="playground-code-tabs">{(["curl", "js", "python"] as CodeLang[]).map(lang => <motion.button type="button" key={lang} className={language === lang ? "active" : ""} onClick={() => setLanguage(lang)} whileTap={{ scale: .97 }}>{lang === "js" ? "JavaScript" : lang === "curl" ? "cURL" : "Python"}</motion.button>)}</div>
           <div className="playground-code-content"><pre dir="ltr">{snippets[language]}</pre><motion.button type="button" className="playground-copy-code" onClick={() => copy(snippets[language])} whileTap={{ scale: .97 }}>{copied ? <Check size={14} /> : <Copy size={14} />} نسخ الكود</motion.button></div>
         </div>
-        <p className="playground-code-warning">أمثلة image وcurrency توثيقية فقط حاليًا؛ لا توجد مسارات تشغيل لهذه الخدمات في الخادم حتى الآن.</p>
+        <p className="playground-code-warning">التنفيذ مباشر على الخدمات المتصلة. لا تُعرض استجابات تجريبية أو أسعار افتراضية.</p>
       </motion.section>
     </div>
   );

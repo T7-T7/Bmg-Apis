@@ -10,13 +10,6 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Profile = { name: string; email: string; avatar: string };
 
-const sampleRequests = [
-  { id: "req_8F21", endpoint: "/api/v1/ai/gemini", method: "POST", status: 200, time: "قبل دقيقتين", duration: "1.24s" },
-  { id: "req_8F20", endpoint: "/api/v1/ai/gemini", method: "POST", status: 200, time: "قبل 18 دقيقة", duration: "980ms" },
-  { id: "req_8F19", endpoint: "/api/v1/currency/rate", method: "GET", status: 200, time: "قبل ساعة", duration: "142ms" },
-  { id: "req_8F18", endpoint: "/api/v1/ai/image", method: "POST", status: 202, time: "أمس", duration: "—" },
-];
-
 const reveal = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: .48, ease: "easeOut" as const } } };
 
 export default function DashboardPage() {
@@ -85,10 +78,10 @@ export default function DashboardPage() {
       </motion.section>
 
       <motion.section className="dashboard-stats" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .15 }}>
-        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><Activity size={18} /></span><div><small>إجمالي الطلبات</small><strong>1,284</strong><em>بيانات عرض تجريبية</em></div></article>
-        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><Code2 size={18} /></span><div><small>واجهات مستخدمة</small><strong>1</strong><em>Gemini متصلة حاليًا</em></div></article>
+        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><Activity size={18} /></span><div><small>إجمالي الطلبات</small><strong>—</strong><em>سجل الاستخدام غير متصل بعد</em></div></article>
+        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><Code2 size={18} /></span><div><small>واجهات متصلة</small><strong>2</strong><em>Gemini وأسعار العملات</em></div></article>
         <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><KeyRound size={18} /></span><div><small>مفاتيح API</small><strong>{keyCount}</strong><em>عدد فعلي من حسابك</em></div></article>
-        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><BarChart3 size={18} /></span><div><small>حد الاستخدام</small><strong>30 <i>/ min</i></strong><em>لكل مفتاح نشط</em></div></article>
+        <article className="dashboard-stat glass-panel"><span className="dashboard-stat-icon"><BarChart3 size={18} /></span><div><small>حد الطلبات</small><strong>30 <i>/ min</i></strong><em>لكل مفتاح نشط حسب سياسة الخدمة</em></div></article>
       </motion.section>
 
       <motion.section className="dashboard-section" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
@@ -97,13 +90,9 @@ export default function DashboardPage() {
       </motion.section>
 
       <motion.section className="dashboard-section" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
-        <div className="section-heading"><div><span className="section-overline">REQUEST LOG</span><h2>آخر الطلبات</h2><p>صفوف توضيحية لتصميم سجل الطلبات؛ ليست سجلًا حيًا من قاعدة البيانات.</p></div><span className="sample-data-label"><Clock3 size={13} /> Sample data</span></div>
+        <div className="section-heading"><div><span className="section-overline">REQUEST LOG</span><h2>سجل الطلبات</h2><p>لا نعرض أرقامًا أو طلبات افتراضية على أنها نشاط حقيقي.</p></div></div>
         <div className="dashboard-table-wrap glass-panel">
-          <table className="dashboard-table">
-            <thead><tr><th>المعرّف</th><th>نقطة الاتصال</th><th>الطريقة</th><th>الحالة</th><th>الزمن</th><th>التوقيت</th></tr></thead>
-            <tbody>{sampleRequests.map(item => <tr key={item.id}><td><code>{item.id}</code></td><td><code dir="ltr">{item.endpoint}</code></td><td><span className="dashboard-method">{item.method}</span></td><td><span className="dashboard-http"><i />{item.status}</span></td><td>{item.duration}</td><td>{item.time}</td></tr>)}</tbody>
-          </table>
-          <div className="dashboard-table-note">سيظهر السجل الفعلي بعد ربط واجهة قراءة آمنة ببيانات الاستخدام.</div>
+          <div className="workspace-empty"><span className="workspace-empty-icon"><Activity size={25} /></span><h2>سجل الاستخدام غير مفعّل بعد</h2><p>سيظهر هنا سجل الطلبات الفعلي بعد توصيل خدمة التسجيل وواجهة القراءة الآمنة.</p></div>
         </div>
       </motion.section>
 
