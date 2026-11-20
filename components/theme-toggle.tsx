@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { motion } from "motion/react";
 
 type Theme = "dark" | "light";
 
@@ -25,14 +26,15 @@ export default function ThemeToggle() {
   }
 
   return (
-    <button
+    <motion.button
       type="button"
+      whileTap={{ scale: .97 }}
       className="theme-toggle"
       onClick={toggleTheme}
       aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
       title={theme === "dark" ? "Light mode" : "Dark mode"}
     >
       {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-    </button>
+    </motion.button>
   );
 }
