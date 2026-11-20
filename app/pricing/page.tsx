@@ -7,7 +7,7 @@ import { ArrowUpLeft, Check, Crown, Headphones, Infinity, ShieldCheck, Zap } fro
 const plans = [
   { id: "free", name: "Free", price: "مجاني", note: "للتجربة والتعلّم", description: "ابدأ باستكشاف المنصة واختبر الخدمة المتاحة.", icon: Zap, features: ["الوصول إلى الكتالوج والتوثيق", "Playground تجريبي", "مفتاح API واحد", "30 طلبًا في الدقيقة", "دعم المجتمع"], action: "ابدأ مجانًا", href: "/signup?next=/dashboard" },
   { id: "pro", name: "Pro", price: "قريبًا", note: "للمطورين والمشاريع النشطة", description: "حدود أعلى وأدوات متابعة أكثر لمشاريعك.", icon: Crown, featured: true, features: ["كل مزايا Free", "حدود استخدام أعلى", "مفاتيح متعددة", "سجل طلبات وتحليلات", "أولوية في الدعم"], action: "انضم إلى قائمة Pro", href: "/signup?next=/dashboard" },
-  { id: "business", name: "Business", price: "حسب الاتفاق", note: "للفرق والمنتجات", description: "خيارات مرنة للمشاريع التي تحتاج تكاملًا مخصصًا.", icon: Headphones, features: ["كل مزايا Pro", "إدارة أعضاء الفريق", "حدود مخصصة", "دعم تكامل مخصص", "اتفاقية خدمة عند التفعيل"], action: "تواصل معنا", href: "mailto:hello@noxapis.com" },
+  { id: "business", name: "Business", price: "حسب الاتفاق", note: "للفرق والمنتجات", description: "خيارات مرنة للمشاريع التي تحتاج تكاملًا مخصصًا.", icon: Headphones, features: ["كل مزايا Pro", "إدارة أعضاء الفريق", "حدود مخصصة", "دعم تكامل مخصص", "اتفاقية خدمة عند التفعيل"], action: "تواصل معنا", href: "/create" },
 ];
 
 const reveal = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: .5, ease: "easeOut" as const } } };
