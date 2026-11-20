@@ -55,7 +55,7 @@ export async function OPTIONS() {
 }
 export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.match(/^Bearer\s+(nox_live_[A-Za-z0-9_-]+)$/i)?.[1];
+  const token = authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i)?.[1];
   if (!token) return jsonError("مفتاح Nox API مطلوب في ترويسة Authorization: Bearer.", 401);
 
   let body: unknown;
