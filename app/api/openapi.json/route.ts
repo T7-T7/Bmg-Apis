@@ -9,7 +9,7 @@ const specification = {
     contact: { name: "Nox Apis", url: "https://bmg-apis-b2-902b.vercel.app/docs" },
   },
   servers: [{ url: "https://bmg-apis-b2-902b.vercel.app", description: "Production" }],
-  tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }, { name: "Currency", description: "أسعار صرف العملات المرجعية" }],
+  tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
   paths: {
     "/api/v1/ai/gemini": {
       post: {
@@ -61,48 +61,6 @@ const specification = {
           "413": { description: "تجاوز prompt الحد الأقصى البالغ 30000 حرف." },
           "429": { description: "تجاوز حد الطلبات: 30 طلبًا في الدقيقة لكل مفتاح." },
           "502": { description: "تعذر الحصول على رد من مزود النموذج." },
-          "503": { description: "الخدمة أو التحقق من المفتاح غير متاح مؤقتًا." }
-        }
-      }
-    },
-    "/api/v1/currency/rate": {
-      get: {
-        tags: ["Currency"],
-        operationId: "getCurrencyRate",
-        summary: "الحصول على سعر صرف مرجعي",
-        description: "يعيد سعر الصرف المرجعي بين عملتين من Frankfurter. الأسعار يومية وليست أسعار تداول لحظية.",
-        security: [{ NoxApiKey: [] }],
-        parameters: [
-          { in: "query", name: "base", required: false, schema: { type: "string", pattern: "^[A-Z]{3}$", default: "USD" }, description: "رمز العملة الأساسية." },
-          { in: "query", name: "target", required: false, schema: { type: "string", pattern: "^[A-Z]{3}$", default: "EUR" }, description: "رمز العملة المستهدفة." }
-        ],
-        responses: {
-          "200": {
-            description: "سعر الصرف المرجعي.",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["success", "base", "target", "rate", "source", "rateType"],
-                  properties: {
-                    success: { type: "boolean", const: true },
-                    base: { type: "string" },
-                    target: { type: "string" },
-                    rate: { type: "number", exclusiveMinimum: 0 },
-                    date: { type: ["string", "null"], format: "date" },
-                    source: { type: "string", const: "Frankfurter" },
-                    rateType: { type: "string", const: "daily_reference" },
-                    note: { type: "string" }
-                  }
-                }
-              }
-            }
-          },
-          "400": { description: "رموز العملات غير صالحة." },
-          "401": { description: "مفتاح API مفقود أو غير صالح أو ملغى." },
-          "422": { description: "رمز العملة غير مدعوم أو لا يتوفر له سعر." },
-          "429": { description: "تجاوز حد 30 طلبًا في الدقيقة لكل مفتاح." },
-          "502": { description: "مصدر أسعار العملات غير متاح." },
           "503": { description: "الخدمة أو التحقق من المفتاح غير متاح مؤقتًا." }
         }
       }
