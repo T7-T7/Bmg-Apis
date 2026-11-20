@@ -1,215 +1,27 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
-import EarthGlobe from "@/components/earth-globe";
-import { Activity, ArrowRight, ArrowUpLeft, ArrowUpRight, BookOpen, Braces, Check, ChevronDown, Code2, GitBranch, Globe2, KeyRound, Layers3, LockKeyhole, Menu, ShieldCheck, Sparkles, Terminal, Workflow, X, Zap } from "lucide-react";
-
-type Locale = "ar" | "en";
-
-const content = {
-  ar: {
-    announcement: "من مصر إلى العالم · مساحة واحدة لبناء تكاملاتك", nav: ["المنصة", "المميزات", "الأسئلة الشائعة", "التوثيق"],
-    signIn: "تسجيل الدخول", getStarted: "ابدأ الآن", eyebrow: "بوابة المطورين · API WORKSPACE",
-    titleA: "ابنِ أسرع.", titleB: "اربط بذكاء.",
-    intro: "واجهات برمجية واضحة، ومفاتيح وصول تحت سيطرتك، وتجربة مطور تختصر الطريق من الفكرة إلى أول طلب ناجح.",
-    explore: "استكشف الواجهات", createKey: "أنشئ مفتاح API", live: "بوابة المطورين متاحة",
-    featuresEyebrow: "مصممة للمطورين", featuresTitle: "كل ما تحتاجه. دون ضجيج.",
-    featuresIntro: "مساحة عمل تجمع اكتشاف الواجهات وإدارة الوصول والتوثيق في تجربة واحدة.",
-    features: [
-      { title: "كتالوج واضح", desc: "استكشف تعريفات الواجهات وطرق HTTP والمسارات والتصنيفات من مكان واحد.", tag: "DISCOVER", icon: Layers3 },
-      { title: "مفاتيح وصول آمنة", desc: "أنشئ مفاتيحك وألغها عند الحاجة. تُحفظ بصمة SHA-256 فقط، وتظهر القيمة الكاملة مرة واحدة.", tag: "ACCESS", icon: LockKeyhole },
-      { title: "توثيق عملي", desc: "أمثلة طلبات واستجابات تساعدك على فهم طريقة الربط قبل كتابة التكامل.", tag: "DOCS", icon: BookOpen },
-      { title: "اختبار الخدمة", desc: "ابدأ باستخدام الخدمة المتصلة حاليًا، وتابع الاستجابة ورمز HTTP بوضوح.", tag: "TEST", icon: Terminal },
-      { title: "مساهمات بمراجعة", desc: "اقترح واجهة للمجتمع. لا تُنشر مساهمات المستخدمين تلقائيًا قبل مراجعتها.", tag: "COMMUNITY", icon: ShieldCheck },
-      { title: "أساس قابل للتوسع", desc: "بنية مبنية على Next.js وSupabase مع فصل الواجهة عن صلاحيات الخدمات.", tag: "STACK", icon: Workflow }
-    ],
-    flowEyebrow: "ابدأ في ثلاث خطوات", flowTitle: "من الحساب إلى أول طلب.",
-    flow: [["01", "أنشئ حسابك", "سجّل باستخدام Google للوصول إلى مساحة المطور."], ["02", "ولّد مفتاحك", "أنشئ مفتاح API واحتفظ به في بيئة الخادم."], ["03", "أرسل طلبك", "استخدم المفتاح في Authorization: Bearer وابدأ التكامل."]],
-    faqEyebrow: "إجابات واضحة", faqTitle: "قبل أن تبدأ.",
-    faqs: [
-      ["هل جميع الواجهات في الكتالوج جاهزة؟", "ليس بعد. الكتالوج يحتوي على تعريفات ونماذج، والخدمة التشغيلية المتصلة حاليًا هي Gemini. وجود بطاقة لا يعني أن API جاهزة للتشغيل."],
-      ["كيف أحصل على مفتاح API؟", "سجّل الدخول باستخدام Google، ثم افتح مفاتيح API وأنشئ مفتاحًا باسم يوضح المشروع. تظهر القيمة الكاملة مرة واحدة فقط."],
-      ["هل يتم حفظ المفتاح الأصلي؟", "لا. يتم حفظ بصمة SHA-256 فقط. احتفظ بالقيمة الكاملة في متغير بيئة خادمي ولا تضعها في الواجهة الأمامية أو مستودع عام."],
-      ["هل يمكنني إضافة API من عندي؟", "يمكنك إرسال مساهمة للمراجعة. كود الاختبار يُحفظ للمراجعة ولا يتم تشغيله مباشرة على خادم الإنتاج."]
-    ],
-    ctaEyebrow: "جاهز للبدء؟", ctaTitle: "خلّ التكامل يبدأ من هنا.",
-    ctaText: "أنشئ حساب المطور، ولّد مفتاحك، واستخدم الخدمة المتاحة.", ctaButton: "افتح مساحة المطور",
-    footerText: "مساحة أدوات وواجهات برمجية للمطورين.", footerLinks: ["الكتالوج", "التوثيق", "حالة الخدمات", "المساهمة"], rights: "جميع الحقوق محفوظة."
-  },
-  en: {
-    announcement: "MADE IN EGYPT · One workspace for your integrations", nav: ["Platform", "Features", "FAQ", "Docs"],
-    signIn: "Sign in", getStarted: "Get started", eyebrow: "DEVELOPER GATEWAY · API WORKSPACE",
-    titleA: "Build faster.", titleB: "Connect smarter.",
-    intro: "Clear API references, access keys you control, and a developer experience designed to shorten the path from an idea to your first successful request.",
-    explore: "Explore APIs", createKey: "Create API key", live: "Developer gateway online",
-    featuresEyebrow: "BUILT FOR DEVELOPERS", featuresTitle: "Everything you need. Nothing noisy.",
-    featuresIntro: "Discover APIs, manage access, and read documentation in one focused workspace.",
-    features: [
-      { title: "Clear API catalog", desc: "Explore API references, HTTP methods, routes, and categories in one place.", tag: "DISCOVER", icon: Layers3 },
-      { title: "Secure access keys", desc: "Create and revoke keys. Only SHA-256 fingerprints are stored; the full value is shown once.", tag: "ACCESS", icon: LockKeyhole },
-      { title: "Practical docs", desc: "Request and response examples help you understand an integration before writing it.", tag: "DOCS", icon: BookOpen },
-      { title: "Service testing", desc: "Start with the currently connected service and inspect its response and HTTP status.", tag: "TEST", icon: Terminal },
-      { title: "Reviewed contributions", desc: "Submit an API for review. Community submissions are not published automatically.", tag: "COMMUNITY", icon: ShieldCheck },
-      { title: "Scalable foundation", desc: "Built with Next.js and Supabase, separating the interface from service permissions.", tag: "STACK", icon: Workflow }
-    ],
-    flowEyebrow: "THREE STEPS TO START", flowTitle: "From account to first request.",
-    flow: [["01", "Create your account", "Continue with Google to access your developer workspace."], ["02", "Generate a key", "Create an API key and keep it server-side."], ["03", "Send your request", "Use Authorization: Bearer and start integrating."]],
-    faqEyebrow: "STRAIGHT ANSWERS", faqTitle: "Before you begin.",
-    faqs: [
-      ["Are all APIs in the catalog ready?", "Not yet. The catalog contains references and examples; Gemini is currently the connected operational service. A catalog card does not mean an API is live."],
-      ["How do I get an API key?", "Sign in with Google, open API Keys, and create a key with a label for your project. The full value is shown only once."],
-      ["Is the original key stored?", "No. Only a SHA-256 fingerprint is stored. Keep the full value in a server-side environment variable, never in frontend code or a public repository."],
-      ["Can I submit my own API?", "You can submit a contribution for review. Test code is stored for review and is not executed directly on the production server."]
-    ],
-    ctaEyebrow: "READY WHEN YOU ARE", ctaTitle: "Let your next integration start here.",
-    ctaText: "Create a developer account, generate a key, and use the connected service.", ctaButton: "Open developer workspace",
-    footerText: "A focused workspace for developer APIs and tools.", footerLinks: ["Catalog", "Documentation", "Service status", "Contribute"], rights: "All rights reserved."
-  }
-};
-
-const reveal = { hidden: { opacity: 0, y: 26 }, visible: { opacity: 1, y: 0, transition: { duration: .62, ease: "easeOut" as const } } };
-
-export default function LandingPage() {
-  const [locale, setLocale] = useState<Locale>("ar");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [catalogQuery, setCatalogQuery] = useState("");
-  const t = content[locale];
-  const ar = locale === "ar";
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("nox-apis-locale");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted locale after hydration.
-    if (saved === "en" || saved === "ar") setLocale(saved);
-  }, []);
-  useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = ar ? "rtl" : "ltr";
-    document.documentElement.dataset.locale = locale;
-    window.localStorage.setItem("nox-apis-locale", locale);
-  }, [locale, ar]);
-  function toggleLocale() { setLocale(value => value === "ar" ? "en" : "ar"); }
-
-  const navLinks = [
-    { href: "#platform", label: t.nav[0] },
-    { href: "#features", label: t.nav[1] },
-    { href: "#catalog", label: ar ? "الكتالوج" : "Catalog" },
-    { href: "#pricing", label: ar ? "الأسعار" : "Pricing" },
-    { href: "#faq", label: t.nav[2] },
-    { href: "/docs", label: t.nav[3] }
-  ];
-
-  return (
-    <main className="landing-page" dir={ar ? "rtl" : "ltr"}>
-      <div className="landing-ambient" aria-hidden="true"><span className="ambient-orb ambient-orb-one" /><span className="ambient-orb ambient-orb-two" /><span className="ambient-grid" /></div>
-      <div className="announcement-bar"><span className="announcement-spark"><Sparkles size={13} /></span><span>{t.announcement}</span><span className="announcement-dot" /><span className="announcement-version">Nox Apis / 0.4</span></div>
-
-      <header className="landing-nav-wrap">
-        <nav className="landing-nav glass-panel" aria-label={ar ? "التنقل الرئيسي" : "Main navigation"}>
-          <Link href="/" className="landing-brand" aria-label="Nox Apis"><span className="landing-brand-mark"><Braces size={22} strokeWidth={2.2} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link>
-          <div className="landing-nav-links">{navLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}</div>
-          <div className="landing-nav-actions">
-            <motion.button className="locale-toggle" onClick={() => toggleLocale()} type="button" aria-label="Change language" whileTap={{ scale: .97 }}><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></motion.button>
-            
-            <Link href="/login" className="nav-signin">{t.signIn}</Link>
-            <Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link>
-          </div>
-          <motion.button className="landing-mobile-toggle" type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} whileTap={{ scale: .97 }}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</motion.button>
-        </nav>
-        <AnimatePresence>
-          {menuOpen && <motion.div className="mobile-nav-panel glass-panel" initial={{ opacity: 0, y: -10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: .98 }} transition={{ duration: .2 }}>
-            {navLinks.map(link => <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}<ArrowUpLeft size={14} /></a>)}
-            <div className="mobile-nav-actions"><motion.button className="locale-toggle" onClick={() => toggleLocale()} whileTap={{ scale: .97 }}><Globe2 size={15} />{ar ? "English" : "العربية"}</motion.button><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
-          </motion.div>}
-        </AnimatePresence>
-      </header>
-
-      <section className="landing-hero" id="platform">
-        <div className="hero-copy">
-          <motion.div className="hero-eyebrow" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .55 }}><span className="hero-eyebrow-icon"><Zap size={14} fill="currentColor" /></span>{t.eyebrow}<span className="hero-eyebrow-line" /></motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, delay: .08, ease: [0.22, 1, 0.36, 1] }}>{t.titleA}<br /><span>{t.titleB}</span></motion.h1>
-          <motion.p className="hero-description" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .18 }}>{t.intro}</motion.p>
-          <motion.div className="hero-actions" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .28 }}>
-            <Link href="/apis" className="hero-button hero-button-primary">{t.explore}{ar ? <ArrowUpLeft size={17} /> : <ArrowRight size={17} />}</Link>
-            <Link href="/signup?next=/dashboard" className="hero-button hero-button-secondary"><KeyRound size={16} />{t.createKey}</Link>
-          </motion.div>
-          <motion.div className="hero-proof" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .55 }}><span className="proof-status"><i />{t.live}</span><span className="proof-divider" /><span className="proof-label">REST <b>·</b> JSON <b>·</b> HTTP</span></motion.div>
-        </div>
-
-        <motion.div className="hero-visual" initial={{ opacity: 0, scale: .94, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: .85, delay: .18, ease: [0.22, 1, 0.36, 1] }}>
-          <div className="visual-orbit visual-orbit-a" /><div className="visual-orbit visual-orbit-b" /><EarthGlobe />
-          <div className="visual-float visual-float-top"><span className="float-icon"><ShieldCheck size={15} /></span><span>AUTHENTICATED</span><i /></div>
-          <div className="code-window glass-panel">
-            <div className="code-window-top"><div className="window-dots"><i /><i /><i /></div><span className="window-file"><Terminal size={13} /> request.ts</span><span className="window-language">TYPESCRIPT</span></div>
-            <div className="code-window-body" dir="ltr">
-              <div className="code-line"><span className="line-number">01</span><span><b className="code-pink">const</b> <b className="code-lime">response</b> = <b className="code-blue">await</b> fetch(</span></div>
-              <div className="code-line"><span className="line-number">02</span><span className="code-string">  &quot;/api/v1/ai/gemini&quot;,</span></div>
-              <div className="code-line"><span className="line-number">03</span><span>  {"{"}</span></div>
-              <div className="code-line"><span className="line-number">04</span><span>    method: <b className="code-string">&quot;POST&quot;</b>,</span></div>
-              <div className="code-line"><span className="line-number">05</span><span>    headers: {"{"}</span></div>
-              <div className="code-line"><span className="line-number">06</span><span>      Authorization: <b className="code-string">&quot;Bearer YOUR_NOX_API_KEY&quot;</b></span></div>
-              <div className="code-line"><span className="line-number">07</span><span>    {"}"},</span></div>
-              <div className="code-line"><span className="line-number">08</span><span>    body: JSON.stringify({"{"} prompt {"}"})</span></div>
-              <div className="code-line"><span className="line-number">09</span><span>  {"}"}</span></div>
-              <div className="code-line"><span className="line-number">10</span><span>);</span></div>
-            </div>
-            <div className="code-window-bottom"><span><span className="terminal-live-dot" />{ar ? "مثال على الطلب" : "REQUEST EXAMPLE"}</span><span className="response-status">EXAMPLE ONLY</span></div>
-          </div>
-          <motion.div className="visual-float visual-float-bottom" animate={{ y: [0, -7, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}><span className="float-method">POST</span><span>/api/v1/ai/gemini</span><span className="float-arrow">↗</span></motion.div>
-          <div className="visual-glow" />
-        </motion.div>
-      </section>
-
-      <section className="trust-strip"><span>{ar ? "مبنية على معايير الويب" : "BUILT ON WEB STANDARDS"}</span><div><b>REST</b><i /><b>JSON</b><i /><b>HTTP</b><i /><b>OAuth</b><i /><b>SHA-256</b></div><span className="trust-right"><Activity size={13} />{ar ? "وضوح في حالة التنفيذ" : "HONEST IMPLEMENTATION STATUS"}</span></section>
-
-      <motion.section className="landing-catalog-section" id="catalog" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
-        <div className="landing-catalog-heading"><div><span className="section-kicker"><span />{ar ? "اكتشف الواجهات" : "DISCOVER APIS"}</span><h2>{ar ? "واجهة واحدة. احتمالات أكثر." : "One gateway. More possibilities."}</h2><p>{ar ? "ابحث في الكتالوج وشاهد حالة كل واجهة بوضوح." : "Search the catalog and see which endpoints are actually available."}</p></div><Link href="/apis" className="text-link">{ar ? "كل الواجهات" : "Full catalog"} <ArrowUpLeft size={14}/></Link></div>
-        <label className="landing-catalog-search"><Globe2 size={18}/><input value={catalogQuery} onChange={event => setCatalogQuery(event.target.value)} placeholder={ar ? "ابحث عن Gemini أو العملة أو الصور..." : "Search Gemini, currency, image..."} /><kbd>⌕</kbd></label>
-        <div className="landing-catalog-grid">{[
-          {name:"Gemini Text",method:"POST",path:"/api/v1/ai/gemini",state:ar?"متاحة فعليًا":"LIVE",live:true,desc:ar?"توليد النصوص والمحادثة.":"Text generation and chat."},
-          {name:"AI Image",method:"POST",path:"/api/v1/ai/image",state:ar?"معاينة":"PREVIEW",live:false,desc:ar?"واجهة قيد التجهيز لتوليد الصور.":"Image generation endpoint preview."},
-          {name:"Currency Rate",method:"GET",path:"/api/v1/currency/rate",state:ar?"معاينة":"PREVIEW",live:false,desc:ar?"عرض نموذج لبيانات أسعار العملات.":"Currency rates response preview."}
-        ].filter(item => (item.name+" "+item.path+" "+item.desc).toLowerCase().includes(catalogQuery.toLowerCase())).map(item => <article className="landing-api-card glass-panel" key={item.path}><div className="landing-api-card-top"><span className={item.live?"landing-api-live":"landing-api-preview"}><i/>{item.state}</span><span className="landing-api-method">{item.method}</span></div><h3>{item.name}</h3><code dir="ltr">{item.path}</code><p>{item.desc}</p><Link href={item.live?"/playground":"/apis"}>{ar?"استكشف الواجهة":"Explore endpoint"} <ArrowUpLeft size={13}/></Link></article>)}</div>
-        <div className="landing-stats"><div><strong>01</strong><span>{ar?"خدمة متصلة فعليًا":"Connected API"}</span></div><div><strong>03</strong><span>{ar?"واجهات في المختبر":"Playground endpoints"}</span></div><div><strong>30/min</strong><span>{ar?"حد الطلبات لكل مفتاح":"Requests per key"}</span></div></div>
-        <div className="landing-playground-cta"><div><strong>{ar?"جرّب قبل ما تدمج":"Test before you integrate"}</strong><p>{ar?"الزوار يقدروا يشوفوا شكل الاستجابة التجريبية، والمفتاح مطلوب للتنفيذ الفعلي.":"Guests can inspect mock responses; a valid key is required for live requests."}</p></div><Link href="/playground" className="hero-button hero-button-primary">{ar?"افتح Playground":"Open Playground"} <ArrowUpLeft size={15}/></Link></div>
-      </motion.section>
-
-      <motion.section className="features-section" id="features" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
-        <div className="section-intro"><span className="section-kicker"><span />{t.featuresEyebrow}</span><h2>{t.featuresTitle}</h2><p>{t.featuresIntro}</p></div>
-        <div className="feature-grid">{t.features.map((feature, index) => { const Icon = feature.icon; return <motion.article className={"feature-card feature-card-" + (index + 1) + " glass-panel"} key={feature.tag} whileHover={{ y: -6, transition: { duration: .22 } }}><div className="feature-card-top"><span className={"feature-icon feature-icon-" + (index + 1)}><Icon size={20} strokeWidth={1.8} /></span><span className="feature-tag">{feature.tag}</span></div><div className="feature-card-copy"><h3>{feature.title}</h3><p>{feature.desc}</p></div><span className="feature-card-index">0{index + 1}</span><span className="feature-card-orb" /></motion.article>; })}</div>
-      </motion.section>
-
-      <motion.section className="flow-section" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .15 }}>
-        <div className="flow-heading"><span className="section-kicker"><span />{t.flowEyebrow}</span><h2>{t.flowTitle}</h2></div>
-        <div className="flow-steps">{t.flow.map(([number, title, desc], index) => <motion.article className="flow-step" key={number} whileHover={{ y: -4 }}><span className="flow-number">{number}</span><div className="flow-step-icon">{index === 0 ? <Globe2 size={19} /> : index === 1 ? <KeyRound size={19} /> : <Code2 size={19} />}</div><h3>{title}</h3><p>{desc}</p>{index !== 2 && <span className="flow-connector"><ArrowRight size={15} /></span>}</motion.article>)}</div>
-      </motion.section>
-
-      <motion.section className="landing-pricing-section" id="pricing" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
-        <div className="landing-catalog-heading"><div><span className="section-kicker"><span />{ar ? "خطط مرنة" : "SIMPLE PLANS"}</span><h2>{ar ? "ابدأ مجانًا، وتوسّع وقت ما تحتاج." : "Start free. Scale when ready."}</h2><p>{ar ? "الخطط المدفوعة قيد الإعداد، ولن يتم تحصيل أي رسوم الآن." : "Paid plans are being prepared. No payments are active yet."}</p></div><Link href="/pricing" className="text-link">{ar ? "تفاصيل الباقات" : "Pricing details"} <ArrowUpLeft size={14}/></Link></div>
-        <div className="landing-mini-pricing"><article className="glass-panel"><span>FREE</span><strong>{ar ? "مجاني" : "Free"}</strong><p>{ar ? "للتجربة والتعلّم" : "For learning and testing"}</p><Link href="/signup">{ar ? "ابدأ الآن" : "Get started"}</Link></article><article className="glass-panel featured"><span>PRO · {ar ? "قريبًا" : "SOON"}</span><strong>Pro</strong><p>{ar ? "حدود أعلى وأدوات للمشاريع" : "Higher limits and project tools"}</p><Link href="/pricing">{ar ? "اعرف المزيد" : "Learn more"}</Link></article><article className="glass-panel"><span>BUSINESS</span><strong>{ar ? "للشركات" : "Business"}</strong><p>{ar ? "خيارات مخصصة للفرق" : "Custom team options"}</p><Link href="/pricing">{ar ? "تفاصيل الباقة" : "Plan details"}</Link></article></div>
-      </motion.section>
-
-      <motion.section className="faq-section" id="faq" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
-        <div className="faq-heading"><span className="section-kicker"><span />{t.faqEyebrow}</span><h2>{t.faqTitle}</h2></div>
-        <div className="faq-list">{t.faqs.map(([question, answer], index) => <details className="faq-item glass-panel" key={question} open={index === 0}><summary><span className="faq-index">0{index + 1}</span><span>{question}</span><ChevronDown size={17} /></summary><p>{answer}</p></details>)}</div>
-      </motion.section>
-
-      <motion.section className="final-cta glass-panel" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .25 }}>
-        <div className="cta-orb cta-orb-one" /><div className="cta-orb cta-orb-two" />
-        <div className="final-cta-copy"><span className="section-kicker"><span />{t.ctaEyebrow}</span><h2>{t.ctaTitle}</h2><p>{t.ctaText}</p></div>
-        <Link href="/signup?next=/dashboard" className="hero-button hero-button-primary">{t.ctaButton}{ar ? <ArrowUpLeft size={17} /> : <ArrowRight size={17} />}</Link>
-      </motion.section>
-
-      <footer className="landing-footer">
-        <div className="footer-main">
-          <div className="footer-brand-block"><Link href="/" className="landing-brand"><span className="landing-brand-mark"><Braces size={22} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link><p>{t.footerText}</p></div>
-          <div className="footer-link-group"><strong>{ar ? "استكشف" : "EXPLORE"}</strong><Link href="/apis">{t.footerLinks[0]}</Link><Link href="/docs">{t.footerLinks[1]}</Link><Link href="/playground">Playground</Link><Link href="/pricing">{ar ? "الأسعار" : "Pricing"}</Link></div>
-          <div className="footer-link-group"><strong>{ar ? "المطورون" : "DEVELOPERS"}</strong><Link href="/status">{t.footerLinks[2]}</Link><Link href="/create">{t.footerLinks[3]}</Link><Link href="/dashboard/api-keys">{ar ? "مفاتيح API" : "API keys"}</Link></div>
-          <div className="footer-link-group"><strong>{ar ? "الحساب" : "ACCOUNT"}</strong><Link href="/login">{t.signIn}</Link><Link href="/signup">{t.getStarted}</Link></div>
-        </div>
-        <div className="footer-bottom"><span>© 2026 Nox Apis. {t.rights}</span><span className="footer-built"><span />{ar ? "مبني للمطورين" : "BUILT FOR BUILDERS"}</span><a href="https://github.com/T7-T7/Bmg-Apis" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={17} /></a></div>
-      </footer>
-    </main>
-  );
+import {Activity,ArrowLeft,ArrowUpLeft,BookOpen,Code2,KeyRound,ShieldCheck,Sparkles,Zap} from "lucide-react";
+import DigitalGlobe from "@/components/globe/digital-globe";
+import ApiCard from "@/components/api/api-card";
+import {apiCatalog} from "@/lib/api/catalog";
+export default function LandingPage(){
+ const live=apiCatalog.filter(api=>api.status==="live");
+ return <div className="source-home">
+  <section className="source-hero"><div className="source-hero-copy">
+   <div className="source-eyebrow"><Sparkles size={15}/> منصة مصرية للمطورين مفتوحة المصدر <i/></div>
+   <h1>واجهات برمجية <span>جاهزة</span><br/>لبوتاتك ومشاريعك.</h1>
+   <p className="source-lead">ذكاء اصطناعي، بيانات، وخدمات عملية — في منصة واحدة. مفاتيح API، توثيق واضح، وتجربة مباشرة للخدمات المنشورة.</p>
+   <div className="source-hero-actions"><Link href="/playground" className="source-button primary"><Zap size={16}/> ابدأ في 5 دقائق</Link><Link href="/apis" className="source-button"><Code2 size={16}/> استكشف الواجهات</Link></div>
+   <div className="source-hero-stats"><div><b>{live.length}</b><span>خدمات متاحة فعليًا</span></div><div><b>REST</b><span>واجهات موحدة</span></div><div><b>JSON</b><span>استجابات منظمة</span></div></div>
+  </div><DigitalGlobe/></section>
+  <div className="source-section-heading"><div><span className="source-overline">AVAILABLE SERVICES / 01</span><h2>الواجهات المتاحة</h2><p>الخدمات المنشورة التي يمكن استدعاؤها الآن.</p></div><Link href="/apis">عرض الكل <ArrowUpLeft size={15}/></Link></div>
+  <div className="source-api-grid">{live.map(api=><ApiCard key={api.slug} api={api}/>)}</div>
+  <div className="source-section-heading"><div><span className="source-overline">WHY BMG APIS / 02</span><h2>كل ما تحتاجه للبدء</h2><p>أدوات واضحة دون تعقيد إضافي.</p></div></div>
+  <div className="source-feature-grid">
+   <article><span><ShieldCheck size={20}/></span><h3>مصادقة آمنة</h3><p>مفاتيح API مرتبطة بحسابك، مع التحقق من الصلاحيات وحدود الطلبات على الخادم.</p></article>
+   <article><span><Activity size={20}/></span><h3>حالة واضحة</h3><p>اعرض الخدمات المنشورة وحالة التطبيق بدل مؤشرات تشغيل تجريبية.</p></article>
+   <article><span><BookOpen size={20}/></span><h3>توثيق مباشر</h3><p>أمثلة طلبات مطابقة لمسارات API الموجودة فعليًا.</p></article>
+   <article><span><KeyRound size={20}/></span><h3>إدارة المفاتيح</h3><p>إنشاء المفاتيح وإلغاؤها من مساحة المطور مع عدم عرض السر إلا مرة واحدة.</p></article>
+  </div>
+  <section className="source-quickstart"><div><span className="source-overline">QUICK START / 03</span><h2>ابدأ التكامل الآن.</h2><p>أنشئ مفتاح Nox API، ثم استخدمه في ترويسة Authorization عند استدعاء الخدمة.</p></div><Link href="/dashboard/api-keys" className="source-button primary">إدارة مفاتيح API <ArrowLeft size={15}/></Link></section>
+ </div>;
 }
