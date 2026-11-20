@@ -26,7 +26,8 @@ export default function AdminSubmissionsPage() {
     if (error) setNotes({ global: error.message }); else setItems((data ?? []) as Submission[]);
     setLoading(false);
   }
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the admin list after mount.\n  useEffect(() => { void load(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the admin list after mount.
+  useEffect(() => { void load(); }, []);
 
   async function review(item: Submission, status: "approved" | "rejected") {
     setBusy(item.id);
