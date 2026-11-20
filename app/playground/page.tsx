@@ -10,7 +10,7 @@ type CodeLang = "curl" | "js" | "python";
 const apiOptions: { id: ApiId; name: string; method: string; path: string; description: string; live: boolean }[] = [
   { id: "gemini", name: "Gemini Text", method: "POST", path: "/api/v1/ai/gemini", description: "توليد النصوص والمحادثة مع تعليمات اختيارية.", live: true },
   { id: "image", name: "AI Image", method: "POST", path: "/api/v1/ai/image", description: "معاينة شكل واجهة توليد الصور — لم يتم ربط محرك توليد بعد.", live: false },
-  { id: "currency", name: "Currency Rate", method: "GET", path: "/api/v1/currency/rate", description: "معاينة استجابة أسعار العملات — لم يتم ربط مصدر أسعار بعد.", live: false },
+  { id: "currency", name: "Currency Rate", method: "GET", path: "/api/v1/currency/rate", description: "سعر صرف مرجعي يومي بين عملتين عبر Frankfurter.", live: true },
 ];
 
 const reveal = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: .48, ease: "easeOut" as const } } };
@@ -42,17 +42,17 @@ export default function PlaygroundPage() {
     const body = selected === "gemini" ? JSON.stringify({ prompt }, null, 2) : selected === "image" ? JSON.stringify({ prompt }, null, 2) : "";
     return {
       curl: selected === "currency"
-        ? "curl -X GET '" + url + "?base=USD&target=EUR'"
-        : `curl -X POST '\${url}' \\
+      curl: selected === "currency"
+        ? "curl -X GET '" + url + "?base=USD&target=EUR' -H 'Authorization: Bearer YOUR_NOX_API_KEY'"
   -H 'Content-Type: application/json' \\
   -H 'Authorization: Bearer YOUR_NOX_API_KEY' \\
-  -d '\${JSON.stringify({ prompt }).replaceAll("'", "'\\"'\\"'")}'`,
+  -d '${JSON.stringify({ prompt }).replaceAll("'", "'\\"'\\"'")}'`,
       js: selected === "currency"
-        ? "const response = await fetch('" + url + "?base=USD&target=EUR');\nconst data = await response.json();\nconsole.log(data);"
-        : "const response = await fetch('" + url + "', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    Authorization: 'Bearer ' + process.env.NOX_API_KEY\n  },\n  body: JSON.stringify(" + body + ")\n});\nconst data = await response.json();\nconsole.log(data);",
+      js: selected === "currency"
+        ? "const response = await fetch('" + url + "?base=USD&target=EUR', { headers: { Authorization: 'Bearer ' + process.env.NOX_API_KEY } });\\nconst data = await response.json();\\nconsole.log(data);"
       python: selected === "currency"
-        ? "import requests\nresponse = requests.get('" + url + "', params={'base': 'USD', 'target': 'EUR'})\nprint(response.json())"
-        : "import os, requests\nresponse = requests.post(\n    '" + url + "',\n    headers={'Authorization': 'Bearer ' + os.environ['NOX_API_KEY']},\n    json=" + body.replaceAll("\n", "\n    ") + "\n)\nprint(response.json())",
+      python: selected === "currency"
+        ? "import os, requests\\nresponse = requests.get('" + url + "', params={'base': 'USD', 'target': 'EUR'}, headers={'Authorization': 'Bearer ' + os.environ['NOX_API_KEY']})\\nprint(response.json())"
     };
   }, [current.path, prompt, selected]);
 
@@ -62,11 +62,12 @@ export default function PlaygroundPage() {
     setError("");
     setResponse(null);
     try {
-      if (selected === "gemini" && apiKey.trim()) {
-        const result = await fetch("/api/v1/ai/gemini", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey.trim() },
-          body: JSON.stringify({ prompt }),
+      if (selected !== "image" && apiKey.trim()) {
+        const isCurrency = selected === "currency";
+        const result = await fetch(isCurrency ? current.path + "?base=USD&target=EUR" : current.path, {
+          method: isCurrency ? "GET" : "POST",
+          headers: { Authorization: "Bearer " + apiKey.trim(), ...(isCurrency ? {} : { "Content-Type": "application/json" }) },
+          ...(isCurrency ? {} : { body: JSON.stringify({ prompt }) }),
         });
         const data = await result.json();
         if (!result.ok || !data.success) throw new Error(data.error || "HTTP " + result.status);
@@ -104,17 +105,17 @@ export default function PlaygroundPage() {
             <span className="playground-api-info"><strong>{api.name}</strong><small dir="ltr">{api.method} {api.path}</small></span>
             <i className={api.live ? "api-live-dot" : "api-preview-dot"} />
           </motion.button>)}
-          <div className="playground-list-note">النقطة المتصلة فعليًا: Gemini. الباقي يعرض بيانات محاكاة فقط.</div>
+          <div className="playground-list-note">الخدمات المتصلة فعليًا: Gemini وأسعار العملات. توليد الصور ما زال معاينة.</div>
         </aside>
 
         <div className="playground-workspace">
           <section className="playground-editor glass-panel">
             <div className="playground-editor-head"><div><span className={"method method-" + current.method.toLowerCase()}>{current.method}</span><code dir="ltr">{current.path}</code></div><span className={current.live ? "service-state ready" : "service-state"}><i />{current.live ? "Live API" : "Preview"}</span></div>
             <p className="playground-api-description">{current.description}</p>
-            {selected === "gemini" && <label className="playground-field"><span>مفتاح Nox API <small>اختياري للعرض التجريبي</small></span><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." autoComplete="off" dir="ltr" /></label>}
+            {selected !== "image" && <label className="playground-field"><span>مفتاح Nox API <small>مطلوب للتشغيل الفعلي</small></span><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." autoComplete="off" dir="ltr" /></label>}
             <label className="playground-field"><span>{selected === "currency" ? "ملاحظة الطلب" : "Prompt"}</span><textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={5} placeholder="اكتب محتوى الطلب..." /></label>
             <div className="playground-editor-actions"><motion.button type="button" className="button-primary" onClick={run} disabled={busy || !prompt.trim()} whileTap={{ scale: .97 }}>{busy ? <LoaderCircle size={16} className="spin" /> : <Play size={15} />}{busy ? "جارٍ التنفيذ..." : "Run request"}</motion.button><motion.button type="button" className="button-secondary" onClick={() => { setPrompt(""); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}><RefreshCw size={14} /> مسح</motion.button></div>
-            <p className="playground-security-note">المفتاح لا يُحفظ في localStorage ولا يُرسل إلا إلى نقطة Gemini على نفس الموقع.</p>
+            <p className="playground-security-note">المفتاح لا يُحفظ في localStorage ولا يُرسل إلا إلى نقطة API المحددة على نفس الموقع.</p>
           </section>
 
           <section className="playground-response glass-panel">
