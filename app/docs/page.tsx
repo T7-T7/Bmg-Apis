@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 
 const baseUrl = "https://bmg-apis.vercel.app";
 const curlExample = `curl -X POST "${baseUrl}/api/v1/ai/gemini" \\\
-  -H "Authorization: Bearer YOUR_BMG_API_KEY" \\\
+  -H "Authorization: Bearer YOUR_NOX_API_KEY" \\\
   -H "Content-Type: application/json" \\\
   -d '{"prompt":"اشرح الفرق بين let و const","instruction":"أجب بالعربية"}'`;
 const jsExample = `const response = await fetch("${baseUrl}/api/v1/ai/gemini", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": "Bearer YOUR_BMG_API_KEY"
+    "Authorization": "Bearer YOUR_NOX_API_KEY"
   },
   body: JSON.stringify({
     prompt: "اشرح الفرق بين let و const",
@@ -95,7 +95,7 @@ export default function DocsPage() {
           <section id="authentication" className="public-docs-section">
             <div className="public-docs-section-heading"><span>02</span><h2>المصادقة</h2></div>
             <p>تتطلب الواجهة مفتاح API نشطًا. أنشئ المفتاح من لوحة التحكم ثم خزّنه في متغير بيئة على الخادم. لا تضع المفتاح في كود المتصفح أو مستودع عام.</p>
-            <div className="public-docs-callout"><LockKeyhole size={18}/><div><strong>استخدم Bearer Authentication</strong><p>أرسل الترويسة بالشكل التالي: <code dir="ltr">Authorization: Bearer YOUR_BMG_API_KEY</code></p></div></div>
+            <div className="public-docs-callout"><LockKeyhole size={18}/><div><strong>استخدم Bearer Authentication</strong><p>أرسل الترويسة بالشكل التالي: <code dir="ltr">Authorization: Bearer YOUR_NOX_API_KEY</code></p></div></div>
           </section>
 
           <section id="gemini" className="public-docs-section">
