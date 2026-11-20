@@ -18,9 +18,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setError("");
     try {
       const supabase = getSupabaseBrowserClient();
-      const next = params.get("next") || "/dashboard/api-keys";
+      const next = params.get("next") || "/dashboard";
       const callback = new URL("/auth/callback", window.location.origin);
-      callback.searchParams.set("next", next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard/api-keys");
+      callback.searchParams.set("next", next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: callback.toString(), queryParams: { access_type: "offline", prompt: "select_account" } },
