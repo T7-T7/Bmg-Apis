@@ -88,7 +88,7 @@ export default function LandingPage() {
     document.documentElement.dataset.locale = locale;
     window.localStorage.setItem("nox-apis-locale", locale);
   }, [locale, ar]);
-  function toggleLocale() { toggleLocale(); }
+  function toggleLocale() { setLocale(value => value === "ar" ? "en" : "ar"); }
 
   const navLinks = [
     { href: "#platform", label: t.nav[0] },
