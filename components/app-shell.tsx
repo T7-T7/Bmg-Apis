@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Activity, ArrowUpLeft, BookOpen, Boxes, ChevronLeft, CircleDollarSign, Command, FileCode2, FlaskConical, LayoutDashboard, Menu, Search, ShieldCheck, Users, X } from "lucide-react";
+import { Activity, ArrowUpLeft, BookOpen, Boxes, ChevronLeft, CircleDollarSign, Command, FileCode2, FlaskConical, Globe2, LayoutDashboard, Menu, Search, ShieldCheck, Users, X } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
@@ -30,16 +30,26 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [locale, setLocale] = useState<"ar" | "en">("ar");
   const current = pathname === "/" ? "نظرة عامة" : pathname.startsWith("/apis/") ? "تفاصيل الواجهة" : groups.flatMap(group => group.items).find(item => item.href === pathname)?.label ?? "Nox Apis";
 
   useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
   useEffect(() => {
-    if (pathname !== "/") {
-      document.documentElement.dir = "rtl";
-      document.documentElement.lang = "ar";
-      document.documentElement.dataset.locale = "ar";
-    }
-  }, [pathname]);
+    const saved = window.localStorage.getItem("nox-apis-locale");
+    const next = saved === "en" ? "en" : "ar";
+    setLocale(next);
+  }, []);
+  useEffect(() => {
+    document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = locale;
+    document.documentElement.dataset.locale = locale;
+  }, [pathname, locale]);
+  function toggleLocale() {
+    const next = locale === "ar" ? "en" : "ar";
+    setLocale(next);
+    window.localStorage.setItem("nox-apis-locale", next);
+    window.dispatchEvent(new Event("nox-locale-change"));
+  }
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setSearchOpen(value => !value); }
@@ -72,7 +82,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       <main className="main-area">
         <header className="topbar">
           <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
-          <div className="topbar-actions"><ThemeToggle /><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard" className="top-create"><LayoutDashboard size={15} /><span>لوحة المطور</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
+          <div className="topbar-actions"><button className="locale-toggle" type="button" onClick={toggleLocale} aria-label="Change language"><Globe2 size={14}/><span>{locale === "ar" ? "EN" : "عربي"}</span></button><ThemeToggle /><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard" className="top-create"><LayoutDashboard size={15} /><span>لوحة المطور</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
         </header>
         {searchOpen && <div className="command-overlay" role="dialog" aria-modal="true" aria-label="البحث السريع" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}><div className="command-panel"><div className="command-input"><Search size={18} /><input autoFocus placeholder="ابحث أو اكتب اسم القسم..." onKeyDown={event => { if (event.key === "Enter") { const value = event.currentTarget.value.trim(); if (/api|واجهة|كتالوج/i.test(value)) window.location.href = "/apis"; else if (/مساهمة|اقتراح|إضافة/i.test(value)) window.location.href = "/create"; else if (/توثيق|docs/i.test(value)) window.location.href = "/docs"; else if (/playground|تجربة|اختبار/i.test(value)) window.location.href = "/playground"; else if (/سعر|أسعار|pricing/i.test(value)) window.location.href = "/pricing"; else if (/dashboard|لوحة/i.test(value)) window.location.href = "/dashboard"; else if (/حالة|status/i.test(value)) window.location.href = "/status"; else window.location.href = "/"; } }} /><kbd>ESC</kbd></div><div className="command-hint">انتقال سريع إلى أقسام المنصة</div>{groups.flatMap(group => group.items).map(item => { const Icon = item.icon; return <Link className="command-link" href={item.href} key={item.href} onClick={() => setSearchOpen(false)}><Icon size={16} /><span>{item.label}</span><ArrowUpLeft size={13} /></Link>; })}</div></div>}
         <div className="page-content">{children}</div>
