@@ -38,7 +38,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   const currentArabic = pathname === "/" ? "نظرة عامة" : pathname.startsWith("/apis/") ? "تفاصيل الواجهة" : groups.flatMap(group => group.items).find(item => item.href === pathname)?.label ?? "Nox Apis";
   const current = locale === "ar" ? currentArabic : pathname.startsWith("/apis/") ? "API Details" : navEnglish[pathname] ?? "Nox Apis";
 
-  useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- close transient navigation UI after route changes.\n  useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
   useEffect(() => {
     const saved = window.localStorage.getItem("nox-apis-locale");
     const next = saved === "en" ? "en" : "ar";
