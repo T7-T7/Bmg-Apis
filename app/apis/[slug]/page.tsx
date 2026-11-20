@@ -26,7 +26,7 @@ export default async function ApiDetailPage({ params }: DetailProps) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer YOUR_BMG_API_KEY"
+      "Authorization": "Bearer YOUR_NOX_API_KEY"
     },
     body: JSON.stringify({
       prompt: "اشرح لي الفرق بين let و const",
