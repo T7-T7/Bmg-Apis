@@ -17,7 +17,7 @@ const specification = {
         operationId: "generateGeminiResponse",
         summary: "إنشاء رد باستخدام Gemini",
         description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API.",
-        security: [{ BmgApiKey: [] }],
+        security: [{ NoxApiKey: [] }],
         requestBody: {
           required: true,
           content: {
@@ -68,11 +68,11 @@ const specification = {
   },
   components: {
     securitySchemes: {
-      BmgApiKey: {
+      NoxApiKey: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "BMG API Key",
-        description: "أنشئ مفتاحًا من لوحة Nox Apis وأرسله في Authorization: Bearer YOUR_BMG_API_KEY."
+        bearerFormat: "Nox Apis API Key",
+        description: "أنشئ مفتاحًا من لوحة Nox Apis وأرسله في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
   }
