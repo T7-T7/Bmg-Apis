@@ -10,7 +10,7 @@ type ApiService = { slug:string; name:string; description:string; category:strin
 type ApiKey = { id:string; label:string; key_prefix:string; created_at:string; last_used_at:string|null; expires_at:string|null; revoked_at:string|null };
 type Analytics = { totals?:{requests:number;successRate:number|null;avgLatency:number|null}; daily?:{date:string;count:number}[]; services?:{slug:string;count:number}[]; recent?:{id:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[] };
 const SERVICES:ApiService[]=[
- {slug:"aql-gemini",name:"Gemini",description:"توليد النصوص والمحادثات باستخدام Gemini مع تعليمات مخصصة واستمرار الجلسات.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gemini",http_method:"POST",status:"active"},
+ {slug:"aql-gemini",name:"جيمناي",description:"توليد النصوص والمحادثات باستخدام Gemini مع تعليمات مخصصة واستمرار الجلسات.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gemini",http_method:"POST",status:"active"},
 
 ];
 const NAV=[{href:"/",label:"نظرة عامة",icon:"⌂"},{href:"/apis",label:"كتالوج الواجهات",icon:"▦"},{href:"/playground",label:"مختبر الطلبات",icon:"⌘"},{href:"/docs",label:"التوثيق",icon:"▤"},{href:"/status",label:"حالة الخدمات",icon:"◉"}];
