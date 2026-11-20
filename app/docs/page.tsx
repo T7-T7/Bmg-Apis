@@ -57,7 +57,7 @@ export default function DocsPage() {
   return (
     <div className="public-docs">
       <header className="public-docs-nav">
-        <Link href="/" className="public-docs-brand"><span className="public-docs-mark">N</span><span>BMG <b>APIs</b></span></Link>
+        <Link href="/" className="public-docs-brand"><span className="public-docs-mark">N</span><span>Nox <b>Apis</b></span></Link>
         <nav aria-label="التنقل الرئيسي"><Link href="/apis">كتالوج الواجهات</Link><Link href="/status">حالة الخدمات</Link><Link href="/docs">التوثيق</Link></nav>
         <div className="public-docs-nav-actions"><ThemeToggle /><Link href="/dashboard/api-keys" className="public-docs-nav-cta">مفاتيح API <ArrowUpLeft size={15}/></Link></div>
       </header>
