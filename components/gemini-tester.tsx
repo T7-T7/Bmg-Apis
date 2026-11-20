@@ -39,8 +39,8 @@ export default function GeminiTester() {
   return (
     <section className="gemini-tester" id="try-api">
       <div className="tester-heading"><div><span className="tester-icon"><Sparkles size={18} /></span><div><h2>جرّب عقل مباشرة</h2><p>اختبر الخدمة من المتصفح قبل دمجها في مشروعك.</p></div></div><span className="tester-limit">30,000 حرف</span></div>
-      <label className="tester-label" htmlFor="gemini-key">مفتاح BMG API</label>
-      <input id="gemini-key" className="tester-instruction" dir="ltr" type="password" autoComplete="off" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="bmg_live_..." />
+      <label className="tester-label" htmlFor="gemini-key">مفتاح Nox API</label>
+      <input id="gemini-key" className="tester-instruction" dir="ltr" type="password" autoComplete="off" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." />
       <p className="tester-key-hint">أنشئ مفتاحًا من صفحة <a href="/dashboard/api-keys">مفاتيح API</a>. لا يُحفظ المفتاح في الموقع.</p>
       <label className="tester-label" htmlFor="gemini-prompt">رسالة المستخدم</label>
       <textarea id="gemini-prompt" className="tester-prompt" value={prompt} onChange={event => setPrompt(event.target.value)} maxLength={MAX_CHARS} placeholder="اكتب سؤالك هنا..." />
