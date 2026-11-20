@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#f2f0e8", colorScheme: "light dark", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl"><body>{children}</body></html>;
+  return <html lang="ar" dir="rtl" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:`(()=>{try{const saved=localStorage.getItem("nox-theme");const mode=saved==="dark"||saved==="light"?saved:"system";const resolved=mode==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):mode;document.documentElement.dataset.theme=resolved;document.documentElement.style.colorScheme=resolved}catch{}})()`}} /></head><body>{children}</body></html>;
 }
