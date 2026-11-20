@@ -39,6 +39,14 @@ const responseExample = `{
   "responseId": "r_..."
 }`;
 
+const currencyCurl = `curl -X GET "${baseUrl}/api/v1/currency/rate?base=USD&target=EUR" \\\\
+  -H "Authorization: Bearer YOUR_NOX_API_KEY"`;
+const currencyJs = `const response = await fetch("${baseUrl}/api/v1/currency/rate?base=USD&target=EUR", {
+  headers: { Authorization: "Bearer " + process.env.NOX_API_KEY }
+});
+const data = await response.json();
+console.log(data.rate, data.date);`;
+
 function CodeBlock({ label, code }: { label: string; code: string }) {
   return <div className="public-docs-code"><div className="public-docs-code-head"><span>{label}</span><span aria-hidden="true">{label.includes("JSON") ? <Braces size={15}/> : <Terminal size={15}/>}</span></div><pre dir="ltr"><code>{code}</code></pre></div>;
 }
@@ -108,8 +116,21 @@ export default function DocsPage() {
             <CodeBlock label="JAVASCRIPT · FETCH" code={jsExample}/>
           </section>
 
+          <section id="currency" className="public-docs-section">
+            <div className="public-docs-section-heading"><span>04</span><h2>أسعار العملات</h2></div>
+            <p>يعيد هذا المسار سعر صرف مرجعيًا يوميًا من Frankfurter. لا يحتاج مصدر البيانات إلى مفتاح خارجي، لكن استخدام Nox Apis يتطلب مفتاحك الخاص. الأسعار ليست عروض تداول لحظية.</p>
+            <div className="public-docs-endpoint"><b className="method-get">GET</b><code dir="ltr">{baseUrl}/api/v1/currency/rate</code></div>
+            <div className="public-docs-facts"><div><small>العملة الأساسية</small><strong>USD افتراضيًا</strong></div><div><small>العملة المستهدفة</small><strong>EUR افتراضيًا</strong></div><div><small>نوع السعر</small><strong>مرجعي يومي</strong></div></div>
+            <div className="public-docs-params">
+              <div><code>base</code><b>string · اختياري</b><p>رمز العملة الأساسية من ثلاثة أحرف، مثل USD.</p></div>
+              <div><code>target</code><b>string · اختياري</b><p>رمز العملة المستهدفة من ثلاثة أحرف، مثل EUR.</p></div>
+            </div>
+            <h3>مثال cURL</h3><CodeBlock label="BASH · CURL" code={currencyCurl}/>
+            <h3>مثال JavaScript</h3><CodeBlock label="JAVASCRIPT · FETCH" code={currencyJs}/>
+          </section>
+
           <section id="request" className="public-docs-section">
-            <div className="public-docs-section-heading"><span>04</span><h2>حقول الطلب</h2></div>
+            <div className="public-docs-section-heading"><span>05</span><h2>حقول الطلب</h2></div>
             <p>أرسل الحقول التالية داخل جسم الطلب بصيغة JSON.</p>
             <div className="public-docs-params">
               <div><code>prompt</code><b>string · مطلوب</b><p>النص أو السؤال المراد إرساله إلى النموذج. من حرف واحد حتى 30,000 حرف.</p></div>
@@ -119,7 +140,7 @@ export default function DocsPage() {
           </section>
 
           <section id="responses" className="public-docs-section">
-            <div className="public-docs-section-heading"><span>05</span><h2>الاستجابات والأخطاء</h2></div>
+            <div className="public-docs-section-heading"><span>06</span><h2>الاستجابات والأخطاء</h2></div>
             <p>مثال توضيحي لبنية الاستجابة الناجحة.</p>
             <CodeBlock label="JSON · 200 OK" code={responseExample}/>
             <div className="public-docs-errors">
@@ -133,7 +154,7 @@ export default function DocsPage() {
           </section>
 
           <section id="openapi" className="public-docs-section">
-            <div className="public-docs-section-heading"><span>06</span><h2>OpenAPI Specification</h2></div>
+            <div className="public-docs-section-heading"><span>07</span><h2>OpenAPI Specification</h2></div>
             <p>لأدوات المطورين والمساعدات البرمجية، يتوفر تعريف آلي للمسار المنشور وحقول الطلب والمصادقة والاستجابات.</p>
             <a className="public-docs-openapi-link" href="/api/openapi.json"><FileJson2 size={19}/><span><strong>openapi.json</strong><small>{baseUrl}/api/openapi.json</small></span><ArrowUpLeft size={15}/></a>
             <a className="public-docs-text-link" href="/docs.md">قراءة التوثيق كنص Markdown <ArrowUpLeft size={13}/></a>
