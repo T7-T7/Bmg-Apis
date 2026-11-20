@@ -1,4 +1,5 @@
 begin;
+drop function if exists public.bmg_authorize_demo_request(text,text,text);
 create table if not exists private.api_demo_config(id boolean primary key default true check(id),secret_hash bytea not null);
 revoke all on private.api_demo_config from anon,authenticated,public;
 -- The hash is populated in the live database through the secret-management workflow.
