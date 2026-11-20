@@ -56,10 +56,10 @@ export default function AuthCallbackPage() {
         }
       }
 
-      const requested = url.searchParams.get("next") || "/dashboard/api-keys";
+      const requested = url.searchParams.get("next") || "/dashboard";
       const next = requested.startsWith("/") && !requested.startsWith("//")
         ? requested
-        : "/dashboard/api-keys";
+        : "/dashboard";
 
       window.location.replace(next);
     }
