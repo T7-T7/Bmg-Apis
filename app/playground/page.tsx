@@ -119,7 +119,7 @@ export default function PlaygroundPage() {
 
           <section className="playground-response glass-panel">
             <div className="playground-panel-title"><div><strong>Response</strong><small>JSON output</small></div><span className="response-format-tag">application/json</span></div>
-            {busy ? <div className="playground-empty"><LoaderCircle size={22} className="spin" /><span>جارٍ انتظار الاستجابة...</span></div> : response ? <div className="playground-json"><div className="playground-json-toolbar"><span className={(response._mode === "live") ? "live-response" : "mock-response"}>{response._mode === "live" ? "LIVE RESPONSE" : "MOCK RESPONSE"}</span><span>HTTP {String(response._httpStatus || 200)}</span><button type="button" onClick={() => copy(JSON.stringify(response, null, 2))}><Copy size={13} /> نسخ JSON</button></div><pre dir="ltr">{highlightJson(JSON.stringify(response, null, 2))}</pre></div> : error ? <div className="playground-error">{error}</div> : <div className="playground-empty"><ArrowDownToLine size={23} /><strong>لا توجد استجابة بعد</strong><span>اختر API ثم اضغط Run request لعرض JSON هنا.</span></div>}
+            {busy ? <div className="playground-empty"><LoaderCircle size={22} className="spin" /><span>جارٍ انتظار الاستجابة...</span></div> : response ? <div className="playground-json"><div className="playground-json-toolbar"><span className={(response._mode === "live") ? "live-response" : "mock-response"}>{response._mode === "live" ? "LIVE RESPONSE" : "MOCK RESPONSE"}</span><span>HTTP {String(response._httpStatus || 200)}</span><motion.button type="button" onClick={() => copy(JSON.stringify(response, null, 2))} whileTap={{ scale: .97 }}><Copy size={13} /> نسخ JSON</motion.button></div><pre dir="ltr">{highlightJson(JSON.stringify(response, null, 2))}</pre></div> : error ? <div className="playground-error">{error}</div> : <div className="playground-empty"><ArrowDownToLine size={23} /><strong>لا توجد استجابة بعد</strong><span>اختر API ثم اضغط Run request لعرض JSON هنا.</span></div>}
           </section>
         </div>
       </motion.section>
@@ -127,8 +127,8 @@ export default function PlaygroundPage() {
       <motion.section className="playground-code-section" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .12 }}>
         <div className="section-heading"><div><span className="section-overline">INTEGRATION SNIPPETS</span><h2>استخدمها في مشروعك</h2><p>أمثلة قابلة للنسخ للواجهة المحددة.</p></div></div>
         <div className="playground-code-card glass-panel">
-          <div className="playground-code-tabs">{(["curl", "js", "python"] as CodeLang[]).map(lang => <button type="button" key={lang} className={language === lang ? "active" : ""} onClick={() => setLanguage(lang)}>{lang === "js" ? "JavaScript" : lang === "curl" ? "cURL" : "Python"}</button>)}</div>
-          <div className="playground-code-content"><pre dir="ltr">{snippets[language]}</pre><button type="button" className="playground-copy-code" onClick={() => copy(snippets[language])}>{copied ? <Check size={14} /> : <Copy size={14} />} نسخ الكود</button></div>
+          <div className="playground-code-tabs">{(["curl", "js", "python"] as CodeLang[]).map(lang => <motion.button type="button" key={lang} className={language === lang ? "active" : ""} onClick={() => setLanguage(lang)} whileTap={{ scale: .97 }}>{lang === "js" ? "JavaScript" : lang === "curl" ? "cURL" : "Python"}</button>)}</div>
+          <div className="playground-code-content"><pre dir="ltr">{snippets[language]}</pre><motion.button type="button" className="playground-copy-code" onClick={() => copy(snippets[language])} whileTap={{ scale: .97 }}>{copied ? <Check size={14} /> : <Copy size={14} />} نسخ الكود</motion.button></div>
         </div>
         <p className="playground-code-warning">أمثلة image وcurrency توثيقية فقط حاليًا؛ لا توجد مسارات تشغيل لهذه الخدمات في الخادم حتى الآن.</p>
       </motion.section>
