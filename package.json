@@ -2,7 +2,7 @@
   "name": "nox-apis",
   "version": "0.3.0",
   "private": true,
-  "description": "Bmg-Apis backend API service",
+  "description": "NOX APIS — NEXUS OF XPERIENCE developer API platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
