@@ -39,20 +39,16 @@ export default function PlaygroundPage() {
 
   const snippets = useMemo(() => {
     const url = "https://bmg-apis-b2-902b.vercel.app" + current.path;
-    const body = selected === "gemini" ? JSON.stringify({ prompt }, null, 2) : selected === "image" ? JSON.stringify({ prompt }, null, 2) : "";
     return {
       curl: selected === "currency"
-      curl: selected === "currency"
         ? "curl -X GET '" + url + "?base=USD&target=EUR' -H 'Authorization: Bearer YOUR_NOX_API_KEY'"
-  -H 'Content-Type: application/json' \\
-  -H 'Authorization: Bearer YOUR_NOX_API_KEY' \\
-  -d '${JSON.stringify({ prompt }).replaceAll("'", "'\\"'\\"'")}'`,
+        : "curl -X POST '" + url + "' -H 'Content-Type: application/json' -H 'Authorization: Bearer YOUR_NOX_API_KEY' -d '" + JSON.stringify({ prompt }).replaceAll("'", "'\\''") + "'",
       js: selected === "currency"
-      js: selected === "currency"
-        ? "const response = await fetch('" + url + "?base=USD&target=EUR', { headers: { Authorization: 'Bearer ' + process.env.NOX_API_KEY } });\\nconst data = await response.json();\\nconsole.log(data);"
+        ? "const response = await fetch('" + url + "?base=USD&target=EUR', { headers: { Authorization: 'Bearer ' + process.env.NOX_API_KEY } });\nconst data = await response.json();\nconsole.log(data);"
+        : "const response = await fetch('" + url + "', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    Authorization: 'Bearer ' + process.env.NOX_API_KEY\n  },\n  body: JSON.stringify(" + JSON.stringify({ prompt }, null, 2) + ")\n});\nconst data = await response.json();\nconsole.log(data);",
       python: selected === "currency"
-      python: selected === "currency"
-        ? "import os, requests\\nresponse = requests.get('" + url + "', params={'base': 'USD', 'target': 'EUR'}, headers={'Authorization': 'Bearer ' + os.environ['NOX_API_KEY']})\\nprint(response.json())"
+        ? "import os, requests\nresponse = requests.get('" + url + "', params={'base': 'USD', 'target': 'EUR'}, headers={'Authorization': 'Bearer ' + os.environ['NOX_API_KEY']})\nprint(response.json())"
+        : "import os, requests\nresponse = requests.post(\n    '" + url + "',\n    headers={'Authorization': 'Bearer ' + os.environ['NOX_API_KEY']},\n    json=" + JSON.stringify({ prompt }, null, 2).replaceAll("\n", "\n    ") + "\n)\nprint(response.json())",
     };
   }, [current.path, prompt, selected]);
 
