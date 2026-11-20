@@ -22,6 +22,7 @@ begin
   totals as (
     select
       count(*)::integer as requests,
+      count(*) filter (where status_code is not null)::integer as status_measured,
       count(*) filter (where status_code >= 200 and status_code < 400)::integer as successful,
       count(*) filter (where latency_ms is not null)::integer as measured,
       round(avg(latency_ms))::integer as avg_latency
@@ -57,7 +58,7 @@ begin
   select jsonb_build_object(
     'totals', jsonb_build_object(
       'requests', totals.requests,
-      'successRate', case when totals.requests > 0 then round((totals.successful::numeric / totals.requests) * 100)::integer else null end,
+      'successRate', case when totals.status_measured > 0 then round((totals.successful::numeric / totals.status_measured) * 100)::integer else null end,
       'avgLatency', totals.avg_latency,
       'measuredRequests', totals.measured
     ),
