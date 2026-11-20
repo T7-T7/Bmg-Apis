@@ -9,7 +9,7 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("bmg-apis-theme");
+    const saved = window.localStorage.getItem("nox-apis-theme") || window.localStorage.getItem("bmg-apis-theme");
     const initial: Theme = saved === "light" || saved === "dark"
       ? saved
       : window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
@@ -21,7 +21,7 @@ export default function ThemeToggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     document.documentElement.dataset.theme = next;
-    window.localStorage.setItem("bmg-apis-theme", next);
+    window.localStorage.setItem("nox-apis-theme", next);
   }
 
   return (
