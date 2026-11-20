@@ -1082,3 +1082,157 @@ html[data-theme="light"] .glass-panel {
 html:not([data-theme="light"]) .auth-page {
   background: linear-gradient(135deg,#171A1D 0%,#202327 50%,#141719 100%);
 }
+
+ 
+/* Kimi-inspired neutral palette */
+:root {
+  --bg: #111111;
+  --bg-soft: #161516;
+  --surface: #1F1E1E;
+  --surface-raised: #242424;
+  --surface-hover: #292929;
+  --line: #ACACAC;
+  --line-strong: #ACACAC;
+  --text: #D9D9D9;
+  --text-soft: #D9D9D9;
+  --muted: #292929;
+  --muted-2: #292929;
+  --accent: #CBCBCB;
+  --accent-strong: #D9D9D9;
+  --accent-wash: rgba(203,203,203,.10);
+  --kimi: #CBCBCB;
+  --kimi-wash: rgba(203,203,203,.08);
+  --success: #CBCBCB;
+  --warning-strong: #ACACAC;
+  --danger-strong: #ACACAC;
+  --info: #3383DA;
+  --pink: #CBCBCB;
+  --orange: #ACACAC;
+  --yellow: #CBCBCB;
+  --mint: #CBCBCB;
+  --warning: #ACACAC;
+  --danger: #ACACAC;
+  --panel: rgba(31,30,30,.70);
+  --accent-soft: var(--accent-wash);
+  --shadow-card: 0 12px 30px rgba(0,0,0,.24);
+}
+html:not([data-theme="light"]) {
+  color-scheme: dark;
+  background: #111111;
+}
+html:not([data-theme="light"]) body {
+  background-color: #111111;
+}
+html:not([data-theme="light"]) .sidebar,
+html:not([data-theme="light"]) .topbar {
+  background-color: rgba(22,21,22,.96);
+  border-color: rgba(172,172,172,.28);
+}
+html:not([data-theme="light"]) .glass-panel,
+html:not([data-theme="light"]) .landing-nav.glass-panel,
+html:not([data-theme="light"]) .mobile-nav-panel.glass-panel,
+html:not([data-theme="light"]) .code-window.glass-panel,
+html:not([data-theme="light"]) .feature-card.glass-panel,
+html:not([data-theme="light"]) .faq-item.glass-panel,
+html:not([data-theme="light"]) .final-cta.glass-panel {
+  background: rgba(31,30,30,.70);
+  border-color: rgba(172,172,172,.45);
+  box-shadow: 0 12px 30px rgba(0,0,0,.22);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+html:not([data-theme="light"]) input,
+html:not([data-theme="light"]) textarea,
+html:not([data-theme="light"]) select,
+html:not([data-theme="light"]) .search-field,
+html:not([data-theme="light"]) .quick-search,
+html:not([data-theme="light"]) .command-input,
+html:not([data-theme="light"]) .api-route,
+html:not([data-theme="light"]) .key-usage-panel pre {
+  background-color: #161516;
+  color: #D9D9D9;
+  border-color: rgba(172,172,172,.48);
+}
+html:not([data-theme="light"]) .command-panel,
+html:not([data-theme="light"]) .workspace-switch,
+html:not([data-theme="light"]) .workflow-card,
+html:not([data-theme="light"]) .api-card,
+html:not([data-theme="light"]) .overview-stat,
+html:not([data-theme="light"]) .stat-icon,
+html:not([data-theme="light"]) .api-glyph,
+html:not([data-theme="light"]) .feature-icon,
+html:not([data-theme="light"]) .flow-step-icon,
+html:not([data-theme="light"]) .callout-icon,
+html:not([data-theme="light"]) .cta-icon {
+  background-color: #1F1E1E;
+}
+html:not([data-theme="light"]) .button-primary,
+html:not([data-theme="light"]) .button-quiet,
+html:not([data-theme="light"]) .button-secondary,
+html:not([data-theme="light"]) .hero-button-primary,
+html:not([data-theme="light"]) .nav-cta,
+html:not([data-theme="light"]) .top-create {
+  background: #242424;
+  border-color: #ACACAC;
+  color: #D9D9D9;
+  box-shadow: none;
+}
+html:not([data-theme="light"]) .button-primary:hover,
+html:not([data-theme="light"]) .button-quiet:hover,
+html:not([data-theme="light"]) .button-secondary:hover,
+html:not([data-theme="light"]) .hero-button-primary:hover,
+html:not([data-theme="light"]) .nav-cta:hover,
+html:not([data-theme="light"]) .top-create:hover {
+  background: #292929;
+  border-color: #D9D9D9;
+  box-shadow: none;
+}
+html:not([data-theme="light"]) .brand-mark,
+html:not([data-theme="light"]) .workspace-avatar,
+html:not([data-theme="light"]) .profile-avatar {
+  background: #1F1E1E;
+  color: #CBCBCB;
+  box-shadow: none;
+}
+html:not([data-theme="light"]) :is(.nav-item,.nav-item.active,.eyebrow,.section-overline,
+.section-kicker,.text-link,.card-link,.welcome-kicker,.welcome-content h1 span,
+.welcome-content > p,.workflow-card-top,.flow-number,.faq-index,.footer-link-group a:hover) {
+  color: #CBCBCB;
+}
+html:not([data-theme="light"]) :is(.nav-item.active,.sidebar-callout,.callout-icon,.api-state,
+.quick-search kbd,.api-route,.api-glyph,.feature-icon,.flow-step-icon) {
+  border-color: rgba(172,172,172,.55);
+}
+html:not([data-theme="light"]) :is(.nav-item.active,.sidebar-callout,.welcome-banner,
+.orbit-core,.orbit-chip,.welcome-bottom,.bottom-cta,.api-route) {
+  background: #1F1E1E;
+  background-image: none;
+}
+html:not([data-theme="light"]) :is(.welcome-content > p,.api-description,.api-route code,
+.stat-copy > span,.stat-copy small,.page-heading p,.section-heading p,
+.workflow-card p,.feature-card-copy p,.flow-step p,.faq-item p,
+.footer-brand-block p,.sidebar-callout p,.breadcrumbs,.method-caption) {
+  color: #292929;
+}
+html:not([data-theme="light"]) :is(.brand-mark svg,.nav-item svg,.button-primary svg,
+.button-quiet svg,.button-secondary svg,.topbar svg,.card-more svg,
+.stat-icon svg,.api-glyph svg,.feature-icon svg,.flow-step-icon svg,
+.callout-icon svg,.cta-icon svg,.auth-brand > span svg) {
+  color: #CBCBCB;
+}
+html:not([data-theme="light"]) :is(.feature-icon-3,.feature-icon-6,.flow-step-icon.static-blue) {
+  color: #3383DA;
+}
+html:not([data-theme="light"]) .code-blue,
+html:not([data-theme="light"]) .float-method {
+  color: #2B8DFC;
+}
+html:not([data-theme="light"]) :is(.ambient-orb,.visual-glow,.cta-orb) {
+  display: none !important;
+}
+html:not([data-theme="light"]) :is(.welcome-banner,.bottom-cta,.sidebar-callout,.auth-page) {
+  box-shadow: none;
+}
+html:not([data-theme="light"]) :focus-visible {
+  outline-color: #ACACAC;
+}
