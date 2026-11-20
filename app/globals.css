@@ -1331,3 +1331,5 @@ html,body,.source-app,.source-main,.source-content{width:100%;max-width:100%;min
 .source-auth-sheet-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:46px;border-radius:9px;background:#d4ff00;color:#080b06;font-size:12px;font-weight:700}
 .source-auth-sheet-cancel{margin-top:12px;padding:9px 18px;color:#9aa59c;font-size:11px}
 @media(max-width:520px){.source-demo-foot{align-items:flex-start;flex-direction:column}.source-auth-sheet{padding-inline:19px}}
+
+.source-globe-stable{background:transparent!important;background-color:transparent!important}.source-globe-stable .source-globe-spin{width:100%;height:100%;transform-style:preserve-3d;transform-origin:50% 50%;animation:bmg-globe-revolution 34s linear infinite;will-change:transform}.source-globe-stable .source-globe-spin svg{display:block;width:100%;height:100%;overflow:visible}@keyframes bmg-globe-revolution{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}@media(prefers-reduced-motion:reduce){.source-globe-stable .source-globe-spin{animation:none}}
