@@ -106,14 +106,14 @@ export default function LandingPage() {
             <button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")} type="button" aria-label="Change language"><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></button>
             <ThemeToggle />
             <Link href="/login" className="nav-signin">{t.signIn}</Link>
-            <Link href="/signup?next=/dashboard/api-keys" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link>
+            <Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link>
           </div>
           <button className="landing-mobile-toggle" type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
         </nav>
         <AnimatePresence>
           {menuOpen && <motion.div className="mobile-nav-panel glass-panel" initial={{ opacity: 0, y: -10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: .98 }} transition={{ duration: .2 }}>
             {navLinks.map(link => <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}<ArrowUpLeft size={14} /></a>)}
-            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")}><Globe2 size={15} />{ar ? "English" : "العربية"}</button><ThemeToggle /><Link href="/signup?next=/dashboard/api-keys" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
+            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")}><Globe2 size={15} />{ar ? "English" : "العربية"}</button><ThemeToggle /><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
           </motion.div>}
         </AnimatePresence>
       </header>
@@ -125,7 +125,7 @@ export default function LandingPage() {
           <motion.p className="hero-description" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .65, delay: .18 }}>{t.intro}</motion.p>
           <motion.div className="hero-actions" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6, delay: .28 }}>
             <Link href="/apis" className="hero-button hero-button-primary">{t.explore}{ar ? <ArrowUpLeft size={17} /> : <ArrowRight size={17} />}</Link>
-            <Link href="/signup?next=/dashboard/api-keys" className="hero-button hero-button-secondary"><KeyRound size={16} />{t.createKey}</Link>
+            <Link href="/signup?next=/dashboard" className="hero-button hero-button-secondary"><KeyRound size={16} />{t.createKey}</Link>
           </motion.div>
           <motion.div className="hero-proof" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .55 }}><span className="proof-status"><i />{t.live}</span><span className="proof-divider" /><span className="proof-label">REST <b>·</b> JSON <b>·</b> HTTP</span></motion.div>
         </div>
@@ -141,7 +141,7 @@ export default function LandingPage() {
               <div className="code-line"><span className="line-number">03</span><span>  {"{"}</span></div>
               <div className="code-line"><span className="line-number">04</span><span>    method: <b className="code-string">"POST"</b>,</span></div>
               <div className="code-line"><span className="line-number">05</span><span>    headers: {"{"}</span></div>
-              <div className="code-line"><span className="line-number">06</span><span>      Authorization: <b className="code-string">"Bearer YOUR_KEY"</b></span></div>
+              <div className="code-line"><span className="line-number">06</span><span>      Authorization: <b className="code-string">"Bearer YOUR_NOX_API_KEY"</b></span></div>
               <div className="code-line"><span className="line-number">07</span><span>    {"}"},</span></div>
               <div className="code-line"><span className="line-number">08</span><span>    body: JSON.stringify({"{"} prompt {"}"})</span></div>
               <div className="code-line"><span className="line-number">09</span><span>  {"}"}</span></div>
@@ -191,7 +191,7 @@ export default function LandingPage() {
       <motion.section className="final-cta glass-panel" variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: .25 }}>
         <div className="cta-orb cta-orb-one" /><div className="cta-orb cta-orb-two" />
         <div className="final-cta-copy"><span className="section-kicker"><span />{t.ctaEyebrow}</span><h2>{t.ctaTitle}</h2><p>{t.ctaText}</p></div>
-        <Link href="/signup?next=/dashboard/api-keys" className="hero-button hero-button-primary">{t.ctaButton}{ar ? <ArrowUpLeft size={17} /> : <ArrowRight size={17} />}</Link>
+        <Link href="/signup?next=/dashboard" className="hero-button hero-button-primary">{t.ctaButton}{ar ? <ArrowUpLeft size={17} /> : <ArrowRight size={17} />}</Link>
       </motion.section>
 
       <footer className="landing-footer">
