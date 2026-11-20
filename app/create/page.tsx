@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertCircle, Code2, Info, ShieldCheck, UploadCloud, X } from "lucide-react";
+import { AlertCircle, ShieldCheck, UploadCloud, X } from "lucide-react";
 import type { ApiCategory, HttpMethod } from "@/lib/api-data";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
