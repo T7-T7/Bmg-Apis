@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowUpLeft, Braces, LoaderCircle } from "lucide-react";
+import { ArrowUpLeft, LoaderCircle } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { motion } from "motion/react";
