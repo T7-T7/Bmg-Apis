@@ -262,3 +262,4 @@ body.sidebar-open{overflow:hidden;touch-action:pan-y}
 .mfa-dialog{width:min(100%,420px);padding:24px;box-shadow:0 20px 70px #0005}
 .mfa-dialog p{color:var(--muted);margin:8px 0 16px}
 .mfa-dialog input{width:100%;max-width:220px;text-align:center;letter-spacing:7px;direction:ltr}
+.key-actions{display:flex;align-items:center;gap:12px}.mfa-dialog label{display:block;margin:12px 0 5px}.mfa-dialog input{width:100%;padding:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:3px}
