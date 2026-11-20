@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://bmg-apis-b2-902b.vercel.app"),
   openGraph: { title: "BMG APIs", description: "Developer API platform", type: "website" },
 };
-export const viewport: Viewport = { themeColor: "#080b12", colorScheme: "dark", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#f2f0e8", colorScheme: "light", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="ar" dir="rtl"><body>{children}</body></html>;
 }
