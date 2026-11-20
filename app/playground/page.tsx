@@ -43,7 +43,10 @@ export default function PlaygroundPage() {
     return {
       curl: selected === "currency"
         ? "curl -X GET '" + url + "?base=USD&target=EUR'"
-        : "curl -X POST '" + url + "' \\\\\n  -H 'Content-Type: application/json' \\\\\n  -H 'Authorization: Bearer YOUR_NOX_API_KEY' \\\\\n  -d '" + JSON.stringify(selected === "gemini" ? { prompt } : { prompt }).replaceAll("'", "'\\\\''") + "'",
+        : \`curl -X POST '\${url}' \\
+  -H 'Content-Type: application/json' \\
+  -H 'Authorization: Bearer YOUR_NOX_API_KEY' \\
+  -d '\${JSON.stringify({ prompt }).replaceAll("'", "'\\"'\\"'")}'\`,
       js: selected === "currency"
         ? "const response = await fetch('" + url + "?base=USD&target=EUR');\nconst data = await response.json();\nconsole.log(data);"
         : "const response = await fetch('" + url + "', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    Authorization: 'Bearer ' + process.env.NOX_API_KEY\n  },\n  body: JSON.stringify(" + body + ")\n});\nconst data = await response.json();\nconsole.log(data);",
