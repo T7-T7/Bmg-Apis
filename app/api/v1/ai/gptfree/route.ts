@@ -39,7 +39,7 @@ async function authorize(request: NextRequest, token: string | null) {
       p_key: token, p_service_slug: "gptfree", p_method: "POST"
     });
     if (rpcError) throw rpcError;
-    const result = data as { authorized?: boolean; reason?: string } | null;
+    const result = data as { authorized?: boolean; reason?: string; usage_id?: number } | null;
     if (!result?.authorized) return { ok: false as const, response: error(
       result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : "مفتاح API غير صالح أو ملغى أو منتهي.",
       result?.reason === "rate_limited" ? 429 : 401
