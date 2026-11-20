@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { Activity, ArrowUpLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Code2, KeyRound, LogOut, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { motion } from "motion/react";
@@ -77,7 +76,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="dashboard-profile">
-          {profile.avatar ? <Image src={profile.avatar} alt="" width={64} height={64} unoptimized /> : <span>{profile.name.slice(0, 1).toUpperCase()}</span>}
+          {profile.avatar ? <img src={profile.avatar} alt="" width={64} height={64} referrerPolicy="no-referrer" /> : <span>{profile.name.slice(0, 1).toUpperCase()}</span>}
           <strong>{profile.name}</strong>
           <small>{profile.email}</small>
           <span className="profile-verified"><CheckCircle2 size={13} /> حساب Google</span>
