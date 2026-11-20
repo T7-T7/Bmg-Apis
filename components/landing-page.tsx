@@ -93,11 +93,11 @@ export default function LandingPage() {
   return (
     <main className="landing-page" dir={ar ? "rtl" : "ltr"}>
       <div className="landing-ambient" aria-hidden="true"><span className="ambient-orb ambient-orb-one" /><span className="ambient-orb ambient-orb-two" /><span className="ambient-grid" /></div>
-      <div className="announcement-bar"><span className="announcement-spark"><Sparkles size={13} /></span><span>{t.announcement}</span><span className="announcement-dot" /><span className="announcement-version">BMG APIs / 0.4</span></div>
+      <div className="announcement-bar"><span className="announcement-spark"><Sparkles size={13} /></span><span>{t.announcement}</span><span className="announcement-dot" /><span className="announcement-version">Nox Apis / 0.4</span></div>
 
       <header className="landing-nav-wrap">
         <nav className="landing-nav glass-panel" aria-label={ar ? "التنقل الرئيسي" : "Main navigation"}>
-          <Link href="/" className="landing-brand" aria-label="BMG APIs"><span className="landing-brand-mark"><Braces size={22} strokeWidth={2.2} /></span><span className="landing-brand-name">BMG<span>APIs</span><small>DEVELOPER GATEWAY</small></span></Link>
+          <Link href="/" className="landing-brand" aria-label="Nox Apis"><span className="landing-brand-mark"><Braces size={22} strokeWidth={2.2} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link>
           <div className="landing-nav-links">{navLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}</div>
           <div className="landing-nav-actions">
             <button className="locale-toggle" onClick={() => setLocale(value => value === "ar" ? "en" : "ar")} type="button" aria-label="Change language"><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></button>
@@ -176,12 +176,12 @@ export default function LandingPage() {
 
       <footer className="landing-footer">
         <div className="footer-main">
-          <div className="footer-brand-block"><Link href="/" className="landing-brand"><span className="landing-brand-mark"><Braces size={22} /></span><span className="landing-brand-name">BMG<span>APIs</span><small>DEVELOPER GATEWAY</small></span></Link><p>{t.footerText}</p></div>
+          <div className="footer-brand-block"><Link href="/" className="landing-brand"><span className="landing-brand-mark"><Braces size={22} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link><p>{t.footerText}</p></div>
           <div className="footer-link-group"><strong>{ar ? "استكشف" : "EXPLORE"}</strong><Link href="/apis">{t.footerLinks[0]}</Link><Link href="/docs">{t.footerLinks[1]}</Link></div>
           <div className="footer-link-group"><strong>{ar ? "المطورون" : "DEVELOPERS"}</strong><Link href="/status">{t.footerLinks[2]}</Link><Link href="/create">{t.footerLinks[3]}</Link><Link href="/dashboard/api-keys">{ar ? "مفاتيح API" : "API keys"}</Link></div>
           <div className="footer-link-group"><strong>{ar ? "الحساب" : "ACCOUNT"}</strong><Link href="/login">{t.signIn}</Link><Link href="/signup">{t.getStarted}</Link></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 BMG APIs. {t.rights}</span><span className="footer-built"><span />{ar ? "مبني للمطورين" : "BUILT FOR BUILDERS"}</span><a href="https://github.com/T7-T7/Bmg-Apis" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={17} /></a></div>
+        <div className="footer-bottom"><span>© 2026 Nox Apis. {t.rights}</span><span className="footer-built"><span />{ar ? "مبني للمطورين" : "BUILT FOR BUILDERS"}</span><a href="https://github.com/T7-T7/Bmg-Apis" target="_blank" rel="noreferrer" aria-label="GitHub"><GitBranch size={17} /></a></div>
       </footer>
     </main>
   );
