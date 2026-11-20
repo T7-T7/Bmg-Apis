@@ -51,12 +51,12 @@ async function authorize(request: NextRequest, token: string | null) {
     p_server_secret: process.env.BMG_DEMO_RPC_SECRET
   });
   if (rpcError) throw rpcError;
-  const result = data as { authorized?: boolean; reason?: string } | null;
+  const result = data as { authorized?: boolean; reason?: string; usage_id?: number } | null;
   if (!result?.authorized) return { ok: false as const, response: error(
     result?.reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية." : "الخدمة غير متاحة حاليًا.",
     result?.reason === "rate_limited" ? 429 : 503
   ) };
-  return { ok: true as const };
+  return { ok: true as const, usageId: Number(result.usage_id) || null };
 }
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
   const response = await fetch(url, {
