@@ -54,6 +54,7 @@ export default function PlaygroundPage() {
 
   async function run() {
     if (busy || (selected !== "currency" && !prompt.trim())) return;
+    if (selected === "currency" && !apiKey.trim()) { setError("أدخل مفتاح Nox API لتشغيل خدمة أسعار العملات."); return; }
     setBusy(true);
     setError("");
     setResponse(null);
@@ -110,7 +111,7 @@ export default function PlaygroundPage() {
             <p className="playground-api-description">{current.description}</p>
             {selected !== "image" && <label className="playground-field"><span>مفتاح Nox API <small>مطلوب للتشغيل الفعلي</small></span><input type="password" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="nox_live_..." autoComplete="off" dir="ltr" /></label>}
             <label className="playground-field"><span>{selected === "currency" ? "ملاحظة الطلب" : "Prompt"}</span><textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={5} placeholder="اكتب محتوى الطلب..." /></label>
-            <div className="playground-editor-actions"><motion.button type="button" className="button-primary" onClick={run} disabled={busy || (selected !== "currency" && !prompt.trim())} whileTap={{ scale: .97 }}>{busy ? <LoaderCircle size={16} className="spin" /> : <Play size={15} />}{busy ? "جارٍ التنفيذ..." : "Run request"}</motion.button><motion.button type="button" className="button-secondary" onClick={() => { setPrompt(""); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}><RefreshCw size={14} /> مسح</motion.button></div>
+            <div className="playground-editor-actions"><motion.button type="button" className="button-primary" onClick={run} disabled={busy || (selected !== "currency" && !prompt.trim()) || (selected === "currency" && !apiKey.trim())} whileTap={{ scale: .97 }}>{busy ? <LoaderCircle size={16} className="spin" /> : <Play size={15} />}{busy ? "جارٍ التنفيذ..." : "Run request"}</motion.button><motion.button type="button" className="button-secondary" onClick={() => { setPrompt(""); setResponse(null); setError(""); }} whileTap={{ scale: .97 }}><RefreshCw size={14} /> مسح</motion.button></div>
             <p className="playground-security-note">المفتاح لا يُحفظ في localStorage ولا يُرسل إلا إلى نقطة API المحددة على نفس الموقع.</p>
           </section>
 
