@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 const specification = {
   openapi: "3.1.0",
   info: {
-    title: "Nox Apis",
+    title: "NOX APIS — NEXUS OF XPERIENCE",
     version: "1.0.0",
-    description: "الواجهة المنشورة حاليًا من منصة Nox Apis. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط.",
-    contact: { name: "Nox Apis", url: "https://bmg-apis-b2-902b.vercel.app/docs" },
+    description: "الواجهة المنشورة حاليًا من منصة NOX APIS — NEXUS OF XPERIENCE. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط.",
+    contact: { name: "NOX APIS", url: "https://bmg-apis-b2-902b.vercel.app/docs" },
   },
   servers: [{ url: "https://bmg-apis-b2-902b.vercel.app", description: "Production" }],
   tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
@@ -96,7 +96,7 @@ const specification = {
       NoxApiKey: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "Nox Apis API Key",
+        bearerFormat: "NOX APIS API Key",
         description: "أنشئ مفتاحًا من لوحة Nox Apis وأرسله في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
