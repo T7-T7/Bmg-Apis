@@ -1013,12 +1013,9 @@ html:not([data-theme="light"]) {
 html:not([data-theme="light"]) body {
   background-color: #121416;
   background-image:
-    linear-gradient(135deg, #171A1D 0%, #1D2023 42%, #141719 100%),
-    repeating-linear-gradient(0deg, rgba(210,216,222,.025) 0 1px, transparent 1px 5px);
+    repeating-linear-gradient(0deg, rgba(210,216,222,.025) 0 1px, transparent 1px 5px),
+    linear-gradient(135deg, rgba(255,255,255,.025), transparent 42%, rgba(255,255,255,.012));
   background-attachment: fixed;
-}
-html[data-theme="light"] {
-  --panel: rgba(49, 53, 56, .70);
 }
 .glass-panel {
   background: rgba(38, 40, 43, .70);
