@@ -18,6 +18,7 @@ function error(message: string, status: number) {
     status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
   });
 }
+async function completeUsage(id:number|null,status:number,startedAt:number){if(!id)return;try{await supabase().rpc("bmg_complete_api_request",{p_usage_id:id,p_status_code:status,p_latency_ms:Math.max(0,Date.now()-startedAt),p_server_secret:process.env.BMG_DEMO_RPC_SECRET})}catch(cause){console.error("[Nox usage completion]",cause instanceof Error?cause.message:cause)}}
 function supabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -43,7 +44,7 @@ async function authorize(request: NextRequest, token: string | null) {
       result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : "مفتاح API غير صالح أو ملغى أو منتهي.",
       result?.reason === "rate_limited" ? 429 : 401
     ) };
-    return { ok: true as const };
+    return { ok: true as const, usageId: Number(result.usage_id) || null };
   }
   const { data, error: rpcError } = await db.rpc("bmg_authorize_demo_request", {
     p_client_hash: clientHash(request), p_service_slug: "gptfree", p_method: "POST",
@@ -140,9 +141,11 @@ export async function POST(request: NextRequest) {
   if (history.some(item => !item || typeof item !== "object" ||
     !["user", "agent", "assistant"].includes(String((item as Record<string, unknown>).type)) ||
     typeof (item as Record<string, unknown>).content !== "string")) return error("صيغة history غير صحيحة.", 400);
+  let usageId:number|null=null;const startedAt=Date.now();
   try {
     const access = await authorize(request, match?.[1] ?? null);
     if (!access.ok) return access.response;
+    usageId=access.usageId??null;
     const upstream = await requestAgent({ message: data.message, images: [], history });
     const raw = await upstream.text();
     let responseText = "";
@@ -161,12 +164,14 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    if (upstreamError) return error(upstreamError, 502);
-    if (!responseText.trim()) return error("لم يُرجع GPTFree محتوى قابلًا للقراءة.", 502);
+    if (upstreamError){await completeUsage(usageId,502,startedAt);return error(upstreamError, 502)}
+    if (!responseText.trim()){await completeUsage(usageId,502,startedAt);return error("لم يُرجع GPTFree محتوى قابلًا للقراءة.", 502)}
+    await completeUsage(usageId,200,startedAt);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: match ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
+    await completeUsage(usageId,502,startedAt);
     console.error("[Nox GPTFree API]", cause instanceof Error ? cause.message : cause);
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
