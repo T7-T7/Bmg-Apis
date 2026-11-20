@@ -10,7 +10,7 @@ type Locale = "ar" | "en";
 
 const content = {
   ar: {
-    announcement: "مساحة واحدة لبناء تكاملاتك", nav: ["المنصة", "المميزات", "الأسئلة الشائعة", "التوثيق"],
+    announcement: "من مصر إلى العالم · مساحة واحدة لبناء تكاملاتك", nav: ["المنصة", "المميزات", "الأسئلة الشائعة", "التوثيق"],
     signIn: "تسجيل الدخول", getStarted: "ابدأ الآن", eyebrow: "بوابة المطورين · API WORKSPACE",
     titleA: "ابنِ أسرع.", titleB: "اربط بذكاء.",
     intro: "واجهات برمجية واضحة، ومفاتيح وصول تحت سيطرتك، وتجربة مطور تختصر الطريق من الفكرة إلى أول طلب ناجح.",
@@ -39,7 +39,7 @@ const content = {
     footerText: "مساحة أدوات وواجهات برمجية للمطورين.", footerLinks: ["الكتالوج", "التوثيق", "حالة الخدمات", "المساهمة"], rights: "جميع الحقوق محفوظة."
   },
   en: {
-    announcement: "One workspace for your integrations", nav: ["Platform", "Features", "FAQ", "Docs"],
+    announcement: "MADE IN EGYPT · One workspace for your integrations", nav: ["Platform", "Features", "FAQ", "Docs"],
     signIn: "Sign in", getStarted: "Get started", eyebrow: "DEVELOPER GATEWAY · API WORKSPACE",
     titleA: "Build faster.", titleB: "Connect smarter.",
     intro: "Clear API references, access keys you control, and a developer experience designed to shorten the path from an idea to your first successful request.",
@@ -120,7 +120,7 @@ export default function LandingPage() {
         <AnimatePresence>
           {menuOpen && <motion.div className="mobile-nav-panel glass-panel" initial={{ opacity: 0, y: -10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: .98 }} transition={{ duration: .2 }}>
             {navLinks.map(link => <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}<ArrowUpLeft size={14} /></a>)}
-            <div className="mobile-nav-actions"><motion.button className="locale-toggle" onClick={() => toggleLocale()} whileTap={{ scale: .97 }}><Globe2 size={15} />{ar ? "English" : "العربية"}</motion.button><ThemeToggle /><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
+            <div className="mobile-nav-actions"><motion.button className="locale-toggle" onClick={() => toggleLocale()} whileTap={{ scale: .97 }}><Globe2 size={15} />{ar ? "English" : "العربية"}</motion.button><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
           </motion.div>}
         </AnimatePresence>
       </header>
