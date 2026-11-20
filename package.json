@@ -1,8 +1,8 @@
 {
-  "name": "bmg-apis",
+  "name": "nox-apis",
   "version": "0.3.0",
   "private": true,
-  "description": "منصة BMG APIs للمطورين",
+  "description": "منصة Nox Apis للمطورين",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
