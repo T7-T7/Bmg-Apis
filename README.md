@@ -10,20 +10,20 @@
 - Vercel للنشر
 
 ## التشغيل المحلي
-\`\`\`bash
+```bash
 npm install
 npm run dev
-\`\`\`
+```
 
 ## فحوصات الجودة
-\`\`\`bash
+```bash
 npm run typecheck
 npm run lint
 npm run build
-\`\`\`
+```
 
 ## شجرة المشروع
-\`\`\`text
+```text
 app/
   api/
     health/route.ts
@@ -66,7 +66,7 @@ lib/
 
 types/
   api.ts
-\`\`\`
+```
 
 ## الخدمات المنشورة فعليًا
 - **POST /api/v1/ai/gemini** — Gemini text generation، مع مصادقة Bearer API Key.
