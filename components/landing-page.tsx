@@ -74,6 +74,7 @@ const reveal = { hidden: { opacity: 0, y: 26 }, visible: { opacity: 1, y: 0, tra
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>("ar");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [catalogQuery, setCatalogQuery] = useState("");
   const t = content[locale];
   const ar = locale === "ar";
 
@@ -86,6 +87,8 @@ export default function LandingPage() {
   const navLinks = [
     { href: "#platform", label: t.nav[0] },
     { href: "#features", label: t.nav[1] },
+    { href: "#catalog", label: ar ? "الكتالوج" : "Catalog" },
+    { href: "#pricing", label: ar ? "الأسعار" : "Pricing" },
     { href: "#faq", label: t.nav[2] },
     { href: "/docs", label: t.nav[3] }
   ];
@@ -177,7 +180,7 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <div className="footer-main">
           <div className="footer-brand-block"><Link href="/" className="landing-brand"><span className="landing-brand-mark"><Braces size={22} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link><p>{t.footerText}</p></div>
-          <div className="footer-link-group"><strong>{ar ? "استكشف" : "EXPLORE"}</strong><Link href="/apis">{t.footerLinks[0]}</Link><Link href="/docs">{t.footerLinks[1]}</Link></div>
+          <div className="footer-link-group"><strong>{ar ? "استكشف" : "EXPLORE"}</strong><Link href="/apis">{t.footerLinks[0]}</Link><Link href="/docs">{t.footerLinks[1]}</Link><Link href="/playground">Playground</Link><Link href="/pricing">{ar ? "الأسعار" : "Pricing"}</Link></div>
           <div className="footer-link-group"><strong>{ar ? "المطورون" : "DEVELOPERS"}</strong><Link href="/status">{t.footerLinks[2]}</Link><Link href="/create">{t.footerLinks[3]}</Link><Link href="/dashboard/api-keys">{ar ? "مفاتيح API" : "API keys"}</Link></div>
           <div className="footer-link-group"><strong>{ar ? "الحساب" : "ACCOUNT"}</strong><Link href="/login">{t.signIn}</Link><Link href="/signup">{t.getStarted}</Link></div>
         </div>
