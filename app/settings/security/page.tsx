@@ -1,1 +1,18 @@
-import SecuritySettings from "@/components/dashboard/security-settings";export const metadata={title:"الأمان والتحقق الثنائي"};export default function Page(){return <div className="source-page"><div className="source-page-head"><span className="source-overline">ACCOUNT SECURITY / MFA</span><h1>الأمان والتحقق الثنائي</h1><p>إعداد التحقق بخطوتين باستخدام تطبيق المصادقة.</p></div><SecuritySettings/></div>
+import SecuritySettings from "@/components/dashboard/security-settings";
+
+export const metadata = {
+  title: "الأمان والتحقق الثنائي",
+};
+
+export default function Page() {
+  return (
+    <div className="source-page">
+      <div className="source-page-head">
+        <span className="source-overline">ACCOUNT SECURITY / MFA</span>
+        <h1>الأمان والتحقق الثنائي</h1>
+        <p>إعداد التحقق بخطوتين باستخدام تطبيق المصادقة.</p>
+      </div>
+      <SecuritySettings />
+    </div>
+  );
+}
