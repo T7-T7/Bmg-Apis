@@ -151,9 +151,9 @@ export default function DigitalGlobe() {
         window.cancelAnimationFrame(frame);
         observer?.disconnect();
         geometry.dispose();
-        (dots.material as THREE.Material).dispose();
+        (dots.material as import("three").Material).dispose();
         sphere.geometry.dispose();
-        (sphere.material as THREE.Material).dispose();
+        (sphere.material as import("three").Material).dispose();
         renderer?.dispose();
         renderer?.domElement.remove();
       };
