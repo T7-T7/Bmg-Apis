@@ -38,7 +38,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         <div className="auth-symbol" aria-hidden="true">
           <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 9h26v7H19v6h15v7H19v10h-8V9Z" fill="currentColor"/><circle cx="36" cy="36" r="4" fill="currentColor"/></svg>
         </div>
-        <span className="eyebrow">BMG APIs / حساب المطور</span>
+        <span className="eyebrow">Nox Apis / حساب المطور</span>
         <h1>{signup ? "إنشاء حساب" : "تسجيل الدخول"}</h1>
         <p>{signup ? "أنشئ حسابك باستخدام Google لإدارة مفاتيح API ومساهماتك." : "تابع باستخدام حساب Google للوصول إلى مساحة المطور."}</p>
         <button type="button" className="google-auth-button" onClick={continueWithGoogle} disabled={busy}>
@@ -48,7 +48,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         </button>
         {error && <div className="auth-error">{error}</div>}
         <div className="auth-google-note">لن نطلب منك إنشاء كلمة مرور منفصلة للموقع.</div>
-        <div className="auth-switch">{signup ? "لديك حساب بالفعل؟" : "جديد على BMG APIs؟"} <Link href={signup ? "/login" : "/signup"}>{signup ? "تسجيل الدخول" : "إنشاء حساب"}</Link></div>
+        <div className="auth-switch">{signup ? "لديك حساب بالفعل؟" : "جديد على Nox Apis؟"} <Link href={signup ? "/login" : "/signup"}>{signup ? "تسجيل الدخول" : "إنشاء حساب"}</Link></div>
         <Link className="auth-back" href="/">العودة إلى المنصة</Link>
       </div>
     </div>
