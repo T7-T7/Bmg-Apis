@@ -83,7 +83,7 @@ export default function ContributePage() {
           <div className="docs-note"><ShieldCheck size={14} /> يحق للمشرف تعليق الواجهة أو حذفها إذا تعطلت أو خالفت شروط المنصة.</div>
         </aside>
       </div>
-      {needsLogin && <div className="auth-sheet-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setNeedsLogin(false); }}><div className="auth-sheet" role="dialog" aria-modal="true" aria-labelledby="auth-sheet-title"><button className="auth-sheet-close" onClick={() => setNeedsLogin(false)} aria-label="إغلاق"><X size={18} /></button><span className="auth-sheet-icon"><ShieldCheck size={22} /></span><h2 id="auth-sheet-title">سجّل الدخول للمتابعة</h2><p>إرسال مساهمة جديدة يتطلب حساب BMG APIs حتى تتمكن من متابعة المراجعة.</p><Link className="button-primary" href="/login?next=/create">تسجيل الدخول</Link><Link className="auth-sheet-signup" href="/signup?next=/create">إنشاء حساب جديد</Link></div></div>}
+      {needsLogin && <div className="auth-sheet-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setNeedsLogin(false); }}><div className="auth-sheet" role="dialog" aria-modal="true" aria-labelledby="auth-sheet-title"><button className="auth-sheet-close" onClick={() => setNeedsLogin(false)} aria-label="إغلاق"><X size={18} /></button><span className="auth-sheet-icon"><ShieldCheck size={22} /></span><h2 id="auth-sheet-title">سجّل الدخول للمتابعة</h2><p>إرسال مساهمة جديدة يتطلب حساب Nox Apis حتى تتمكن من متابعة المراجعة.</p><Link className="button-primary" href="/login?next=/create">تسجيل الدخول</Link><Link className="auth-sheet-signup" href="/signup?next=/create">إنشاء حساب جديد</Link></div></div>}
     </div>
   );
 }
