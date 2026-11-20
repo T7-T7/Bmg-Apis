@@ -1344,3 +1344,10 @@ html,body,.source-app,.source-main,.source-content{width:100%;max-width:100%;min
 @keyframes dot-globe-sphere-rotation{from{transform:perspective(900px) rotateY(0deg) rotateZ(-8deg)}to{transform:perspective(900px) rotateY(360deg) rotateZ(-8deg)}}
 @media(max-width:820px){.source-dot-globe{height:280px}.dot-globe-sphere{width:min(76vw,290px)}}
 @media(prefers-reduced-motion:reduce){.dot-globe-sphere{animation:none}}
+
+
+/* True 3D point globe. The opaque sphere occludes points on its far side. */
+.source-dot-globe.source-globe-3d{display:block;width:100%;height:390px;min-width:0;overflow:hidden;background:#000!important}
+.source-globe-3d canvas{display:block;width:100%;height:100%;outline:0}
+@media(max-width:820px){.source-dot-globe.source-globe-3d{height:300px}}
+@media(prefers-reduced-motion:reduce){.source-globe-3d canvas{animation:none}}
