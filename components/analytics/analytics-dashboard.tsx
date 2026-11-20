@@ -48,10 +48,10 @@ export default function AnalyticsDashboard() {
       const { data: sessionData, error: sessionError } = await getSupabaseBrowserClient().auth.getSession();
       const token = sessionData.session?.access_token;
       if (sessionError || !token) throw new Error("سجّل الدخول لعرض تحليلات حسابك.");
-      const response = await fetch("/api/dashboard/analytics", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "تعذر تحميل التحليلات.");
-      setData(result as AnalyticsData);
+      const { data, error: analyticsError } = await getSupabaseBrowserClient().rpc("bmg_get_api_analytics", { p_days: 30 });
+      if (analyticsError) throw analyticsError;
+      if (!data) throw new Error("لا توجد استجابة من خدمة التحليلات.");
+      setData(data as AnalyticsData);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "حدث خطأ غير متوقع.");
     } finally { setBusy(false); }
