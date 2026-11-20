@@ -1095,8 +1095,8 @@ html:not([data-theme="light"]) .auth-page {
   --line-strong: #ACACAC;
   --text: #D9D9D9;
   --text-soft: #D9D9D9;
-  --muted: #292929;
-  --muted-2: #292929;
+  --muted: #5C5C5C;
+  --muted-2: #5C5C5C;
   --accent: #CBCBCB;
   --accent-strong: #D9D9D9;
   --accent-wash: rgba(203,203,203,.10);
@@ -1212,7 +1212,7 @@ html:not([data-theme="light"]) :is(.welcome-content > p,.api-description,.api-ro
 .stat-copy > span,.stat-copy small,.page-heading p,.section-heading p,
 .workflow-card p,.feature-card-copy p,.flow-step p,.faq-item p,
 .footer-brand-block p,.sidebar-callout p,.breadcrumbs,.method-caption) {
-  color: #292929;
+  color: #5C5C5C;
 }
 html:not([data-theme="light"]) :is(.brand-mark svg,.nav-item svg,.button-primary svg,
 .button-quiet svg,.button-secondary svg,.topbar svg,.card-more svg,
