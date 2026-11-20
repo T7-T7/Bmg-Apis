@@ -27,7 +27,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const current = pathname === "/" ? "نظرة عامة" : pathname.startsWith("/apis/") ? "تفاصيل الواجهة" : groups.flatMap(group => group.items).find(item => item.href === pathname)?.label ?? "BMG APIs";
+  const current = pathname === "/" ? "نظرة عامة" : pathname.startsWith("/apis/") ? "تفاصيل الواجهة" : groups.flatMap(group => group.items).find(item => item.href === pathname)?.label ?? "Nox Apis";
 
   useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [pathname]);
   useEffect(() => {
@@ -52,8 +52,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
     <div className="app-frame">
       {menuOpen && <button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => setMenuOpen(false)} />}
       <aside className={`sidebar ${menuOpen ? "is-open" : ""}`} aria-label="القائمة الرئيسية">
-        <Link href="/" className="brand"><span className="brand-mark"><Image src="/bmg-apis-mark.svg" width={38} height={38} alt="" priority /></span><span className="brand-copy"><strong>BMG <i>APIs</i></strong><small>بوابة واجهات البرمجة</small></span></Link>
-        <div className="workspace-switch"><span className="workspace-avatar">B</span><span><strong>BMG APIs</strong><small>كتالوج الخدمات</small></span><ChevronLeft size={15} /></div>
+        <Link href="/" className="brand"><span className="brand-mark"><Image src="/bmg-apis-mark.svg" width={38} height={38} alt="" priority /></span><span className="brand-copy"><strong>Nox <i>Apis</i></strong><small>Nexus Of Xperience</small></span></Link>
+        <div className="workspace-switch"><span className="workspace-avatar">N</span><span><strong>Nox Apis</strong><small>كتالوج الخدمات</small></span><ChevronLeft size={15} /></div>
         <div className="sidebar-groups">
           {groups.map(group => <section className="nav-group" key={group.label}><h2>{group.label}</h2>{group.items.map(item => {
             const active = item.href === "/" ? pathname === "/" : pathname === item.href || (item.href === "/apis" && pathname.startsWith("/apis/"));
@@ -63,7 +63,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
         </div>
         <div className="sidebar-bottom">
           <div className="sidebar-callout"><span className="callout-icon"><ShieldCheck size={15} /></span><strong>المساهمات تمر بالمراجعة</strong><p>لا تُنشر أي واجهة يضيفها المجتمع قبل اعتماد المشرف.</p><Link href="/create">إرسال مساهمة <ArrowUpLeft size={13} /></Link></div>
-          <div className="sidebar-profile"><span className="profile-avatar">B</span><span><strong>حساب المطور</strong><small>تسجيل الدخول أو إنشاء حساب</small></span><Link href="/login" aria-label="تسجيل الدخول"><ArrowUpLeft size={15} /></Link></div>
+          <div className="sidebar-profile"><span className="profile-avatar">N</span><span><strong>حساب المطور</strong><small>تسجيل الدخول أو إنشاء حساب</small></span><Link href="/login" aria-label="تسجيل الدخول"><ArrowUpLeft size={15} /></Link></div>
         </div>
       </aside>
       <main className="main-area">
@@ -73,7 +73,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
         </header>
         {searchOpen && <div className="command-overlay" role="dialog" aria-modal="true" aria-label="البحث السريع" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}><div className="command-panel"><div className="command-input"><Search size={18} /><input autoFocus placeholder="ابحث أو اكتب اسم القسم..." onKeyDown={event => { if (event.key === "Enter") { const value = event.currentTarget.value.trim(); if (/api|واجهة|كتالوج/i.test(value)) window.location.href = "/apis"; else if (/مساهمة|اقتراح|إضافة/i.test(value)) window.location.href = "/create"; else if (/توثيق|docs/i.test(value)) window.location.href = "/docs"; else if (/حالة|status/i.test(value)) window.location.href = "/status"; else window.location.href = "/"; } }} /><kbd>ESC</kbd></div><div className="command-hint">انتقال سريع إلى أقسام المنصة</div>{groups.flatMap(group => group.items).map(item => { const Icon = item.icon; return <Link className="command-link" href={item.href} key={item.href} onClick={() => setSearchOpen(false)}><Icon size={16} /><span>{item.label}</span><ArrowUpLeft size={13} /></Link>; })}</div></div>}
         <div className="page-content">{children}</div>
-        <footer className="app-footer"><span>© 2026 BMG APIs</span><span><i className="footer-status" /> نسخة الواجهة — خدمات التشغيل قيد التنفيذ</span></footer>
+        <footer className="app-footer"><span>© 2026 Nox Apis</span><span><i className="footer-status" /> نسخة الواجهة — خدمات التشغيل قيد التنفيذ</span></footer>
       </main>
     </div>
   );
