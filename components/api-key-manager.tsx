@@ -29,7 +29,8 @@ export default function ApiKeyManager() {
   const [busy, setBusy] = useState(true);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);\n  const [keyVisible, setKeyVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [keyVisible, setKeyVisible] = useState(true);
 
   async function load() {
     setBusy(true); setError("");
