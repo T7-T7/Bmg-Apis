@@ -6,17 +6,17 @@ import AppShell from "@/components/app-shell";
 export const metadata: Metadata = {
   metadataBase: new URL("https://bmg-apis.vercel.app"),
   title: {
-    default: "BMG APIs — بوابة المطورين",
-    template: "%s | BMG APIs",
+    default: "Nox Apis — Nexus Of Xperience",
+    template: "%s | Nox Apis",
   },
   description: "منصة عربية للمطورين لاستكشاف واجهات البرمجة وتجهيز تعريفاتها وإدارة تكاملاتها.",
-  applicationName: "BMG APIs",
-  keywords: ["BMG APIs", "واجهات برمجة التطبيقات", "API", "REST API", "Developer Platform"],
+  applicationName: "Nox Apis",
+  keywords: ["Nox Apis", "واجهات برمجة التطبيقات", "API", "REST API", "Developer Platform"],
   icons: { icon: "/bmg-apis-mark.svg" },
   openGraph: {
-    title: "BMG APIs — بوابة المطورين",
+    title: "Nox Apis — Nexus Of Xperience",
     description: "اكتشف واجهات البرمجة وجهّز تكاملاتك من مساحة عمل واحدة.",
-    siteName: "BMG APIs",
+    siteName: "Nox Apis",
     locale: "ar_EG",
     type: "website",
   },
