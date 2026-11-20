@@ -1,16 +1,13 @@
-"use client";import{useEffect,useRef}from"react";type P=[number,number];
-const continents:P[][]=[
-[[-168,65],[-145,70],[-125,58],[-120,48],[-110,32],[-98,18],[-82,8],[-78,25],[-90,48],[-110,60],[-140,70]],
-[[-80,12],[-65,8],[-50,-2],[-44,-15],[-52,-30],[-66,-55],[-75,-40],[-78,-15]],
-[[-10,36],[-5,45],[10,50],[25,60],[45,65],[70,70],[100,70],[130,60],[155,55],[175,50],[160,40],[140,35],[125,25],[115,15],[100,5],[85,10],[75,20],[60,25],[50,30],[40,35],[25,38],[10,38]],
-[[-17,35],[5,37],[25,32],[38,20],[50,10],[42,-12],[32,-30],[20,-35],[10,-34],[-1,-20],[-10,0],[-17,15]],
-[[112,-11],[130,-12],[145,-18],[153,-28],[140,-38],[120,-35],[113,-25]],
-[[-52,60],[-40,65],[-20,65],[-30,80],[-50,80]]
-];
-export default function DigitalGlobe(){const ref=useRef<HTMLCanvasElement>(null);useEffect(()=>{const canvas=ref.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;let w=0,h=0,a=0,frame=0,stop=false;const dots:{lon:number;lat:number}[]=[];for(let lat=-82;lat<=82;lat+=3.4)for(let lon=-180;lon<180;lon+=3.4)dots.push({lon,lat});
-const resize=()=>{const b=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);w=b.width;h=b.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0)};
-const project=(lon:number,lat:number,r:number,cx:number,cy:number)=>{const L=lon*Math.PI/180+a,B=lat*Math.PI/180,x=Math.cos(B)*Math.sin(L),y=Math.sin(B),z=Math.cos(B)*Math.cos(L),c=Math.cos(a),s=Math.sin(a);return{x:cx+(x*c+z*s)*r,y:cy-y*r,front:z*c-x*s>0,depth:z*c-x*s}};
-const draw=()=>{if(stop)return;ctx.clearRect(0,0,w,h);a+=.002;const r=Math.min(w,h)*.405,cx=w/2,cy=h/2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle="rgba(212,255,0,.025)";ctx.fill();ctx.strokeStyle="rgba(212,255,0,.2)";ctx.stroke();
-for(const poly of continents){ctx.beginPath();let first=true;for(const [lon,lat]of poly){const p=project(lon,lat,r,cx,cy);if(!p.front){first=true;continue}if(first){ctx.moveTo(p.x,p.y);first=false}else ctx.lineTo(p.x,p.y)}ctx.closePath();ctx.fillStyle="rgba(212,255,0,.19)";ctx.strokeStyle="rgba(212,255,0,.8)";ctx.lineWidth=1.2;ctx.fill();ctx.stroke()}
-for(const d of dots){const p=project(d.lon,d.lat,r,cx,cy);if(!p.front)continue;let land=false;for(const poly of continents){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if((yi>d.lat)!==(yj>d.lat)&&d.lon<(xj-xi)*(d.lat-yi)/(yj-yi)+xi)inside=!inside}if(inside){land=true;break}}if(!land)continue;ctx.beginPath();ctx.fillStyle="rgba(212,255,0,.6)";ctx.arc(p.x,p.y,.75,0,Math.PI*2);ctx.fill()}
-ctx.beginPath();ctx.strokeStyle="rgba(212,255,0,.13)";ctx.ellipse(cx,cy,r*1.22,r*.31,-.32,0,Math.PI*2);ctx.stroke();frame=requestAnimationFrame(draw)};resize();draw();const ro=new ResizeObserver(resize);ro.observe(canvas);const vis=()=>{if(document.hidden)cancelAnimationFrame(frame);else if(!stop)draw()};document.addEventListener("visibilitychange",vis);return()=>{stop=true;cancelAnimationFrame(frame);ro.disconnect();document.removeEventListener("visibilitychange",vis)}},[]);return <div className="source-globe"><canvas ref={ref} role="img" aria-label="كرة أرضية تظهر آسيا وأفريقيا وأوروبا"/><span className="globe-coordinate">30°02′N · 31°14′E</span><span className="globe-caption">EGYPT / CONNECTED GLOBALLY</span></div>}
+"use client";
+export default function DigitalGlobe(){return <div className="source-globe source-globe-stable" role="img" aria-label="كرة أرضية ثابتة تعرض القارات"><svg viewBox="0 0 520 520" aria-hidden="true"><defs><clipPath id="globe-clip"><circle cx="260" cy="260" r="214"/></clipPath><radialGradient id="globe-fill" cx="35%" cy="30%"><stop offset="0" stopColor="#263b2c"/><stop offset="1" stopColor="#07100b"/></radialGradient></defs><circle cx="260" cy="260" r="214" fill="url(#globe-fill)" stroke="rgba(212,255,0,.32)" strokeWidth="1.5"/><g clipPath="url(#globe-clip)" fill="#d4ff00" fillOpacity=".72" stroke="#e5ff75" strokeOpacity=".75" strokeWidth="1.5" strokeLinejoin="round">
+<path d="M66 125 92 98 128 88 151 70 187 79 205 99 195 119 216 130 211 151 192 164 183 190 163 202 153 231 133 224 121 203 104 194 96 169 78 158Z"/>
+<path d="m159 239 25 7 20 24-5 31-16 27-8 42-18 38-19-18-8-42-18-36 9-42 22-23Z"/>
+<path d="m223 104 25-18 34 6 14 22-18 18-26-5Z"/>
+<path d="m238 163 22-13 23 8 12 24-8 24-15 13-8 29-17 19-14-16-3-30-13-24Z"/>
+<path d="m274 112 32-28 49-7 35 13 41 2 34 23-8 22-36 3-21 18-27-5-18 17-28-4-18-18-25 1-18-14Z"/>
+<path d="m298 191 22-15 34 8 17 25 22 11 15 29-17 19-28-7-20-21-28-7-17-20Z"/>
+<path d="m362 300 31-11 35 12 17 24-20 25-37-2-26-19Z"/>
+<path d="m86 62 21-19 26 8 12 22-17 18-28-8Z"/>
+<path d="m34 256 24-16 25 9 12 22-20 18-28-8Z"/>
+<path d="m455 202 18-8 20 14-4 25-19 8-15-17Z"/>
+</g><g fill="none" stroke="#d4ff00" strokeOpacity=".16"><ellipse cx="260" cy="260" rx="214" ry="78"/><ellipse cx="260" cy="260" rx="105" ry="214"/><path d="M46 260h428M260 46v428"/></g><circle cx="260" cy="260" r="214" fill="none" stroke="rgba(212,255,0,.28)" strokeWidth="1.5"/></svg><span className="globe-coordinate">30°02′N · 31°14′E</span><span className="globe-caption">EGYPT / CONNECTED GLOBALLY</span></div>}
