@@ -1,1 +1,0 @@
-export default function StatusLabel({live}:{live:boolean}){return <span className={"source-status "+(live?"live":"planned")}>{live?"متاحة فعليًا":"قيد التطوير"}</span>}

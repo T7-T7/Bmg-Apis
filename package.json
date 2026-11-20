@@ -2,7 +2,7 @@
   "name": "nox-apis",
   "version": "0.3.0",
   "private": true,
-  "description": "منصة Nox Apis للمطورين",
+  "description": "Bmg-Apis backend API service",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,13 +11,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "lucide-react": "^1.77.0",
     "next": "16.4.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@supabase/supabase-js": "2.58.0",
-    "motion": "^14.14.0",
-    "three": "^0.180.0"
+    "@supabase/supabase-js": "2.58.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
@@ -25,8 +22,7 @@
     "@types/react-dom": "^19.2.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.4.6",
-    "typescript": "^5.9.0",
-    "@types/three": "^0.180.0"
+    "typescript": "^5.9.0"
   },
   "engines": {
     "node": ">=20.9.0 <27"

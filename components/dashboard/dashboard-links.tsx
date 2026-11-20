@@ -1,4 +1,0 @@
-import Link from "next/link";
-import {ArrowUpLeft,BookOpen,FlaskConical,KeyRound} from "lucide-react";
-const links=[{href:"/dashboard/api-keys",title:"مفاتيح API",desc:"إنشاء المفاتيح وإلغاؤها وإدارة الوصول.",icon:KeyRound},{href:"/playground",title:"Playground",desc:"اختبر طلبات حقيقية إلى الخدمات المنشورة.",icon:FlaskConical},{href:"/docs",title:"التوثيق",desc:"راجع المسارات ومعايير المصادقة والاستجابة.",icon:BookOpen}];
-export default function DashboardLinks(){return <div className="source-dashboard-grid">{links.map(item=>{const Icon=item.icon;return <Link href={item.href} key={item.href}><Icon/><b>{item.title}</b><span>{item.desc}</span><i><ArrowUpLeft size={15}/></i></Link>})}</div>}
