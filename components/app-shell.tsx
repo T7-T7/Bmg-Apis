@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Activity, ArrowUpLeft, BookOpen, Boxes, ChevronLeft, CircleDollarSign, Command, FileCode2, FlaskConical, Globe2, LayoutDashboard, Menu, Search, ShieldCheck, Users, X } from "lucide-react";
 import ThemeToggle from "@/components/theme-toggle";
+import { motion } from "motion/react";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 type NavGroup = { label: string; items: NavItem[] };
@@ -63,7 +64,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
 
   return (
     <div className="app-frame">
-      {menuOpen && <button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => setMenuOpen(false)} />}
+      {menuOpen && <motion.button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={() => setMenuOpen(false)} whileTap={{ scale: .97 }} />}
       <aside className={`sidebar ${menuOpen ? "is-open" : ""}`} aria-label="القائمة الرئيسية">
         <Link href="/" className="brand"><span className="brand-mark"><Image src="/bmg-apis-mark.svg" width={38} height={38} alt="" priority /></span><span className="brand-copy"><strong>Nox <i>Apis</i></strong><small>Nexus Of Xperience</small></span></Link>
         <div className="workspace-switch"><span className="workspace-avatar">N</span><span><strong>Nox Apis</strong><small>كتالوج الخدمات</small></span><ChevronLeft size={15} /></div>
@@ -81,8 +82,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       </aside>
       <main className="main-area">
         <header className="topbar">
-          <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
-          <div className="topbar-actions"><button className="locale-toggle" type="button" onClick={toggleLocale} aria-label="Change language"><Globe2 size={14}/><span>{locale === "ar" ? "EN" : "عربي"}</span></button><ThemeToggle /><button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard" className="top-create"><LayoutDashboard size={15} /><span>لوحة المطور</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
+          <div className="topbar-start"><button className="icon-button mobile-menu" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} aria-expanded={menuOpen}>{menuOpen ? <X size={19} /> : <Menu size={19} />}</motion.button><div className="breadcrumbs"><span>المنصة</span><ChevronLeft size={14} /><strong>{current}</strong></div></div>
+          <div className="topbar-actions"><motion.button className="locale-toggle" type="button" onClick={toggleLocale} aria-label="Change language" whileTap={{ scale: .97 }}><Globe2 size={14}/><span>{locale === "ar" ? "EN" : "عربي"}</span></motion.button><ThemeToggle /><motion.button className="quick-search" onClick={() => setSearchOpen(true)}><Search size={15} /><span>بحث سريع...</span><kbd><Command size={10} /> K</kbd></motion.button><Link href="/docs" className="top-docs"><BookOpen size={15} /><span>التوثيق</span></Link><Link href="/dashboard" className="top-create"><LayoutDashboard size={15} /><span>لوحة المطور</span></Link><Link href="/login" className="top-docs"><span>دخول</span></Link></div>
         </header>
         {searchOpen && <div className="command-overlay" role="dialog" aria-modal="true" aria-label="البحث السريع" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}><div className="command-panel"><div className="command-input"><Search size={18} /><input autoFocus placeholder="ابحث أو اكتب اسم القسم..." onKeyDown={event => { if (event.key === "Enter") { const value = event.currentTarget.value.trim(); if (/api|واجهة|كتالوج/i.test(value)) window.location.href = "/apis"; else if (/مساهمة|اقتراح|إضافة/i.test(value)) window.location.href = "/create"; else if (/توثيق|docs/i.test(value)) window.location.href = "/docs"; else if (/playground|تجربة|اختبار/i.test(value)) window.location.href = "/playground"; else if (/سعر|أسعار|pricing/i.test(value)) window.location.href = "/pricing"; else if (/dashboard|لوحة/i.test(value)) window.location.href = "/dashboard"; else if (/حالة|status/i.test(value)) window.location.href = "/status"; else window.location.href = "/"; } }} /><kbd>ESC</kbd></div><div className="command-hint">انتقال سريع إلى أقسام المنصة</div>{groups.flatMap(group => group.items).map(item => { const Icon = item.icon; return <Link className="command-link" href={item.href} key={item.href} onClick={() => setSearchOpen(false)}><Icon size={16} /><span>{item.label}</span><ArrowUpLeft size={13} /></Link>; })}</div></div>}
         <div className="page-content">{children}</div>
