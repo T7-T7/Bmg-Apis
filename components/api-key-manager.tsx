@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 
 type ApiKey = { id: string; label: string; key_prefix: string; created_at: string; last_used_at: string | null; expires_at: string | null; revoked_at: string | null };
 
-const usageExample = `const response = await fetch("https://bmg-apis.vercel.app/api/v1/ai/gemini", {
+const usageExample = `const response = await fetch("https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
