@@ -11,6 +11,31 @@ const specification = {
   servers: [{ url: "https://bmg-apis-b2-902b.vercel.app", description: "Production" }],
   tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
   paths: {
+    "/api/v1/ai/gptfree": {
+      post: {
+        tags: ["AI"], operationId: "generateGptFreeResponse",
+        summary: "إنشاء رد باستخدام GPTFree",
+        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة.",
+        security: [{ NoxApiKey: [] }],
+        requestBody: { required: true, content: { "application/json": { schema: {
+          type: "object", additionalProperties: false, required: ["message"],
+          properties: {
+            message: { type: "string", minLength: 1, maxLength: 30000 },
+            history: { type: "array", maxItems: 20, items: { type: "object", required: ["type", "content"], properties: {
+              type: { type: "string", enum: ["user", "agent", "assistant"] }, content: { type: "string" }
+            } } }
+          }
+        }, example: { message: "اشرح REST API", history: [] } } } },
+        responses: {
+          "200": { description: "تم إنشاء الرد.", content: { "application/json": { schema: { type: "object", properties: {
+            success: { type: "boolean", const: true }, response: { type: "string" }, provider: { type: "string", const: "gptfree" }
+          } } } } },
+          "400": { description: "طلب غير صالح." }, "401": { description: "مفتاح API غير صالح." },
+          "429": { description: "تجاوز حد الاستخدام." }, "502": { description: "تعذر الحصول على رد من GPTFree." },
+          "503": { description: "الخدمة غير متاحة." }
+        }
+      }
+    },
     "/api/v1/ai/gemini": {
       post: {
         tags: ["AI"],
