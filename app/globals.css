@@ -1337,10 +1337,10 @@ html,body,.source-app,.source-main,.source-content{width:100%;max-width:100%;min
 
 /* Kimi-inspired pointillist globe: black site background, lime land dots, no grid lines. */
 .source-dot-globe{position:relative;display:grid;place-items:center;width:100%;height:390px;min-width:0;overflow:hidden;background:#000}
-.dot-globe-sphere{position:relative;width:min(88%,370px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:#030503;box-shadow:inset -30px -10px 48px #000b,0 0 35px #d4ff0010;transform:translateZ(0)}
+.dot-globe-sphere{position:relative;width:min(88%,370px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:#030503;transform:perspective(900px) translateZ(0);transform-style:preserve-3d;animation:dot-globe-sphere-rotation 24s linear infinite;backface-visibility:visible}
 .dot-globe-map{display:block;width:100%;height:100%;overflow:hidden}
-.dot-globe-continents{transform-origin:320px 320px;animation:dot-globe-turn 34s linear infinite}
-.dot-globe-highlight{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at 28% 24%,#ffffff0c,transparent 34%),linear-gradient(90deg,#0000 48%,#0005 100%);box-shadow:inset -24px -5px 35px #000a,inset 7px 0 20px #d4ff0008}
-@keyframes dot-globe-turn{from{transform:translateX(0)}to{transform:translateX(-640px)}}
+.dot-globe-continents{transform:none;animation:none}
+.dot-globe-highlight{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(90deg,#0000 48%,#0003 100%);box-shadow:inset -18px -3px 24px #0008}
+@keyframes dot-globe-sphere-rotation{from{transform:perspective(900px) rotateY(0deg) rotateZ(-8deg)}to{transform:perspective(900px) rotateY(360deg) rotateZ(-8deg)}}
 @media(max-width:820px){.source-dot-globe{height:280px}.dot-globe-sphere{width:min(76vw,290px)}}
-@media(prefers-reduced-motion:reduce){.dot-globe-continents{animation:none}}
+@media(prefers-reduced-motion:reduce){.dot-globe-sphere{animation:none}}
