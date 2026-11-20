@@ -1,4 +1,4 @@
-# Nox Apis — Nexus Of Xperience
+# NOX APIS — NEXUS OF XPERIENCE
 
 منصة مطورين لإدارة مفاتيح API، استكشاف الخدمات المنشورة، اختبار الطلبات، ومراجعة استخدام الواجهات من لوحة واحدة.
 
@@ -31,7 +31,15 @@
 | `/apis/currency-rate` | تفاصيل أسعار العملات |
 | `/playground` | إرسال طلبات حقيقية وعرض JSON |
 | `/docs` | توثيق المطورين وأمثلة الاستخدام |
-| `/status` | حالة الخدمات ونقطة فحص الصحة |
+| `/status` | حالة التطبيق ومسارات API المسجلة دون ادعاء مراقبة المزودين |
+| `/changelog` | سجل التحديثات العامة |
+| `/limits` | حدود الاستخدام |
+| `/faq` | الأسئلة الشائعة |
+| `/support` | الدعم الفني عبر واتساب |
+| `/privacy` | سياسة الخصوصية |
+| `/terms` | شروط الاستخدام |
+| `/dashboard/logs` | سجل آخر طلبات API |
+| `/dashboard/analytics` | تحليلات الاستخدام |
 | `/login` | تسجيل الدخول بالبريد أو Google |
 | `/signup` | إنشاء حساب |
 | `/dashboard` | إحصاءات الاستخدام |
@@ -173,7 +181,7 @@ curl "https://bmg-apis-b2-902b.vercel.app/api/v1/currency/rate?base=USD&target=E
 - `502`: تعذر تنفيذ الطلب لدى المصدر الخارجي.
 - `503`: الخدمة أو التفويض غير متاح مؤقتاً.
 
-## موارد المطورين
+## الدعم الفني\n\nمجموعة الدعم الفني: https://chat.whatsapp.com/JvIsngFNWwIEvacsMqKUzX?s=cl&p=a&iam=2\n\n## موارد المطورين
 
 - فحص الصحة: `/api/health`
 - مواصفات OpenAPI: `/api/openapi.json`
