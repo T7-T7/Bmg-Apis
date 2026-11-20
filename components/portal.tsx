@@ -21,7 +21,7 @@ function Notice({children,type="info"}:{children:React.ReactNode;type?:"info"|"e
 
 export default function Portal(){
  const pathname=usePathname();const router=useRouter();
- const [user,setUser]=useState<User|null>(null);const [authReady,setAuthReady]=useState(false);const [mobileOpen,setMobileOpen]=useState(false);
+ const [user,setUser]=useState<User|null>(null);const [mobileOpen,setMobileOpen]=useState(false);
  const [keys,setKeys]=useState<ApiKey[]>([]);const [analytics,setAnalytics]=useState<Analytics|null>(null);const [loading,setLoading]=useState(false);const [message,setMessage]=useState("");const [error,setError]=useState("");
  const [keyLabel,setKeyLabel]=useState("مفتاح رئيسي");const [newKey,setNewKey]=useState("");
  const [prompt,setPrompt]=useState("اشرح مفهوم REST API باختصار مع مثال عملي.");const [instruction,setInstruction]=useState("أجب باللغة العربية وبأسلوب واضح.");const [sessionId,setSessionId]=useState("");const [apiKey,setApiKey]=useState("");const [apiOutput,setApiOutput]=useState("");const [requestBusy,setRequestBusy]=useState(false);
@@ -29,7 +29,7 @@ export default function Portal(){
  const service=useMemo(()=>SERVICES.find(item=>item.slug===pathname.split("/")[2]),[pathname]);
  const isAuthPage=pathname==="/login"||pathname==="/signup";
  const supabase=useMemo(()=>{try{return getSupabaseBrowserClient()}catch{return null}},[]);
- useEffect(()=>{if(!supabase){setAuthReady(true);return}supabase.auth.getSession().then(({data})=>{setUser(data.session?.user??null);setAuthReady(true)});const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user??null));return()=>subscription.unsubscribe()},[supabase]);
+ useEffect(()=>{if(!supabase)return;supabase.auth.getSession().then(({data})=>setUser(data.session?.user??null));const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user??null));return()=>subscription.unsubscribe()},[supabase]);
  useEffect(()=>{if(!supabase||!user)return;let alive=true;supabase.rpc("bmg_list_api_keys").then(({data,error})=>{if(alive&&!error)setKeys((data||[]) as ApiKey[])});supabase.rpc("bmg_get_api_analytics",{p_days:30}).then(({data,error})=>{if(alive&&!error)setAnalytics(data as Analytics)});return()=>{alive=false}},[supabase,user]);
  useEffect(()=>{if(pathname==="/auth/callback"&&supabase){const code=new URLSearchParams(window.location.search).get("code");if(code)supabase.auth.exchangeCodeForSession(code).then(({error})=>{if(error){setError(error.message);router.replace("/login")}else router.replace("/dashboard")});else router.replace(user?"/dashboard":"/login")}},[pathname,supabase,router,user]);
  const signOut=useCallback(async()=>{if(supabase)await supabase.auth.signOut();setUser(null);router.push("/")},[supabase,router]);
