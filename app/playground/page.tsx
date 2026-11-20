@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { Activity, ArrowDownToLine, Check, Copy, Image as ImageIcon, LoaderCircle, Play, RefreshCw, Sparkles, Terminal, WalletCards } from "lucide-react";
+import { ArrowDownToLine, Check, Copy, Image as ImageIcon, LoaderCircle, Play, RefreshCw, Sparkles, Terminal, WalletCards } from "lucide-react";
 
 type ApiId = "gemini" | "image" | "currency";
 type CodeLang = "curl" | "js" | "python";
