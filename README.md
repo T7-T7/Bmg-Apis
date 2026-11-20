@@ -1,86 +1,192 @@
-# Bmg-Apis
+# BMG APIs
 
-منصة مصرية للمطورين لاستكشاف واجهات API واختبارها وإدارة مفاتيح الوصول.
+منصة مطورين لإدارة مفاتيح API، استكشاف الخدمات المنشورة، اختبار الطلبات، ومراجعة استخدام الواجهات من لوحة واحدة.
 
-## التقنية
-- Next.js 16 App Router
-- React 19
-- TypeScript مع Strict Mode
-- Supabase للمصادقة وإدارة مفاتيح API
-- Vercel للنشر
+## الحالة الحالية
+
+- **الواجهة:** Next.js App Router + React + TypeScript.
+- **المصادقة وإدارة المفاتيح:** Supabase Auth وRPCs الموجودة في قاعدة البيانات.
+- **النشر:** Vercel — فرع الإنتاج `main`.
+- **التصميم:** واجهة عربية RTL، وضع داكن، متجاوبة مع الهاتف وسطح المكتب.
+- **لا يتم تعديل مخطط Supabase أو سياسات RLS عند تشغيل الواجهة.**
+
+## الخدمات النشطة
+
+هذه هي الخدمات التي تم التحقق من وجودها وحالتها `active` في سجل الخدمات:
+
+| الخدمة | الطريقة | المسار | المصدر |
+|---|---|---|---|
+| عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini |
+| أسعار العملات | GET | `/api/v1/currency/rate` | Frankfurter |
+
+لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.
+
+## صفحات المنصة
+
+| المسار | الوظيفة |
+|---|---|
+| `/` | الصفحة الرئيسية والتعريف بالخدمات |
+| `/apis` | كتالوج الواجهات النشطة |
+| `/apis/aql-gemini` | تفاصيل واجهة Gemini |
+| `/apis/currency-rate` | تفاصيل أسعار العملات |
+| `/playground` | إرسال طلبات حقيقية وعرض JSON |
+| `/docs` | توثيق المطورين وأمثلة الاستخدام |
+| `/status` | حالة الخدمات ونقطة فحص الصحة |
+| `/login` | تسجيل الدخول بالبريد أو Google |
+| `/signup` | إنشاء حساب |
+| `/dashboard` | إحصاءات الاستخدام |
+| `/dashboard/api-keys` | إنشاء وإلغاء مفاتيح API |
+
+## شجرة المشروع الفعلية
+
+```text
+.
+├── .github/
+│   └── workflows/ci.yml
+├── app/
+│   ├── api/
+│   │   ├── health/route.ts
+│   │   ├── openapi.json/route.ts
+│   │   └── v1/
+│   │       ├── ai/gemini/route.ts
+│   │       └── currency/rate/route.ts
+│   ├── apis/
+│   │   ├── [slug]/page.tsx
+│   │   └── page.tsx
+│   ├── auth/callback/page.tsx
+│   ├── dashboard/
+│   │   ├── api-keys/page.tsx
+│   │   └── page.tsx
+│   ├── docs/page.tsx
+│   ├── login/page.tsx
+│   ├── playground/page.tsx
+│   ├── signup/page.tsx
+│   ├── status/page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── backend/
+│   └── README.md
+├── components/
+│   └── portal.tsx
+├── lib/
+│   ├── server/
+│   │   └── gemini.ts
+│   ├── services/
+│   │   └── health.ts
+│   └── supabase/
+│       └── client.ts
+├── supabase/
+│   └── migrations/
+├── .gitignore
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+## المتطلبات
+
+- Node.js `>=20.9.0 <27`.
+- npm.
+- مشروع Supabase مرتبط.
+- مشروع Vercel مرتبط بالمستودع.
+
+## متغيرات البيئة
+
+تُضبط القيم في Vercel Project Settings ولا تحفظ داخل Git:
+
+| المتغير | الاستخدام |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | رابط مشروع Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | مفتاح Supabase العام (anon/publishable) |
+| `GEMINI_SESSION_SECRET` | سر خادمي بطول 32 حرفاً على الأقل لتشفير جلسات Gemini وتجزئة معرف العميل |
+| `BMG_DEMO_RPC_SECRET` | السر الخادمي المطابق للبصمة المسجلة في `private.api_demo_config` |
+| `GEMINI_TIMEOUT_MS` | مهلة Gemini بالمللي ثانية؛ اختياري، الافتراضي 45000 |
+
+لا تستخدم `service_role` أو أي سر خادمي في متغير يبدأ بـ `NEXT_PUBLIC_`. لا تشارك قيم الأسرار في سجلات البناء أو الواجهة.
 
 ## التشغيل المحلي
+
 ```bash
 npm install
 npm run dev
 ```
 
+أنشئ ملف `.env.local` محلياً بالقيم المطلوبة قبل اختبار المصادقة أو خدمات API.
+
 ## فحوصات الجودة
+
 ```bash
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-## شجرة المشروع
-```text
-app/
-  api/
-    health/route.ts
-    openapi.json/route.ts
-    v1/
-      ai/gemini/route.ts
-      currency/rate/route.ts
-  apis/
-    [slug]/page.tsx
-    page.tsx
-  auth/callback/page.tsx
-  dashboard/
-    api-keys/page.tsx
-    page.tsx
-  docs/page.tsx
-  login/page.tsx
-  playground/page.tsx
-  signup/page.tsx
-  status/page.tsx
-  page.tsx
-  layout.tsx
-  globals.css
+## المصادقة ومفاتيح API
 
-components/
-  api/
-  dashboard/
-  globe/
-  layout/
-  navigation/
-  ui/
-  auth-form.tsx
-  api-key-manager.tsx
-  landing-page.tsx
+تستخدم الواجهة وظائف Supabase الحالية:
 
-lib/
-  api/catalog.ts
-  server/gemini.ts
-  services/health.ts
-  supabase/client.ts
+- `bmg_create_api_key(p_key, p_label)`
+- `bmg_list_api_keys()`
+- `bmg_revoke_api_key(p_id)`
+- `bmg_get_api_analytics(p_days)`
 
-types/
-  api.ts
+يُنشأ المفتاح بصيغة `nox_live_...` ويُخزن hash المفتاح في قاعدة البيانات. تعرض الواجهة القيمة السرية مرة واحدة عند الإنشاء فقط. الإلغاء لا يحذف سجل المفتاح بل يعطله عبر الوظيفة الحالية.
+
+تسجيل الدخول يدعم البريد وكلمة المرور وGoogle OAuth. يجب ضبط Redirect URLs في Supabase Auth لتشمل نطاق الإنتاج ومسار `/auth/callback`.
+
+## استخدام API
+
+### Gemini
+
+```bash
+curl -X POST "https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini" \
+  -H "Authorization: Bearer YOUR_NOX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"اشرح REST API","instruction":"أجب بالعربية"}'
 ```
 
-## الخدمات المنشورة فعليًا
-- **POST /api/v1/ai/gemini** — Gemini text generation، مع مصادقة Bearer API Key.
-- **GET /api/v1/currency/rate?base=USD&target=EUR** — أسعار صرف مرجعية يومية من Frankfurter.
+الحقول:
+- `prompt`: مطلوب، من 1 إلى 30000 حرف.
+- `instruction`: تعليمات اختيارية.
+- `sessionId`: معرّف اختياري من الاستجابة السابقة لمتابعة المحادثة.
 
-كلا المسارين يتحققان من مفتاح Nox API وصلاحية الخدمة وحد الطلبات على الخادم. لا يتم تضمين المفاتيح السرية في كود المتصفح.
+### أسعار العملات
 
-بقية عناصر الكتالوج تظهر كـ **قيد التطوير** ولا تُقدَّم على أنها endpoints عاملة. Playground يرسل طلبات حقيقية إلى المسارين المنشورين فقط.
+```bash
+curl "https://bmg-apis-b2-902b.vercel.app/api/v1/currency/rate?base=USD&target=EUR" \
+  -H "Authorization: Bearer YOUR_NOX_API_KEY"
+```
 
-## المصادقة والمفاتيح
-- Google OAuth عبر Supabase.
-- إنشاء وإلغاء مفاتيح API عبر إجراءات قاعدة البيانات الحالية.
-- تخزين بصمة المفتاح بدل المفتاح الأصلي.
-- عرض قيمة المفتاح مرة واحدة عند إنشائه.
+الأسعار يومية مرجعية وليست أسعار تداول لحظية.
+
+## حدود الاستخدام والاستجابات
+
+- مفاتيح API: 30 طلباً في الدقيقة لكل مفتاح.
+- التجربة العامة لها حدود أقل يفرضها الخادم.
+- `400`: طلب غير صالح.
+- `401`: مفتاح غير صالح أو ملغى.
+- `413`: تجاوز حد الحجم أو النص.
+- `422`: رمز عملة غير مدعوم.
+- `429`: تجاوز حد الطلبات.
+- `502`: تعذر تنفيذ الطلب لدى المصدر الخارجي.
+- `503`: الخدمة أو التفويض غير متاح مؤقتاً.
+
+## موارد المطورين
+
+- فحص الصحة: `/api/health`
+- مواصفات OpenAPI: `/api/openapi.json`
+- توثيق Markdown: `/docs.md`
+- فهرس LLM: `/llms.txt`
 
 ## النشر
-يتم النشر عبر Vercel المرتبط بفرع **main**. تحفظ متغيرات البيئة الحساسة في إعدادات المشروع، ولا تُضمّن في المستودع.
+
+المستودع مرتبط بفرع `main`. نشر الإنتاج يجب أن يستهدف بيئة Vercel المسماة **Production**. لا تستخدم Preview لهذا المشروع عند تحديث واجهة الإنتاج. بعد النشر، اختبر الصفحات والمصادقة ومفاتيح API والمسارين النشطين من نطاق الإنتاج.
+
+## ملاحظات هندسية
+
+- الواجهة تتصل بـ Supabase باستخدام المفتاح العام فقط؛ صلاحيات إدارة المفاتيح والتحليلات تبقى داخل RPCs المحمية.
+- استدعاءات Gemini وأسرار الجلسات تنفذ على الخادم.
+- لا تضف مفاتيح أو أسرار حقيقية إلى ملفات المصدر.
+- لا تعتبر حالة صفحة Status بديلاً عن مراقبة خارجية مستمرة أو فحص فعلي لكل مزود.
