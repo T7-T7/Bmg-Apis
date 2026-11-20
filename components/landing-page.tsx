@@ -109,17 +109,17 @@ export default function LandingPage() {
           <Link href="/" className="landing-brand" aria-label="Nox Apis"><span className="landing-brand-mark"><Braces size={22} strokeWidth={2.2} /></span><span className="landing-brand-name">Nox<span> Apis</span><small>NEXUS OF XPERIENCE</small></span></Link>
           <div className="landing-nav-links">{navLinks.map(link => <a key={link.href} href={link.href}>{link.label}</a>)}</div>
           <div className="landing-nav-actions">
-            <button className="locale-toggle" onClick={() => toggleLocale()} type="button" aria-label="Change language"><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></button>
+            <button className="locale-toggle" onClick={() => toggleLocale()} type="button" aria-label="Change language"><Globe2 size={15} /><span>{ar ? "EN" : "عربي"}</span></motion.button>
             <ThemeToggle />
             <Link href="/login" className="nav-signin">{t.signIn}</Link>
             <Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link>
           </div>
-          <button className="landing-mobile-toggle" type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
+          <motion.button className="landing-mobile-toggle" type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} whileTap={{ scale: .97 }}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</motion.button>
         </nav>
         <AnimatePresence>
           {menuOpen && <motion.div className="mobile-nav-panel glass-panel" initial={{ opacity: 0, y: -10, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: .98 }} transition={{ duration: .2 }}>
             {navLinks.map(link => <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>{link.label}<ArrowUpLeft size={14} /></a>)}
-            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => toggleLocale()}><Globe2 size={15} />{ar ? "English" : "العربية"}</button><ThemeToggle /><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
+            <div className="mobile-nav-actions"><button className="locale-toggle" onClick={() => toggleLocale()}><Globe2 size={15} />{ar ? "English" : "العربية"}</motion.button><ThemeToggle /><Link href="/signup?next=/dashboard" className="nav-cta">{t.getStarted}<ArrowUpRight size={15} /></Link></div>
           </motion.div>}
         </AnimatePresence>
       </header>
