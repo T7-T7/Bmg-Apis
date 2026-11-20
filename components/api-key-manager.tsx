@@ -40,7 +40,8 @@ export default function ApiKeyManager() {
     else setKeys((data ?? []) as ApiKey[]);
     setBusy(false);
   }
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- load the current user keys after mount.\n  useEffect(() => { void load(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- load the current user keys after mount.
+  useEffect(() => { void load(); }, []);
 
   async function createKey() {
     setWorking(true); setError(""); setNewKey(""); setCopied(false);
