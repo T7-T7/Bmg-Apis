@@ -124,7 +124,7 @@ export async function OPTIONS() {
 }
 export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
-  const match = authorization.match(/^Bearer\\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
+  const match = authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
   if (authorization && !match) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
   let body: unknown;
   try {
@@ -147,9 +147,9 @@ export async function POST(request: NextRequest) {
     const raw = await upstream.text();
     let responseText = "";
     let upstreamError = "";
-    for (const block of raw.split(/\\r?\\n\\r?\\n/)) {
+    for (const block of raw.split(/\r?\n\r?\n/)) {
       let event = "";
-      const lines = block.split(/\\r?\\n/);
+      const lines = block.split(/\r?\n/);
       for (const line of lines) {
         if (line.startsWith("event:")) event = line.slice(6).trim();
         if (line.startsWith("data:")) {
