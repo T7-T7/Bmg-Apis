@@ -520,10 +520,10 @@ export default function AdminConsole(){
      {!auditRows.length&&<p className={styles.empty}>لا توجد عمليات مطابقة للفلاتر.</p>}
      <div className={styles.actions}><button disabled={busy||auditRowsPage<=1} onClick={()=>void loadAuditLogs(auditRowsPage-1)}>السابق</button><button disabled={busy||auditRowsPage>=auditRowsTotalPages} onClick={()=>void loadAuditLogs(auditRowsPage+1)}>التالي</button></div>
     </section>}{tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
-   {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2>
+   {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2><p className={styles.hint}>التحديثات والوصف الأولي تظهر في صفحة الحالة العامة. لا تضع أسرارًا أو تفاصيل تشخيص داخلية هنا.</p>
     <div className={styles.form}>
      <label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label>
-     <label>الوصف الأولي<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label>
+     <label>الوصف الأولي (يظهر في صفحة الحالة العامة)<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label>
      <div className={styles.formGrid}>
       <label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label>
       <label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label>
@@ -537,7 +537,7 @@ export default function AdminConsole(){
      </div>
      <p>{i.description}</p>
      <p className={styles.hint}>الخدمات المتأثرة: {i.affected_services.map(slug=>services.find(x=>x.slug===slug)?.name||slug).join("، ")||"لا توجد خدمات محددة"}</p>
-     <div className={styles.form}><label>إضافة تحديث أو ملاحظة<textarea value={incidentUpdateNotes[i.id]||""} onChange={e=>setIncidentUpdateNotes(v=>({...v,[i.id]:e.target.value}))} placeholder="اكتب آخر المستجدات أو خطوات الحل"/></label><button disabled={busy||!incidentUpdateNotes[i.id]?.trim()} onClick={()=>void addIncidentUpdate(i)}>إضافة تحديث</button></div>
+     <div className={styles.form}><label>إضافة تحديث أو ملاحظة<textarea value={incidentUpdateNotes[i.id]||""} onChange={e=>setIncidentUpdateNotes(v=>({...v,[i.id]:e.target.value}))} placeholder="اكتب تحديثًا عامًا للمستخدمين عن الحالة أو التقدم في الحل"/></label><button disabled={busy||!incidentUpdateNotes[i.id]?.trim()} onClick={()=>void addIncidentUpdate(i)}>إضافة تحديث</button></div>
      <h4>سجل التحديثات</h4>
      {incidentUpdates.filter(u=>u.incident_id===i.id).map(u=><div className={styles.auditRow} key={u.id}><span>{u.status?label(u.status):"تحديث"}</span><p>{u.message}</p><time>{date(u.created_at)}</time></div>)}
     </article>)}
