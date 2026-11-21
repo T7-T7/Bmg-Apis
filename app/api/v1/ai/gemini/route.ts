@@ -16,7 +16,7 @@ async function readJsonBody(request: NextRequest): Promise<unknown> {
  const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}return JSON.parse(new TextDecoder().decode(bytes));
 }
 function jsonError(message:string,status:number){
- const code=status===400?"INVALID_REQUEST":status===401?"UNAUTHORIZED":status===413?"PAYLOAD_TOO_LARGE":status===429?"RATE_LIMITED":status===503?"SERVICE_UNAVAILABLE":"UPSTREAM_ERROR";
+ const code=status===400?"INVALID_REQUEST":status===401?"UNAUTHORIZED":status===413?"PAYLOAD_TOO_LARGE":status===429?"RATE_LIMITED":status===503?"SERVICE_UNAVAILABLE":status===403?"FORBIDDEN":"UPSTREAM_ERROR";
  const headers:Record<string,string>={"Access-Control-Allow-Origin":"*","Cache-Control":"no-store"};
  if(status===429)headers["Retry-After"]="60";
  return NextResponse.json({success:false,error:message,code},{status,headers});
@@ -26,10 +26,10 @@ function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=proces
 function clientHash(request:NextRequest){const secret=process.env.GEMINI_SESSION_SECRET;if(!secret||secret.length<32)throw new Error("GEMINI_SESSION_SECRET is not configured.");const ip=request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()||request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";return createHmac("sha256",secret).update(ip).digest("hex")}
 async function authorize(request:NextRequest,token:string|null){
  const supabase=getSupabase();
- if(token){const{data,error}=await supabase.rpc("bmg_authorize_api_request",{p_key:token,p_service_slug:"aql-gemini",p_method:"POST"});if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number}|null;if(!result?.authorized)return result?.reason==="rate_limited"?{ok:false,response:jsonError("تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح.",429)}:{ok:false,response:jsonError(result?.reason==="service_unavailable"?"الخدمة غير متاحة حاليًا.":"مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.",result?.reason==="service_unavailable"?503:401)};return{ok:true,usageId:Number(result.usage_id)||null}}
+ if(token){const{data,error}=await supabase.rpc("bmg_authorize_api_request",{p_key:token,p_service_slug:"aql-gemini",p_method:"POST"});if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number;message?:string}|null;if(!result?.authorized){if(result?.reason==="rate_limited")return{ok:false,response:jsonError("تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح.",429)};if(result?.reason==="maintenance")return{ok:false,response:jsonError(result.message||"الخدمة تحت الصيانة مؤقتًا.",503)};if(result?.reason==="account_suspended")return{ok:false,response:jsonError("تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة.",403)};return{ok:false,response:jsonError(result?.reason==="service_unavailable"?"الخدمة غير متاحة حاليًا.":"مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.",result?.reason==="service_unavailable"?503:401)}}return{ok:true,usageId:Number(result.usage_id)||null}}
  const{data,error}=await supabase.rpc("bmg_authorize_demo_request",{p_client_hash:clientHash(request),p_service_slug:"aql-gemini",p_method:"POST",p_server_secret:process.env.BMG_DEMO_RPC_SECRET});
  if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number}|null;
- if(!result?.authorized)return{ok:false,response:jsonError(result?.reason==="rate_limited"?"وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.":"الخدمة غير متاحة حاليًا.",result?.reason==="rate_limited"?429:503)};
+ if(!result?.authorized)return{ok:false,response:jsonError(result?.reason==="rate_limited"?"وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.":result?.reason==="maintenance"?(result.message||"الخدمة تحت الصيانة مؤقتًا."):"الخدمة غير متاحة حاليًا.",result?.reason==="rate_limited"?429:503)};
  return{ok:true,usageId:Number(result.usage_id)||null};
 }
 export async function OPTIONS(){return new NextResponse(null,{status:204,headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Allow-Headers":"Content-Type, Authorization","Access-Control-Max-Age":"86400"}})}
