@@ -194,7 +194,8 @@ export type Database = {
           label: string
         }[]
       }
-      bmg_get_api_analytics: { Args: { p_days?: number }; Returns: Json }
+      bmg_get_api_analytics: { Args: { p_days?: number }; Returns: Json },
+      bmg_get_api_request_logs: { Args: { p_page?: number; p_page_size?: number; p_service?: string | null; p_status?: string }; Returns: Json }
       bmg_list_api_keys: {
         Args: never
         Returns: {

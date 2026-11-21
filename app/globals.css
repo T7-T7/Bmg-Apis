@@ -497,3 +497,5 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 .skeleton-chart-legend{display:flex;gap:8px}
 .skeleton-chart-legend i{height:7px;width:42px;background:var(--surface-2);border-radius:8px}
 @media(max-width:600px){.catalog-controls,.log-controls{align-items:stretch}.catalog-search{flex-basis:100%}.catalog-controls>select,.log-controls>select{flex:1;min-width:0}.log-controls .button{width:100%}}
+
+.log-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-top:1px solid var(--line)}.log-pagination>div{display:flex;gap:8px}.log-pagination .button{min-height:34px;padding:6px 12px}@media(max-width:600px){.log-pagination{align-items:flex-start;flex-direction:column}.log-pagination>div{width:100%}.log-pagination .button{flex:1}}
