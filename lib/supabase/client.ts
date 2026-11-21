@@ -1,12 +1,31 @@
-"use client";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
-let client: SupabaseClient | null = null;
-export function getSupabaseBrowserClient() {
-  if (client) return client;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("إعدادات Supabase العامة غير موجودة في بيئة النشر.");
-  client = createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
-  return client;
+{
+  "name": "nox-apis",
+  "version": "0.3.0",
+  "private": true,
+  "description": "NOX APIS — NEXUS OF XPERIENCE developer API platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint",
+    "test:security": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@supabase/supabase-js": "2.58.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.4.6",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=20.9.0 <27"
+  }
 }
