@@ -1,2 +1,2 @@
-import UsageCenter from "@/components/usage-center";
-export default function UsagePage(){return <UsageCenter/>;}
+import Portal from "@/components/portal";
+export default function UsagePage(){return <Portal/>;}
