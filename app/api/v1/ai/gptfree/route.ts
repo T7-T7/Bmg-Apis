@@ -106,7 +106,7 @@ async function authorize(request: NextRequest, token: string | null) {
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
   const response = await fetch(url, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(12_000)
+    body: JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(10_000)
   });
   const data = await response.json() as Record<string, unknown>;
   if (!response.ok) throw new Error(String(data.error && (data.error as Record<string, unknown>).message || "Firebase authentication failed"));
@@ -124,7 +124,7 @@ async function getAuth(force = false): Promise<AuthState> {
         const form = new URLSearchParams({ grant_type: "refresh_token", refresh_token: authState.refreshToken });
         const response = await fetch("https://securetoken.googleapis.com/v1/token?key=" + encodeURIComponent(key), {
           method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: form, cache: "no-store", signal: AbortSignal.timeout(20_000)
+          body: form, cache: "no-store", signal: AbortSignal.timeout(10_000)
         });
         data = await response.json() as Record<string, unknown>;
         if (!response.ok) throw new Error("Firebase token refresh failed");
@@ -153,7 +153,7 @@ async function requestAgent(payload: { message: string; images: string[]; histor
       "Origin": "https://gptfree.com", "Referer": "https://gptfree.com/",
       "User-Agent": "Nox-Apis/1.0"
     },
-    body: JSON.stringify(payload), cache: "no-store", signal: AbortSignal.timeout(95_000)
+    body: JSON.stringify(payload), cache: "no-store", signal: AbortSignal.timeout(90_000)
   });
   if ((response.status === 401 || response.status === 403) && retry) {
     authState = null;
