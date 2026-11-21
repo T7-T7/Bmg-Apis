@@ -28,7 +28,8 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data: { claims } } = await supabase.auth.getClaims();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
   if (protectedRoute) response.headers.set("Cache-Control", "private, no-store, max-age=0");
 
   if (protectedRoute && !claims) {
