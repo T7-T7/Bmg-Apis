@@ -49,44 +49,49 @@
 
 ```text
 .
-├── .github/
-│   └── workflows/ci.yml
+├── .github/workflows/ci.yml
 ├── app/
 │   ├── api/
 │   │   ├── health/route.ts
 │   │   ├── openapi.json/route.ts
-│   │   └── v1/
-│   │       ├── ai/gemini/route.ts
-│   │       ├── ai/gemini/route.ts\n│       └── ai/gptfree/route.ts
-│   ├── apis/
-│   │   ├── [slug]/page.tsx
-│   │   └── page.tsx
+│   │   └── v1/ai/
+│   │       ├── gemini/route.ts
+│   │       └── gptfree/route.ts
+│   ├── apis/[slug]/page.tsx
+│   ├── apis/page.tsx
 │   ├── auth/callback/page.tsx
+│   ├── changelog/page.tsx
 │   ├── dashboard/
+│   │   ├── analytics/page.tsx
 │   │   ├── api-keys/page.tsx
+│   │   ├── logs/page.tsx
+│   │   ├── settings/page.tsx
 │   │   └── page.tsx
 │   ├── docs/page.tsx
+│   ├── docs.md/route.ts
+│   ├── faq/page.tsx
+│   ├── limits/page.tsx
+│   ├── llms.txt/route.ts
 │   ├── login/page.tsx
 │   ├── playground/page.tsx
+│   ├── privacy/page.tsx
 │   ├── signup/page.tsx
 │   ├── status/page.tsx
+│   ├── support/page.tsx
+│   ├── terms/page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
-├── backend/
-│   └── README.md
-├── components/
-│   └── portal.tsx
+├── backend/README.md
+├── components/portal.tsx
 ├── lib/
-│   ├── server/
-│   │   └── gemini.ts
-│   ├── services/
-│   │   └── health.ts
+│   ├── server/gemini.ts
+│   ├── services/health.ts
 │   └── supabase/
-│       └── client.ts
-├── supabase/
-│   └── migrations/
-├── .gitignore
+│       ├── client.ts
+│       └── database.types.ts
+├── supabase/migrations/*.sql
+├── tests/security.test.mjs
 ├── eslint.config.mjs
 ├── next.config.ts
 ├── package.json
@@ -109,7 +114,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | رابط مشروع Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | مفتاح Supabase العام (anon/publishable) |
 | `GEMINI_SESSION_SECRET` | سر خادمي بطول 32 حرفاً على الأقل لتشفير جلسات Gemini وتجزئة معرف العميل |
-| `Nox_DEMO_RPC_SECRET` | السر الخادمي المطابق للبصمة المسجلة في `private.api_demo_config` |
+| `BMG_DEMO_RPC_SECRET` | السر الخادمي المطابق للبصمة المسجلة في `private.api_demo_config` |
 | `GEMINI_TIMEOUT_MS` | مهلة Gemini بالمللي ثانية؛ اختياري، الافتراضي 45000 |
 
 لا تستخدم `service_role` أو أي سر خادمي في متغير يبدأ بـ `NEXT_PUBLIC_`. لا تشارك قيم الأسرار في سجلات البناء أو الواجهة.
@@ -180,7 +185,6 @@ curl -X POST "https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gptfree" \
 - `400`: طلب غير صالح.
 - `401`: مفتاح غير صالح أو ملغى.
 - `413`: تجاوز حد الحجم أو النص.
-- `422`: رمز عملة غير مدعوم.
 - `429`: تجاوز حد الطلبات.
 - `502`: تعذر تنفيذ الطلب لدى المصدر الخارجي.
 - `503`: الخدمة أو التفويض غير متاح مؤقتاً.
