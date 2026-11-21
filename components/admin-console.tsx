@@ -78,7 +78,7 @@ export default function AdminConsole(){
     supabase.from("audit_logs").select("id,actor_id,action,entity_type,entity_id,details,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.from("incidents").select("id,title,description,severity,status,affected_services,started_at,resolved_at").order("started_at",{ascending:false}),
     supabase.from("maintenance_windows").select("id,service_id,enabled,message,starts_at,ends_at").order("updated_at",{ascending:false}),
-    supabase.rpc("bmg_admin_list_api_keys",{p_user_id:null,p_status:"all"}),
+    supabase.rpc("bmg_admin_list_api_keys",{p_user_id:undefined,p_status:"all"}),
     supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle()
    ]);
    for(const x of [p,s,sub,pl,au,inc,mw,k,al])if(x.error)throw x.error;
@@ -113,7 +113,7 @@ export default function AdminConsole(){
   if(!supabase)return;
   setBusy(true);setError("");
   try{
-   const {data,error}=await supabase.rpc("bmg_get_admin_analytics",{p_days:analyticsDays,p_service:analyticsService||null,p_user_id:analyticsUser||null,p_category:analyticsCategory||null,p_status_code:analyticsStatus?Number(analyticsStatus):null});
+   const {data,error}=await supabase.rpc("bmg_get_admin_analytics",{p_days:analyticsDays,p_service:analyticsService||undefined,p_user_id:analyticsUser||undefined,p_category:analyticsCategory||undefined,p_status_code:analyticsStatus?Number(analyticsStatus):undefined});
    if(error)throw error;
    setAnalytics(data as unknown as AdminAnalytics);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل التحليلات.");}
