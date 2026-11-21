@@ -11,7 +11,7 @@ import styles from "./admin-console.module.css";
 type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
-type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string };
+type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string; reviewed_at:string|null };
 type Plan = { plan:string; requests_per_minute:number; max_api_keys:number; daily_weighted_limit:number; monthly_weighted_limit:number };
 type Audit = { id:number; actor_id:string|null; action:string; entity_type:string; entity_id:string|null; details:Record<string,unknown>; created_at:string };
 type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;actorEmail:string|null;action:string;entityType:string;entityId:string|null;details:Record<string,unknown>;createdAt:string};
