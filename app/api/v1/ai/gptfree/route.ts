@@ -50,9 +50,18 @@ let authState: AuthState | null = null;
 let authPromise: Promise<AuthState> | null = null;
 
 function error(message: string, status: number) {
-  return NextResponse.json({ success: false, error: message }, {
-    status, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
-  });
+  const code = status === 400 ? "INVALID_REQUEST"
+    : status === 401 ? "UNAUTHORIZED"
+    : status === 413 ? "PAYLOAD_TOO_LARGE"
+    : status === 429 ? "RATE_LIMITED"
+    : status === 503 ? "SERVICE_UNAVAILABLE"
+    : status === 504 ? "UPSTREAM_TIMEOUT" : "UPSTREAM_ERROR";
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "no-store"
+  };
+  if (status === 429 || status === 503 || status === 504) headers["Retry-After"] = "30";
+  return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
 async function completeUsage(id:number|null,status:number,startedAt:number){if(!id)return;try{await supabase().rpc("bmg_complete_api_request",{p_usage_id:id,p_status_code:status,p_latency_ms:Math.max(0,Date.now()-startedAt),p_server_secret:process.env.BMG_DEMO_RPC_SECRET})}catch(cause){console.error("[Nox usage completion]",cause instanceof Error?cause.message:cause)}}
 function supabase() {
@@ -97,7 +106,7 @@ async function authorize(request: NextRequest, token: string | null) {
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
   const response = await fetch(url, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(20_000)
+    body: JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(12_000)
   });
   const data = await response.json() as Record<string, unknown>;
   if (!response.ok) throw new Error(String(data.error && (data.error as Record<string, unknown>).message || "Firebase authentication failed"));
@@ -144,7 +153,7 @@ async function requestAgent(payload: { message: string; images: string[]; histor
       "Origin": "https://gptfree.com", "Referer": "https://gptfree.com/",
       "User-Agent": "Nox-Apis/1.0"
     },
-    body: JSON.stringify(payload), cache: "no-store", signal: AbortSignal.timeout(115_000)
+    body: JSON.stringify(payload), cache: "no-store", signal: AbortSignal.timeout(95_000)
   });
   if ((response.status === 401 || response.status === 403) && retry) {
     authState = null;
@@ -201,8 +210,8 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    if (upstreamError){await completeUsage(usageId,502,startedAt);return error(upstreamError, 502)}
-    if (!responseText.trim()){await completeUsage(usageId,502,startedAt);return error("لم يُرجع GPTFree محتوى قابلًا للقراءة.", 502)}
+    if (upstreamError){await completeUsage(usageId,502,startedAt);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
+    if (!responseText.trim()){await completeUsage(usageId,502,startedAt);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
     await completeUsage(usageId,200,startedAt);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: match ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
