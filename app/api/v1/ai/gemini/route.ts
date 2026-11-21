@@ -15,7 +15,12 @@ async function readJsonBody(request: NextRequest): Promise<unknown> {
  try{while(true){const{done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BODY_BYTES){await reader.cancel();throw new PayloadTooLargeError()}chunks.push(value)}}finally{reader.releaseLock()}
  const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}return JSON.parse(new TextDecoder().decode(bytes));
 }
-function jsonError(message:string,status:number){return NextResponse.json({success:false,error:message},{status,headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store"}})}
+function jsonError(message:string,status:number){
+ const code=status===400?"INVALID_REQUEST":status===401?"UNAUTHORIZED":status===413?"PAYLOAD_TOO_LARGE":status===429?"RATE_LIMITED":status===503?"SERVICE_UNAVAILABLE":"UPSTREAM_ERROR";
+ const headers:Record<string,string>={"Access-Control-Allow-Origin":"*","Cache-Control":"no-store"};
+ if(status===429)headers["Retry-After"]="60";
+ return NextResponse.json({success:false,error:message,code},{status,headers});
+}
 async function completeUsage(id:number|null,status:number,startedAt:number){if(!id)return;try{const db=getSupabase();await db.rpc("bmg_complete_api_request",{p_usage_id:id,p_status_code:status,p_latency_ms:Math.max(0,Date.now()-startedAt),p_server_secret:process.env.BMG_DEMO_RPC_SECRET})}catch(error){console.error("[Nox usage completion]",error instanceof Error?error.message:error)}}
 function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key)throw new Error("Supabase environment variables are missing.");return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}
 function clientHash(request:NextRequest){const secret=process.env.GEMINI_SESSION_SECRET;if(!secret||secret.length<32)throw new Error("GEMINI_SESSION_SECRET is not configured.");const ip=request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()||request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";return createHmac("sha256",secret).update(ip).digest("hex")}
