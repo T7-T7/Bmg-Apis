@@ -499,3 +499,31 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 @media(max-width:600px){.catalog-controls,.log-controls{align-items:stretch}.catalog-search{flex-basis:100%}.catalog-controls>select,.log-controls>select{flex:1;min-width:0}.log-controls .button{width:100%}}
 
 .log-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-top:1px solid var(--line)}.log-pagination>div{display:flex;gap:8px}.log-pagination .button{min-height:34px;padding:6px 12px}@media(max-width:600px){.log-pagination{align-items:flex-start;flex-direction:column}.log-pagination>div{width:100%}.log-pagination .button{flex:1}}
+
+
+/* API submission workspace */
+.submission-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:14px;align-items:start}
+.submission-form,.submission-history{min-width:0;padding:20px}
+.submission-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:16px}
+.submission-fields label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:600;min-width:0}
+.submission-fields input,.submission-fields select,.submission-fields textarea{width:100%;min-width:0;padding:10px 11px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:2px;font-size:12px;outline:none}
+.submission-fields textarea{resize:vertical;line-height:1.8}
+.submission-fields .submission-full{grid-column:1/-1}
+.submission-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.submission-footer p{max-width:420px;margin:0;color:var(--muted);font-size:10px;line-height:1.8}
+.submission-list{display:grid;gap:0}
+.submission-item{padding:14px 0;border-bottom:1px solid var(--line)}
+.submission-item:last-child{border-bottom:0}
+.submission-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.submission-item-head>div{display:grid;gap:4px;min-width:0}
+.submission-item-head b{font-size:12px}
+.submission-item-head code,.submission-item>small{font:10px/1.6 'JetBrains Mono',monospace;color:var(--muted);overflow-wrap:anywhere}
+.submission-item p{font-size:11px;line-height:1.8;color:var(--muted);margin:9px 0}
+.submission-status{display:inline-flex;align-items:center;white-space:nowrap;padding:4px 8px;border:1px solid var(--line);font-size:9px}
+.submission-status.pending{color:var(--muted);background:var(--surface-2)}
+.submission-status.approved{color:#5e9b53;border-color:#5e9b5355}
+.submission-status.rejected{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,transparent)}
+.submission-review-note{margin-top:10px;padding:9px 11px;background:var(--surface-2);border-right:2px solid var(--accent);font-size:10px;line-height:1.8}
+:root[data-theme="dark"] .submission-fields input,:root[data-theme="dark"] .submission-fields select,:root[data-theme="dark"] .submission-fields textarea{background:#171b1d;border-color:#303638;color:var(--ink)}
+@media(max-width:900px){.submission-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.submission-form,.submission-history{padding:15px}.submission-fields{grid-template-columns:1fr}.submission-fields .submission-full{grid-column:auto}.submission-footer{align-items:stretch;flex-direction:column}.submission-footer .button{width:100%}.submission-item-head{align-items:flex-start}}

@@ -44,6 +44,7 @@
 | `/signup` | إنشاء حساب |
 | `/dashboard` | إحصاءات الاستخدام |
 | `/dashboard/api-keys` | إنشاء وإلغاء مفاتيح API |
+| `/dashboard/submissions` | إرسال ومتابعة طلبات إضافة واجهات API |
 
 ## شجرة المشروع الفعلية
 
@@ -64,6 +65,7 @@
 │   ├── auth/callback/page.tsx
 │   ├── dashboard/
 │   │   ├── api-keys/page.tsx
+│   │   ├── submissions/page.tsx
 │   │   └── page.tsx
 │   ├── docs/page.tsx
 │   ├── login/page.tsx
