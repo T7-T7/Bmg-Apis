@@ -310,6 +310,41 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_updates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          incident_id: string
+          message: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id: string
+          message: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_id?: string
+          message?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incidents: {
         Row: {
           affected_services: string[]
