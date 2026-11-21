@@ -41,3 +41,13 @@ test("both public API routes enforce bounded request payloads", () => {
   assert.match(gptfree, /await reader\.cancel\(\)/);
   assert.doesNotMatch(gptfree, /await request\.text\(\)/);
 });
+
+test("GPTFree upstream and Firebase timeouts fit the 120-second route budget", () => {
+  const route = read("../app/api/v1/ai/gptfree/route.ts");
+  const duration = Number(route.match(/maxDuration\s*=\s*(\d+)/)?.[1]);
+  const firebaseTimeouts = [...route.matchAll(/AbortSignal\.timeout\((\d+)_000\)/g)].map((match) => Number(match[1]));
+  assert.equal(duration, 120);
+  assert.ok(firebaseTimeouts.includes(10));
+  assert.ok(firebaseTimeouts.includes(90));
+  assert.ok(10 + 10 + 90 < duration, "Firebase refresh + fresh auth + provider timeout must fit the route budget");
+});
