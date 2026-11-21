@@ -50,3 +50,20 @@ test("GPTFree upstream and Firebase timeouts fit the 120-second route budget", (
   assert.deepEqual(firebaseTimeouts.sort((a, b) => a - b), [10, 10, 90]);
   assert.ok(10 + 10 + 90 < duration, "Firebase refresh + fresh auth + provider timeout must fit the route budget");
 });
+
+test("administrator role boundaries are enforced by the database RPC", () => {
+  const sql = read("../supabase/migrations/20261121173724_protect_admin_role_boundaries.sql");
+  assert.match(sql, /v_actor_role='admin' and v_target_role<>'user'/i);
+  assert.match(sql, /Administrators cannot modify another administrator/i);
+  assert.match(sql, /Only the owner can grant administrator access/i);
+  assert.match(sql, /v_target_role='owner'/i);
+});
+
+test("admin request log RPC is role-gated and never returns network/device identifiers", () => {
+  const sql = read("../supabase/migrations/20261121173846_add_admin_request_log_center.sql");
+  assert.match(sql, /if not private\.bmg_is_admin\(\) then/i);
+  assert.match(sql, /created_at>=now\(\)-make_interval\(hours=>v_hours\)/i);
+  assert.match(sql, /revoke all on function public\.bmg_admin_get_request_logs[\s\S]*from public,anon/i);
+  assert.match(sql, /grant execute on function public\.bmg_admin_get_request_logs[\s\S]*to authenticated/i);
+  assert.doesNotMatch(sql, /ip_address|user_agent|device_id|request_body/i);
+});
