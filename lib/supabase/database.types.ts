@@ -442,6 +442,16 @@ export type Database = {
           label: string
         }[]
       }
+      bmg_get_admin_analytics: {
+        Args: {
+          p_category?: string
+          p_days?: number
+          p_service?: string
+          p_status_code?: number
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       bmg_get_api_analytics: { Args: { p_days?: number }; Returns: Json }
       bmg_get_api_request_logs: {
         Args: {
