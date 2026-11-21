@@ -67,3 +67,11 @@ test("admin request log RPC is role-gated and never returns network/device ident
   assert.match(sql, /grant execute on function public\.bmg_admin_get_request_logs[\s\S]*to authenticated/i);
   assert.doesNotMatch(sql, /ip_address|user_agent|device_id|request_body/i);
 });
+
+test("admin audit log RPC is restricted to administrators and paginates safely", () => {
+  const sql = read("../supabase/migrations/20261121174122_add_admin_audit_log_center.sql");
+  assert.match(sql, /if not private\.bmg_is_admin\(\) then/i);
+  assert.match(sql, /least\(greatest\(coalesce\(p_page_size,25\),1\),100\)/i);
+  assert.match(sql, /revoke all on function public\.bmg_admin_get_audit_logs[\s\S]*from public,anon/i);
+  assert.match(sql, /grant execute on function public\.bmg_admin_get_audit_logs[\s\S]*to authenticated/i);
+});
