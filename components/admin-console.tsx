@@ -306,7 +306,7 @@ export default function AdminConsole(){
 
  return <main className={styles.shell} dir="rtl">
   <aside className={styles.sidebar}>
-   <Link href="/dashboard" className={styles.brand}><b>BMG</b><span>CONTROL CENTER</span></Link>
+   <Link href="/dashboard" className={styles.brand}><b>NOX APIS</b><span>NEXUS OF XPERIENCE</span></Link>
    <div className={styles.sideTitle}>إدارة المنصة</div>
    <nav>{TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""}>{t.label}</button>)}</nav>
    <div className={styles.sideBottom}><span>{role==="owner"?"مالك المنصة":"مشرف المنصة"}</span><Link href="/dashboard">العودة للوحة المطور</Link></div>
