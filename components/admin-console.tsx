@@ -80,7 +80,7 @@ export default function AdminConsole(){
    ]);
    for(const x of [p,s,sub,pl,au,inc,mw,k,al])if(x.error)throw x.error;
    setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
-   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setMaintenance((mw.data||[]) as Maintenance[]);
+   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل بيانات الإدارة.");}
   finally{setBusy(false);}
  },[supabase,user]);
