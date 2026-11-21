@@ -8,7 +8,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 
-type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies";
+type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string };
@@ -28,7 +28,7 @@ type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:numbe
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
  {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
- {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"}
+ {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"},{id:"exports",label:"مركز التصدير"}
 ];
 const blankService = {id:"",slug:"",name:"",description:"",category:"AI",endpoint_path:"",http_method:"POST",docs_markdown:"",status:"active",source_type:"official",weight:1};
 const label = (value:string) => ({basic:"Basic",pro:"Pro",premium:"Premium",user:"مستخدم",admin:"مشرف",owner:"مالك",active:"نشط",suspended:"موقوف",pending:"قيد المراجعة",approved:"مقبول",rejected:"مرفوض",changes_requested:"مطلوب تعديل",investigating:"قيد التحقيق",identified:"تم تحديد السبب",monitoring:"تحت المراقبة",resolved:"تم الحل",minor:"منخفض",major:"مرتفع",critical:"حرج"} as Record<string,string>)[value] || value;
@@ -55,6 +55,7 @@ export default function AdminConsole(){
  const [maintenance,setMaintenance]=useState<Maintenance[]>([]);
  const [dependencies,setDependencies]=useState<ServiceDependency[]>([]);
  const [dependencyForm,setDependencyForm]=useState({service_id:"",depends_on_service_id:"",dependency_type:"required" as "required"|"optional",description:""});
+ const [exportDataset,setExportDataset]=useState("audit");
  const [query,setQuery]=useState("");
  const [moderatorCandidate,setModeratorCandidate]=useState("");
  const [serviceForm,setServiceForm]=useState(blankService);
@@ -185,6 +186,29 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  },[supabase,auditActor,auditAction,auditEntityType,auditQuery,auditHours]);
  useEffect(()=>{if(tab==="audit"&&ready&&user&&["admin","owner"].includes(role))void loadAuditLogs(1)},[tab,ready,user,role,loadAuditLogs]);
+ const exportCenterFile=(format:"json"|"csv")=>{
+  const datasets:Record<string,{name:string;rows:Record<string,unknown>[]}> = {
+   audit:{name:"audit-logs",rows:auditRows.map(x=>({id:x.id,createdAt:x.createdAt,actorName:x.actorName,actorEmail:x.actorEmail,action:x.action,entityType:x.entityType,entityId:x.entityId,details:x.details}))},
+   requests:{name:"request-logs",rows:requestLogs.map(x=>({id:x.id,createdAt:x.createdAt,userId:x.userId,displayName:x.displayName,email:x.email,keyLabel:x.keyLabel,service:x.service,method:x.method,status:x.status,latency:x.latency,weight:x.weight}))},
+   users:{name:"users",rows:profiles.map(x=>({id:x.id,email:x.email,displayName:x.display_name,role:x.role,plan:x.plan,planSource:x.plan_source,planExpiresAt:x.plan_expires_at,accountStatus:x.account_status,createdAt:x.created_at}))},
+   services:{name:"services",rows:services.map(x=>({id:x.id,slug:x.slug,name:x.name,category:x.category,status:x.status,method:x.http_method,path:x.endpoint_path,weight:x.weight,version:x.current_version,archivedAt:x.archived_at}))},
+   submissions:{name:"submissions",rows:submissions.map(x=>({id:x.id,userId:x.user_id,name:x.name,slug:x.slug,category:x.category,status:x.review_status,createdAt:x.created_at,reviewedAt:x.reviewed_at}))},
+   keys:{name:"api-keys",rows:apiKeys.map(x=>({id:x.id,userId:x.userId,displayName:x.displayName,email:x.email,label:x.label,keyPrefix:x.keyPrefix,scopes:x.scopes.join(" "),createdAt:x.createdAt,lastUsedAt:x.lastUsedAt,expiresAt:x.expiresAt,revokedAt:x.revokedAt}))},
+   incidents:{name:"incidents",rows:incidents.map(x=>({id:x.id,title:x.title,severity:x.severity,status:x.status,affectedServices:x.affected_services.join(" "),startedAt:x.started_at,resolvedAt:x.resolved_at}))},
+   maintenance:{name:"maintenance",rows:maintenance.map(x=>({id:x.id,serviceId:x.service_id,enabled:x.enabled,message:x.message,startsAt:x.starts_at,endsAt:x.ends_at}))}
+  };
+  const selected=datasets[exportDataset];
+  if(!selected||!selected.rows.length){setError("لا توجد بيانات محملة للتصدير في هذا القسم.");return;}
+  const rows=selected.rows;
+  const csvCell=(v:unknown)=>'"'+String(v===null||v===undefined?"":typeof v==="object"?JSON.stringify(v):v).replace(/"/g,'""')+'"';
+  const content=format==="json"?JSON.stringify({platform:"NOX APIS",exportedAt:new Date().toISOString(),dataset:exportDataset,total:rows.length,items:rows},null,2):[
+   Object.keys(rows[0]).map(csvCell).join(","),
+   ...rows.map(row=>Object.keys(rows[0]).map(key=>csvCell(row[key])).join(","))
+  ].join("\\n");
+  const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-apis-"+selected.name+"-"+new Date().toISOString().slice(0,10)+"."+format;link.click();URL.revokeObjectURL(url);
+  void writeAudit("export.create","export",exportDataset,{format,rows:rows.length});
+ };
  const exportAuditLogs=(format:"json"|"csv")=>{
   const content=format==="json"?JSON.stringify(auditRows,null,2):[
    "createdAt,actorName,actorEmail,action,entityType,entityId,details",
@@ -539,6 +563,16 @@ export default function AdminConsole(){
      <h4>سجل التحديثات</h4>
      {incidentUpdates.filter(u=>u.incident_id===i.id).map(u=><div className={styles.auditRow} key={u.id}><span>{u.status?label(u.status):"تحديث"}</span><p>{u.message}</p><time>{date(u.created_at)}</time></div>)}
     </article>)}
+   </section>}
+   {tab==="exports"&&<section className={styles.panel}>
+    <div className={styles.toolbar}><div><h2>مركز تصدير بيانات المنصة</h2><p className={styles.hint}>تصدير البيانات المتاحة للإدارة بصيغ CSV وJSON. مفاتيح API السرية وعناوين IP وبيانات الأجهزة لا تدخل في الملفات.</p></div></div>
+    <div className={styles.form}>
+     <label>مجموعة البيانات<select value={exportDataset} onChange={e=>setExportDataset(e.target.value)}>
+      <option value="audit">سجل التدقيق</option><option value="requests">سجلات الطلبات المحملة</option><option value="users">الحسابات</option><option value="services">الخدمات</option><option value="submissions">طلبات الإضافة</option><option value="keys">بيانات مفاتيح API الآمنة</option><option value="incidents">الحوادث</option><option value="maintenance">نوافذ الصيانة</option>
+     </select></label>
+     <div className={styles.hint}>التصدير يعتمد على البيانات المحملة حاليًا داخل لوحة الإدارة. افتح قسم سجلات الطلبات وحمّل الفترة المطلوبة قبل تصديرها.</div>
+     <div className={styles.actions}><button className={styles.primary} disabled={busy} onClick={()=>exportCenterFile("csv")}>تصدير CSV</button><button onClick={()=>exportCenterFile("json")}>تصدير JSON</button></div>
+    </div>
    </section>}
    {tab==="dependencies"&&<section className={styles.panel}>
     <div className={styles.toolbar}><div><h2>اعتماديات الخدمات</h2><p className={styles.hint}>حدد الخدمات التي تعتمد عليها كل خدمة. يمنع النظام إنشاء علاقات دائرية تلقائياً.</p></div></div>
