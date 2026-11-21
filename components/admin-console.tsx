@@ -8,7 +8,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 
-type Tab = "overview" | "analytics" | "users" | "moderators" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance";
+type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string };
