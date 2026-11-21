@@ -35,6 +35,7 @@ export default function Portal(){
  const supabase=useMemo(()=>{try{return getSupabaseBrowserClient()}catch{return null}},[]);
  // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   if (!supabase) { setAuthReady(true); return; }
   let alive = true;
   let subscription: { unsubscribe: () => void } | null = null;
