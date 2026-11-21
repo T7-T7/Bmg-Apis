@@ -54,6 +54,7 @@ function error(message: string, status: number) {
     : status === 401 ? "UNAUTHORIZED"
     : status === 413 ? "PAYLOAD_TOO_LARGE"
     : status === 429 ? "RATE_LIMITED"
+    : status === 403 ? "FORBIDDEN"
     : status === 503 ? "SERVICE_UNAVAILABLE"
     : status === 504 ? "UPSTREAM_TIMEOUT" : "UPSTREAM_ERROR";
   const headers: Record<string, string> = {
@@ -84,10 +85,10 @@ async function authorize(request: NextRequest, token: string | null) {
       p_key: token, p_service_slug: "gptfree", p_method: "POST"
     });
     if (rpcError) throw rpcError;
-    const result = data as { authorized?: boolean; reason?: string; usage_id?: number } | null;
+    const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
     if (!result?.authorized) return { ok: false as const, response: error(
-      result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : "مفتاح API غير صالح أو ملغى أو منتهي.",
-      result?.reason === "rate_limited" ? 429 : 401
+      result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : result?.reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة." : "مفتاح API غير صالح أو ملغى أو منتهي.",
+      result?.reason === "rate_limited" ? 429 : result?.reason === "account_suspended" ? 403 : result?.reason === "maintenance" ? 503 : 401
     ) };
     return { ok: true as const, usageId: Number(result.usage_id) || null };
   }
@@ -96,9 +97,9 @@ async function authorize(request: NextRequest, token: string | null) {
     p_server_secret: process.env.BMG_DEMO_RPC_SECRET
   });
   if (rpcError) throw rpcError;
-  const result = data as { authorized?: boolean; reason?: string; usage_id?: number } | null;
+  const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
   if (!result?.authorized) return { ok: false as const, response: error(
-    result?.reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية." : "الخدمة غير متاحة حاليًا.",
+    result?.reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : "الخدمة غير متاحة حاليًا.",
     result?.reason === "rate_limited" ? 429 : 503
   ) };
   return { ok: true as const, usageId: Number(result.usage_id) || null };
