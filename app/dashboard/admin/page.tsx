@@ -1,2 +1,2 @@
-import AdminConsole from "@/components/admin-console";
-export default function AdminPage(){ return <AdminConsole/>; }
+import Portal from "@/components/portal";
+export default function AdminPage(){return <Portal/>;}
