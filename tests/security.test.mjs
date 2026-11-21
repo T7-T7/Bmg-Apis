@@ -93,3 +93,12 @@ test("incident updates are public-readable but admin-write-only and append-only"
   assert.match(sql, /grant select on public\.incident_updates to anon,authenticated/i);
   assert.doesNotMatch(sql, /grant update|grant delete/i);
 });
+
+test("public status RPC exposes only bounded public incident updates", () => {
+  const sql = read("../supabase/migrations/20261121174553_publish_incident_updates_on_status_page.sql");
+  assert.match(sql, /limit 20/i);
+  assert.match(sql, /'message',u\.message/i);
+  assert.match(sql, /'created_at',u\.created_at/i);
+  assert.doesNotMatch(sql, /created_by|actor_email|ip_address|user_agent/i);
+  assert.match(sql, /grant execute on function public\.bmg_get_public_status\(\) to anon,authenticated/i);
+});
