@@ -186,7 +186,7 @@ export type Database = {
         Returns: Json
       }
       bmg_create_api_key: {
-        Args: { p_expires_at?: string; p_key: string; p_label: string }
+        Args: { p_expires_at?: string | null; p_key: string; p_label: string }
         Returns: {
           created_at: string
           id: string
@@ -209,7 +209,7 @@ export type Database = {
       }
       bmg_revoke_api_key: { Args: { p_id: string }; Returns: boolean }
       bmg_update_api_key: {
-        Args: { p_expires_at?: string; p_id: string; p_label: string }
+        Args: { p_expires_at?: string | null; p_id: string; p_label: string }
         Returns: boolean
       }
     }
