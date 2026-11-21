@@ -1,2 +1,2 @@
-import NotificationsCenter from "@/components/notifications-center";
-export default function NotificationsPage(){return <NotificationsCenter/>;}
+import Portal from "@/components/portal";
+export default function NotificationsPage(){return <Portal/>;}
