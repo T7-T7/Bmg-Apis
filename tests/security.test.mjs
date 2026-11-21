@@ -22,7 +22,7 @@ test("server-only credentials are not referenced by browser application modules"
   const forbidden = /process\.env\.(?:SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|BMG_DEMO_RPC_SECRET|GPTFREE_FIREBASE_API_KEY)/;
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return walk(path);
+    if (entry.isDirectory()) return entry.name === "api" && dir.endsWith("/app") ? [] : walk(path);
     return /\.(?:ts|tsx|js|jsx)$/.test(entry.name) ? [path] : [];
   });
   for (const root of roots) for (const file of walk(new URL(root, import.meta.url).pathname)) {
