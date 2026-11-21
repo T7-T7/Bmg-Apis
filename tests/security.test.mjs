@@ -47,7 +47,6 @@ test("GPTFree upstream and Firebase timeouts fit the 120-second route budget", (
   const duration = Number(route.match(/maxDuration\s*=\s*(\d+)/)?.[1]);
   const firebaseTimeouts = [...route.matchAll(/AbortSignal\.timeout\((\d+)_000\)/g)].map((match) => Number(match[1]));
   assert.equal(duration, 120);
-  assert.ok(firebaseTimeouts.includes(10));
-  assert.ok(firebaseTimeouts.includes(90));
+  assert.deepEqual(firebaseTimeouts.sort((a, b) => a - b), [10, 10, 90]);
   assert.ok(10 + 10 + 90 < duration, "Firebase refresh + fresh auth + provider timeout must fit the route budget");
 });
