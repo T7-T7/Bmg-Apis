@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 
@@ -90,7 +91,7 @@ export default function AdminConsole(){
  const filteredServices=useMemo(()=>services.filter(s=>[s.name,s.slug,s.endpoint_path,s.category].some(v=>String(v||"").toLowerCase().includes(query.toLowerCase()))),[services,query]);
  const writeAudit=async(action:string,entityType:string,entityId:string|null,details:Record<string,unknown>={})=>{
   if(!supabase||!user)return;
-  const {error}=await supabase.from("audit_logs").insert({actor_id:user.id,action,entity_type:entityType,entity_id:entityId,details});
+  const {error}=await supabase.from("audit_logs").insert({actor_id:user.id,action,entity_type:entityType,entity_id:entityId,details:details as Json});
   if(error)throw error;
  };
  const updateProfile=async(p:Profile,field:"role"|"plan"|"account_status",value:string)=>{
@@ -98,7 +99,7 @@ export default function AdminConsole(){
   const next={role:field==="role"?value:p.role,plan:field==="plan"?value:p.plan,account_status:field==="account_status"?value:p.account_status};
   setBusy(true);setError("");setNotice("");
   try{
-   const {error}=await supabase.rpc("bmg_admin_update_profile",{p_user_id:p.id,p_role:next.role,p_plan:next.plan,p_plan_expires_at:p.plan_expires_at,p_account_status:next.account_status});
+   const {error}=await supabase.rpc("bmg_admin_update_profile",{p_user_id:p.id,p_role:next.role,p_plan:next.plan,p_plan_expires_at:p.plan_expires_at as string,p_account_status:next.account_status});
    if(error)throw error;
    setNotice("تم تحديث حساب المستخدم وتسجيل العملية في سجل التدقيق.");
    await load();
