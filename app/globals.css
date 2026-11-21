@@ -160,7 +160,7 @@ textarea{resize:vertical;line-height:1.8}
 .key-reveal code{padding:12px;background:#1c211d;border:1px solid #303a30;border-radius:2px;overflow-wrap:anywhere;direction:ltr;text-align:left;color:var(--lime);font-size:10px}
 .key-reveal .button{justify-self:start}
 .keys-panel{margin-top:14px}
-.key-status{font-size:9px;padding:4px 8px;border-radius:2px}.key-status.active{background:#e5eddf;color:#426a3b}.key-status.revoked{background:#f8e5e1;color:#a53f36}
+.key-status{font-size:9px;padding:4px 8px;border-radius:2px}.key-status.active{background:#e5eddf;color:#426a3b}.key-status.revoked{background:#f8e5e1;color:#a53f36}.key-status.expired{background:#f4edda;color:#866b28}.key-controls{margin-top:10px}.key-controls .catalog-search{flex:1;min-width:220px}
 .danger-link{background:transparent;border:0;color:#b43e34;font-size:9px;font-weight:700}
 .empty-state{display:grid;justify-items:center;text-align:center;padding:35px 15px;color:#85897e}
 .empty-icon{width:45px;height:45px;border-radius:3px;background:#f4e5dc;color:var(--accent);display:grid;place-items:center;margin-bottom:10px}
