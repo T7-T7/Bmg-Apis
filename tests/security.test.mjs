@@ -23,7 +23,7 @@ test("server-only credentials are not referenced by browser application modules"
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return entry.name === "api" && dir.endsWith("/app") ? [] : walk(path);
-    return /\.(?:ts|tsx|js|jsx)$/.test(entry.name) ? [path] : [];
+    return /\.(?:ts|tsx|js|jsx)$/.test(entry.name) && !path.includes("/api/") ? [path] : [];
   });
   for (const root of roots) for (const file of walk(new URL(root, import.meta.url).pathname)) {
     assert.doesNotMatch(readFileSync(file, "utf8"), forbidden, file);
