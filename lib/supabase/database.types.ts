@@ -431,6 +431,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_get_request_logs: {
+        Args: {
+          p_hours?: number
+          p_page?: number
+          p_page_size?: number
+          p_result?: string
+          p_service?: string
+          p_status_code?: number
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       bmg_admin_get_service_versions: {
         Args: { p_service_id: string }
         Returns: Json
