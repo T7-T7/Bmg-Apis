@@ -74,6 +74,51 @@ export type Database = {
         }
         Relationships: []
       }
+      api_service_dependencies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dependency_type: string
+          depends_on_service_id: string
+          description: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dependency_type?: string
+          depends_on_service_id: string
+          description?: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dependency_type?: string
+          depends_on_service_id?: string
+          description?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_service_dependencies_depends_on_service_id_fkey"
+            columns: ["depends_on_service_id"]
+            isOneToOne: false
+            referencedRelation: "api_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_service_dependencies_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "api_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_service_versions: {
         Row: {
           change_note: string
