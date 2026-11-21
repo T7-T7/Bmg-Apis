@@ -8,7 +8,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 
-type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance";
+type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string };
@@ -18,6 +18,7 @@ type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;acto
 type AdminAuditResponse = {items:AdminAuditEntry[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type Incident = { id:string; title:string; description:string; severity:string; status:string; affected_services:string[]; started_at:string; resolved_at:string|null };
 type Maintenance = { id:string; service_id:string|null; enabled:boolean; message:string; starts_at:string|null; ends_at:string|null };
+type ServiceDependency = {id:string;service_id:string;depends_on_service_id:string;dependency_type:"required"|"optional";description:string;created_by:string|null;created_at:string};
 type AdminKey = {id:string;userId:string;displayName:string|null;email:string|null;label:string;keyPrefix:string;scopes:string[];createdAt:string;lastUsedAt:string|null;expiresAt:string|null;revokedAt:string|null};
 type ServiceVersion = {id:string;version:number;snapshot:Record<string,unknown>;changeNote:string;createdBy:string|null;createdAt:string};
 type AdminLimit = {id:boolean;requests_per_minute:number;max_api_keys:number;daily_weighted_limit:number;monthly_weighted_limit:number};
@@ -26,7 +27,7 @@ type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:numbe
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
  {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
- {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"}
+ {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"}
 ];
 const blankService = {id:"",slug:"",name:"",description:"",category:"AI",endpoint_path:"",http_method:"POST",docs_markdown:"",status:"active",source_type:"official",weight:1};
 const label = (value:string) => ({basic:"Basic",pro:"Pro",premium:"Premium",user:"مستخدم",admin:"مشرف",owner:"مالك",active:"نشط",suspended:"موقوف",pending:"قيد المراجعة",approved:"مقبول",rejected:"مرفوض",changes_requested:"مطلوب تعديل",investigating:"قيد التحقيق",identified:"تم تحديد السبب",monitoring:"تحت المراقبة",resolved:"تم الحل",minor:"منخفض",major:"مرتفع",critical:"حرج"} as Record<string,string>)[value] || value;
@@ -49,6 +50,8 @@ export default function AdminConsole(){
  const [audit,setAudit]=useState<Audit[]>([]);
  const [incidents,setIncidents]=useState<Incident[]>([]);
  const [maintenance,setMaintenance]=useState<Maintenance[]>([]);
+ const [dependencies,setDependencies]=useState<ServiceDependency[]>([]);
+ const [dependencyForm,setDependencyForm]=useState({service_id:"",depends_on_service_id:"",dependency_type:"required" as "required"|"optional",description:""});
  const [query,setQuery]=useState("");
  const [moderatorCandidate,setModeratorCandidate]=useState("");
  const [serviceForm,setServiceForm]=useState(blankService);
@@ -93,7 +96,7 @@ export default function AdminConsole(){
   if(!supabase||!user)return;
   setBusy(true);setError("");
   try{
-   const [p,s,sub,pl,au,inc,mw,k,al]=await Promise.all([
+   const [p,s,sub,pl,au,inc,mw,k,al,dep]=await Promise.all([
     supabase.from("profiles").select("id,email,display_name,role,plan,plan_source,plan_expires_at,account_status,created_at").order("created_at",{ascending:false}),
     supabase.from("api_services").select("id,slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,archived_at,current_version,created_at").order("created_at",{ascending:false}),
     supabase.from("api_submissions").select("id,user_id,name,slug,description,category,endpoint_url,http_method,documentation,review_status,review_note,created_at").order("created_at",{ascending:false}),
@@ -104,9 +107,9 @@ export default function AdminConsole(){
     supabase.rpc("bmg_admin_list_api_keys",{p_user_id:undefined,p_status:"all"}),
     supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle()
    ]);
-   for(const x of [p,s,sub,pl,au,inc,mw,k,al])if(x.error)throw x.error;
+   for(const x of [p,s,sub,pl,au,inc,mw,k,al,dep])if(x.error)throw x.error;
    setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
-   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);
+   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);setDependencies((dep.data||[]) as ServiceDependency[]);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل بيانات الإدارة.");}
   finally{setBusy(false);}
  },[supabase,user]);
@@ -352,6 +355,31 @@ export default function AdminConsole(){
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث الحادث.");}
   finally{setBusy(false);}
  };
+ const saveDependency=async()=>{
+  if(!supabase||!user)return;
+  if(!dependencyForm.service_id||!dependencyForm.depends_on_service_id){setError("اختر الخدمتين أولاً.");return;}
+  if(dependencyForm.service_id===dependencyForm.depends_on_service_id){setError("لا يمكن للخدمة الاعتماد على نفسها.");return;}
+  setBusy(true);setError("");setNotice("");
+  try{
+   const {data,error}=await supabase.from("api_service_dependencies").insert({...dependencyForm,created_by:user.id}).select("id").single();
+   if(error)throw error;
+   await writeAudit("service_dependency.create","api_service_dependency",data.id,{service_id:dependencyForm.service_id,depends_on_service_id:dependencyForm.depends_on_service_id,dependency_type:dependencyForm.dependency_type});
+   setDependencyForm({service_id:"",depends_on_service_id:"",dependency_type:"required",description:""});
+   setNotice("تمت إضافة الاعتمادية.");await load();
+  }catch(e){setError(e instanceof Error?e.message:"تعذر إضافة الاعتمادية. تحقق من عدم وجود دورة اعتماد.");}
+  finally{setBusy(false);}
+ };
+ const deleteDependency=async(d:ServiceDependency)=>{
+  if(!supabase||!confirm("حذف علاقة الاعتماد بين الخدمتين؟"))return;
+  setBusy(true);setError("");
+  try{
+   const {error}=await supabase.from("api_service_dependencies").delete().eq("id",d.id);
+   if(error)throw error;
+   await writeAudit("service_dependency.delete","api_service_dependency",d.id,{service_id:d.service_id,depends_on_service_id:d.depends_on_service_id});
+   setNotice("تم حذف الاعتمادية.");await load();
+  }catch(e){setError(e instanceof Error?e.message:"تعذر حذف الاعتمادية.");}
+  finally{setBusy(false);}
+ };
  const saveMaintenance=async()=>{
   if(!supabase)return;
   setBusy(true);setError("");
@@ -469,6 +497,22 @@ export default function AdminConsole(){
      <div className={styles.actions}><button disabled={busy||auditRowsPage<=1} onClick={()=>void loadAuditLogs(auditRowsPage-1)}>السابق</button><button disabled={busy||auditRowsPage>=auditRowsTotalPages} onClick={()=>void loadAuditLogs(auditRowsPage+1)}>التالي</button></div>
     </section>}{tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
    {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2><div className={styles.form}><label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label><label>الوصف<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label><div className={styles.formGrid}><label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label><label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label></div><button className={styles.primary} onClick={()=>void createIncident()}>تسجيل حادث</button></div>{incidents.map(i=><div className={styles.auditRow} key={i.id}><b>{i.title}</b><span>{label(i.severity)} · {label(i.status)}</span><time>{date(i.started_at)}</time><select value={i.status} onChange={e=>void changeIncident(i,e.target.value)}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option><option value="resolved">تم الحل</option></select></div>)}</section>}
+   {tab==="dependencies"&&<section className={styles.panel}>
+    <div className={styles.toolbar}><div><h2>اعتماديات الخدمات</h2><p className={styles.hint}>حدد الخدمات التي تعتمد عليها كل خدمة. يمنع النظام إنشاء علاقات دائرية تلقائياً.</p></div></div>
+    <div className={styles.form}>
+     <div className={styles.formGrid}>
+      <label>الخدمة الأساسية<select value={dependencyForm.service_id} onChange={e=>setDependencyForm({...dependencyForm,service_id:e.target.value})}><option value="">اختر الخدمة</option>{services.filter(s=>!s.archived_at).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+      <label>تعتمد على<select value={dependencyForm.depends_on_service_id} onChange={e=>setDependencyForm({...dependencyForm,depends_on_service_id:e.target.value})}><option value="">اختر الاعتمادية</option>{services.filter(s=>!s.archived_at&&s.id!==dependencyForm.service_id).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+      <label>نوع الاعتماد<select value={dependencyForm.dependency_type} onChange={e=>setDependencyForm({...dependencyForm,dependency_type:e.target.value as "required"|"optional"})}><option value="required">إلزامي</option><option value="optional">اختياري</option></select></label>
+     </div>
+     <label>ملاحظات<textarea value={dependencyForm.description} onChange={e=>setDependencyForm({...dependencyForm,description:e.target.value})} placeholder="سبب الاعتماد أو تفاصيله"/></label>
+     <button className={styles.primary} disabled={busy||!dependencyForm.service_id||!dependencyForm.depends_on_service_id} onClick={()=>void saveDependency()}>إضافة الاعتمادية</button>
+    </div>
+    <div className={styles.tableWrap}><table><thead><tr><th>الخدمة</th><th>تعتمد على</th><th>النوع</th><th>الوصف</th><th>الإجراء</th></tr></thead><tbody>
+     {dependencies.map(d=><tr key={d.id}><td>{services.find(x=>x.id===d.service_id)?.name||"خدمة محذوفة"}</td><td>{services.find(x=>x.id===d.depends_on_service_id)?.name||"خدمة محذوفة"}</td><td>{d.dependency_type==="required"?"إلزامي":"اختياري"}</td><td>{d.description||"—"}</td><td><button disabled={busy} onClick={()=>void deleteDependency(d)}>حذف</button></td></tr>)}
+    </tbody></table></div>
+    {!dependencies.length&&<p className={styles.empty}>لم يتم تعريف اعتماديات بعد.</p>}
+   </section>}
    {tab==="maintenance"&&<section className={styles.panel}><h2>وضع الصيانة</h2><div className={styles.form}><label>النطاق<select value={maintenanceForm.service_id} onChange={e=>setMaintenanceForm({...maintenanceForm,service_id:e.target.value})}><option value="">كل الخدمات (عام)</option>{services.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>رسالة الصيانة<textarea value={maintenanceForm.message} onChange={e=>setMaintenanceForm({...maintenanceForm,message:e.target.value})}/></label><div className={styles.formGrid}><label>البداية<input type="datetime-local" value={maintenanceForm.starts_at} onChange={e=>setMaintenanceForm({...maintenanceForm,starts_at:e.target.value})}/></label><label>النهاية<input type="datetime-local" value={maintenanceForm.ends_at} onChange={e=>setMaintenanceForm({...maintenanceForm,ends_at:e.target.value})}/></label></div><label className={styles.check}><input type="checkbox" checked={maintenanceForm.enabled} onChange={e=>setMaintenanceForm({...maintenanceForm,enabled:e.target.checked})}/> تفعيل الصيانة عند الحفظ</label><button className={styles.primary} onClick={()=>void saveMaintenance()}>حفظ إعداد الصيانة</button></div>{maintenance.map(m=><div className={styles.auditRow} key={m.id}><b>{m.service_id?services.find(s=>s.id===m.service_id)?.name||"خدمة":"كل الخدمات"}</b><span>{m.message}</span><time>{m.enabled?"مفعلة":"متوقفة"}</time><button onClick={()=>void markMaintenance(m)}>{m.enabled?"إيقاف":"تفعيل"}</button></div>)}</section>}
   </section>
  </main>;
