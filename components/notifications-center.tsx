@@ -2,8 +2,9 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {useRouter} from "next/navigation";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
+import type {Json} from "@/lib/supabase/database.types";
 import styles from "./notifications-center.module.css";
-type Notification={id:string;title:string;body:string;type:"info"|"warning"|"critical";read_at:string|null;created_at:string;metadata:Record<string,unknown>};
+type Notification={id:string;title:string;body:string;type:"info"|"warning"|"critical";read_at:string|null;created_at:string;metadata:Json};
 export default function NotificationsCenter(){
  const router=useRouter();
  const [db]=useState(()=>{try{return getSupabaseBrowserClient()}catch{return null}});
