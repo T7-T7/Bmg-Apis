@@ -32,11 +32,11 @@ export default function Portal(){
  const [theme,setTheme]=useState<"system"|"light"|"dark">(()=>{if(typeof window==="undefined")return "system";const saved=localStorage.getItem("nox-theme");return saved==="light"||saved==="dark"?saved:"system"});const [totpFactors,setTotpFactors]=useState<Array<{id:string;friendly_name?:string;status:string}>>([]);const [totpQr,setTotpQr]=useState("");const [totpSecret,setTotpSecret]=useState("");const [totpFactorId,setTotpFactorId]=useState("");const [totpCode,setTotpCode]=useState("");const [mfaChallengeId,setMfaChallengeId]=useState("");const [mfaCode,setMfaCode]=useState("");const [mfaDialog,setMfaDialog]=useState(false);const [editingKeyId,setEditingKeyId]=useState("");const [editingKeyLabel,setEditingKeyLabel]=useState("");const [editingExpiry,setEditingExpiry]=useState("");const [pendingSensitive,setPendingSensitive]=useState<(()=>Promise<void>)|null>(null);
  const service=useMemo(()=>SERVICES.find(item=>item.slug===pathname.split("/")[2]),[pathname]);
  const logsQueryKey=`${user?.id||""}:${logPage}:${logService}:${logStatus}`;
- const logsLoading=Boolean(supabase&&user&&pathname==="/dashboard/logs"&&logsResolvedKey!==logsQueryKey);
- const visibleLogsError=logsErrorKey===logsQueryKey?logsError:"";
  const isAuthPage=pathname==="/login"||pathname==="/signup";
  const isProtectedPage=pathname==="/playground"||pathname==="/dashboard"||pathname.startsWith("/dashboard/");
  const supabase=useMemo(()=>{try{return getSupabaseBrowserClient()}catch{return null}},[]);
+ const logsLoading=Boolean(supabase&&user&&pathname==="/dashboard/logs"&&logsResolvedKey!==logsQueryKey);
+ const visibleLogsError=logsErrorKey===logsQueryKey?logsError:"";
  useEffect(() => {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   if (!supabase) { setAuthReady(true); return; }
