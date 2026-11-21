@@ -14,10 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_plan_limits: {
+        Row: {
+          daily_weighted_limit: number
+          max_api_keys: number
+          monthly_weighted_limit: number
+          plan: string
+          requests_per_minute: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          daily_weighted_limit: number
+          max_api_keys: number
+          monthly_weighted_limit: number
+          plan: string
+          requests_per_minute: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          daily_weighted_limit?: number
+          max_api_keys?: number
+          monthly_weighted_limit?: number
+          plan?: string
+          requests_per_minute?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      api_service_versions: {
+        Row: {
+          change_note: string
+          created_at: string
+          created_by: string | null
+          id: string
+          service_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          change_note?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          service_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          change_note?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          service_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_service_versions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "api_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_services: {
         Row: {
+          archived_at: string | null
           category: string
           created_at: string
+          current_version: number
           description: string
           docs_markdown: string
           endpoint_path: string
@@ -34,8 +104,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           category?: string
           created_at?: string
+          current_version?: number
           description?: string
           docs_markdown?: string
           endpoint_path: string
@@ -52,8 +124,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           category?: string
           created_at?: string
+          current_version?: number
           description?: string
           docs_markdown?: string
           endpoint_path?: string
@@ -128,33 +202,194 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string
+          id: number
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type: string
+          id?: never
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string
+          id?: never
+        }
+        Relationships: []
+      }
+      incidents: {
+        Row: {
+          affected_services: string[]
+          created_by: string | null
+          description: string
+          id: string
+          resolved_at: string | null
+          severity: string
+          started_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_services?: string[]
+          created_by?: string | null
+          description?: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          started_at?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_services?: string[]
+          created_by?: string | null
+          description?: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          started_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      maintenance_windows: {
+        Row: {
+          enabled: boolean
+          ends_at: string | null
+          id: string
+          message: string
+          service_id: string | null
+          starts_at: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          message?: string
+          service_id?: string | null
+          starts_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          message?: string
+          service_id?: string | null
+          starts_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_windows_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "api_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          account_status: string
           avatar_url: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          plan: string
+          plan_expires_at: string | null
+          plan_grace_until: string | null
+          plan_source: string
           role: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
+          account_status?: string
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id: string
+          plan?: string
+          plan_expires_at?: string | null
+          plan_grace_until?: string | null
+          plan_source?: string
           role?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
+          account_status?: string
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          plan?: string
+          plan_expires_at?: string | null
+          plan_grace_until?: string | null
+          plan_source?: string
           role?: string
           updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      user_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -163,6 +398,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_update_profile: {
+        Args: {
+          p_account_status: string
+          p_plan: string
+          p_plan_expires_at: string
+          p_role: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       bmg_authorize_api_request: {
         Args: { p_key: string; p_method: string; p_service_slug: string }
         Returns: Json
@@ -186,7 +431,7 @@ export type Database = {
         Returns: Json
       }
       bmg_create_api_key: {
-        Args: { p_expires_at?: string | null; p_key: string; p_label: string }
+        Args: { p_expires_at?: string; p_key: string; p_label: string }
         Returns: {
           created_at: string
           id: string
@@ -194,8 +439,16 @@ export type Database = {
           label: string
         }[]
       }
-      bmg_get_api_analytics: { Args: { p_days?: number }; Returns: Json },
-      bmg_get_api_request_logs: { Args: { p_page?: number; p_page_size?: number; p_service?: string | null; p_status?: string }; Returns: Json }
+      bmg_get_api_analytics: { Args: { p_days?: number }; Returns: Json }
+      bmg_get_api_request_logs: {
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_service?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
       bmg_list_api_keys: {
         Args: never
         Returns: {
@@ -210,7 +463,7 @@ export type Database = {
       }
       bmg_revoke_api_key: { Args: { p_id: string }; Returns: boolean }
       bmg_update_api_key: {
-        Args: { p_expires_at?: string | null; p_id: string; p_label: string }
+        Args: { p_expires_at?: string; p_id: string; p_label: string }
         Returns: boolean
       }
     }
