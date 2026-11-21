@@ -430,15 +430,13 @@ export default function AdminConsole(){
  if(!user)return <main className={styles.loading}>جارٍ تحويلك إلى تسجيل الدخول…</main>;
  if(!["admin","owner"].includes(role))return <main className={styles.denied}><h1>لا تملك صلاحية الوصول</h1><p>هذه المنطقة مخصصة لإدارة المنصة.</p><Link href="/dashboard">العودة إلى لوحة المطور</Link></main>;
 
- return <main className={styles.shell} dir="rtl">
-  <aside className={styles.sidebar}>
-   <Link href="/dashboard" className={styles.brand}><b>NOX APIS</b><span>NEXUS OF XPERIENCE</span></Link>
-   <div className={styles.sideTitle}>إدارة المنصة</div>
-   <nav>{TABS.filter(t=>t.id!=="moderators"||role==="owner").map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""}>{t.label}</button>)}</nav>
-   <div className={styles.sideBottom}><span>{role==="owner"?"مالك المنصة":"مشرف المنصة"}</span><Link href="/dashboard">العودة للوحة المطور</Link></div>
-  </aside>
+ return <div className={styles.shell} dir="rtl">
+  <header className={styles.header}>
+   <div><small>NOX APIS / NEXUS OF XPERIENCE</small><h1>{TABS.find(t=>t.id===tab)?.label}</h1><span className={styles.roleLabel}>{role==="owner"?"مالك المنصة":"مشرف المنصة"} · {user.email}</span></div>
+   <div className={styles.headerActions}><button onClick={()=>void load()} disabled={busy}>تحديث البيانات</button><Link href="/dashboard">لوحة المطور</Link></div>
+  </header>
+  <nav className={styles.adminTabs} aria-label="أقسام إدارة المنصة">{TABS.filter(t=>t.id!=="moderators"||role==="owner").map(t=><button type="button" key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""} aria-current={tab===t.id?"page":undefined}>{t.label}</button>)}</nav>
   <section className={styles.main}>
-   <header className={styles.header}><div><small>NOX APIS / ADMIN</small><h1>{TABS.find(t=>t.id===tab)?.label}</h1></div><div className={styles.headerActions}><span>{user.email}</span><button onClick={()=>void load()} disabled={busy}>تحديث البيانات</button></div></header>
    {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}{busy&&<div className={styles.busy}>جارٍ تنفيذ العملية…</div>}
    {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>طلبات قيد المراجعة</small><strong>{submissions.filter(s=>s.review_status==="pending").length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
    {tab==="analytics"&&<section className={styles.panel}>
@@ -560,7 +558,7 @@ export default function AdminConsole(){
    </section>}
    {tab==="maintenance"&&<section className={styles.panel}><h2>وضع الصيانة</h2><div className={styles.form}><label>النطاق<select value={maintenanceForm.service_id} onChange={e=>setMaintenanceForm({...maintenanceForm,service_id:e.target.value})}><option value="">كل الخدمات (عام)</option>{services.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>رسالة الصيانة<textarea value={maintenanceForm.message} onChange={e=>setMaintenanceForm({...maintenanceForm,message:e.target.value})}/></label><div className={styles.formGrid}><label>البداية<input type="datetime-local" value={maintenanceForm.starts_at} onChange={e=>setMaintenanceForm({...maintenanceForm,starts_at:e.target.value})}/></label><label>النهاية<input type="datetime-local" value={maintenanceForm.ends_at} onChange={e=>setMaintenanceForm({...maintenanceForm,ends_at:e.target.value})}/></label></div><label className={styles.check}><input type="checkbox" checked={maintenanceForm.enabled} onChange={e=>setMaintenanceForm({...maintenanceForm,enabled:e.target.checked})}/> تفعيل الصيانة عند الحفظ</label><button className={styles.primary} onClick={()=>void saveMaintenance()}>حفظ إعداد الصيانة</button></div>{maintenance.map(m=><div className={styles.auditRow} key={m.id}><b>{m.service_id?services.find(s=>s.id===m.service_id)?.name||"خدمة":"كل الخدمات"}</b><span>{m.message}</span><time>{m.enabled?"مفعلة":"متوقفة"}</time><button onClick={()=>void markMaintenance(m)}>{m.enabled?"إيقاف":"تفعيل"}</button></div>)}</section>}
   </section>
- </main>;
+ </div>;
 }
 
 function PlanEditor({plan,busy,onSave}:{plan:Plan;busy:boolean;onSave:(p:Plan)=>Promise<void>}){
