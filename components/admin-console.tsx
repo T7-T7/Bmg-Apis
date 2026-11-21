@@ -207,6 +207,10 @@ export default function AdminConsole(){
   setBusy(true);setError("");
   try{
    const payload={service_id:maintenanceForm.service_id||null,message:maintenanceForm.message,enabled:maintenanceForm.enabled,starts_at:maintenanceForm.starts_at?new Date(maintenanceForm.starts_at).toISOString():null,ends_at:maintenanceForm.ends_at?new Date(maintenanceForm.ends_at).toISOString():null,updated_by:user?.id,updated_at:new Date().toISOString()};
+   let previous=supabase.from("maintenance_windows").update({enabled:false,updated_at:new Date().toISOString(),updated_by:user?.id});
+   previous=payload.service_id?previous.eq("service_id",payload.service_id):previous.is("service_id",null);
+   const {error:disableError}=await previous;
+   if(disableError)throw disableError;
    const {error}=await supabase.from("maintenance_windows").insert(payload);
    if(error)throw error;
    await writeAudit("maintenance.configure","maintenance_window",null,{service_id:payload.service_id,enabled:payload.enabled});
