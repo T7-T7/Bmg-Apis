@@ -17,6 +17,7 @@ type Audit = { id:number; actor_id:string|null; action:string; entity_type:strin
 type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;actorEmail:string|null;action:string;entityType:string;entityId:string|null;details:Record<string,unknown>;createdAt:string};
 type AdminAuditResponse = {items:AdminAuditEntry[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type Incident = { id:string; title:string; description:string; severity:string; status:string; affected_services:string[]; started_at:string; resolved_at:string|null };
+type IncidentUpdate = {id:string;incident_id:string;status:string|null;message:string;created_by:string|null;created_at:string};
 type Maintenance = { id:string; service_id:string|null; enabled:boolean; message:string; starts_at:string|null; ends_at:string|null };
 type ServiceDependency = {id:string;service_id:string;depends_on_service_id:string;dependency_type:"required"|"optional";description:string;created_by:string|null;created_at:string};
 type AdminKey = {id:string;userId:string;displayName:string|null;email:string|null;label:string;keyPrefix:string;scopes:string[];createdAt:string;lastUsedAt:string|null;expiresAt:string|null;revokedAt:string|null};
@@ -49,6 +50,8 @@ export default function AdminConsole(){
  const [plans,setPlans]=useState<Plan[]>([]);
  const [audit,setAudit]=useState<Audit[]>([]);
  const [incidents,setIncidents]=useState<Incident[]>([]);
+ const [incidentUpdates,setIncidentUpdates]=useState<IncidentUpdate[]>([]);
+ const [incidentUpdateNotes,setIncidentUpdateNotes]=useState<Record<string,string>>({});
  const [maintenance,setMaintenance]=useState<Maintenance[]>([]);
  const [dependencies,setDependencies]=useState<ServiceDependency[]>([]);
  const [dependencyForm,setDependencyForm]=useState({service_id:"",depends_on_service_id:"",dependency_type:"required" as "required"|"optional",description:""});
@@ -58,7 +61,7 @@ export default function AdminConsole(){
  const [showServiceForm,setShowServiceForm]=useState(false);
  const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({});
  const [notification,setNotification]=useState({user_id:"all",title:"",body:"",type:"info"});
- const [incidentForm,setIncidentForm]=useState({title:"",description:"",severity:"minor",status:"investigating"});
+ const [incidentForm,setIncidentForm]=useState({title:"",description:"",severity:"minor",status:"investigating",affected_services:[] as string[]});
  const [maintenanceForm,setMaintenanceForm]=useState({service_id:"",message:"الخدمة تحت الصيانة مؤقتاً.",enabled:true,starts_at:"",ends_at:""});
  const [analytics,setAnalytics]=useState<AdminAnalytics|null>(null);
  const [requestLogs,setRequestLogs]=useState<AdminRequestLog[]>([]);
@@ -96,21 +99,22 @@ export default function AdminConsole(){
   if(!supabase||!user)return;
   setBusy(true);setError("");
   try{
-   const [p,s,sub,pl,au,inc,mw,k,al,dep]=await Promise.all([
+   const [p,s,sub,pl,au,inc,iu,mw,k,al,dep]=await Promise.all([
     supabase.from("profiles").select("id,email,display_name,role,plan,plan_source,plan_expires_at,account_status,created_at").order("created_at",{ascending:false}),
     supabase.from("api_services").select("id,slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,archived_at,current_version,created_at").order("created_at",{ascending:false}),
     supabase.from("api_submissions").select("id,user_id,name,slug,description,category,endpoint_url,http_method,documentation,review_status,review_note,created_at").order("created_at",{ascending:false}),
     supabase.from("api_plan_limits").select("plan,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").order("plan"),
     supabase.from("audit_logs").select("id,actor_id,action,entity_type,entity_id,details,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.from("incidents").select("id,title,description,severity,status,affected_services,started_at,resolved_at").order("started_at",{ascending:false}),
+    supabase.from("incident_updates").select("id,incident_id,status,message,created_by,created_at").order("created_at",{ascending:false}),
     supabase.from("maintenance_windows").select("id,service_id,enabled,message,starts_at,ends_at").order("updated_at",{ascending:false}),
     supabase.rpc("bmg_admin_list_api_keys",{p_user_id:undefined,p_status:"all"}),
     supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle(),
     supabase.from("api_service_dependencies").select("id,service_id,depends_on_service_id,dependency_type,description,created_by,created_at").order("created_at",{ascending:false})
    ]);
-   for(const x of [p,s,sub,pl,au,inc,mw,k,al,dep])if(x.error)throw x.error;
+   for(const x of [p,s,sub,pl,au,inc,iu,mw,k,al,dep])if(x.error)throw x.error;
    setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
-   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);setDependencies((dep.data||[]) as ServiceDependency[]);
+   setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setIncidentUpdates((iu.data||[]) as IncidentUpdate[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);setDependencies((dep.data||[]) as ServiceDependency[]);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل بيانات الإدارة.");}
   finally{setBusy(false);}
  },[supabase,user]);
@@ -339,10 +343,12 @@ export default function AdminConsole(){
   if(!supabase||!user||!incidentForm.title.trim())return;
   setBusy(true);setError("");
   try{
-   const {data,error}=await supabase.from("incidents").insert({...incidentForm,created_by:user.id,affected_services:[]}).select("id").single();
+   const {data,error}=await supabase.from("incidents").insert({...incidentForm,created_by:user.id}).select("id").single();
    if(error)throw error;
-   await writeAudit("incident.create","incident",data.id,{severity:incidentForm.severity});
-   setIncidentForm({title:"",description:"",severity:"minor",status:"investigating"});setNotice("تم تسجيل الحادث.");await load();
+   const {error:updateError}=await supabase.from("incident_updates").insert({incident_id:data.id,status:incidentForm.status,message:incidentForm.description.trim()||"تم تسجيل الحادث.",created_by:user.id});
+   if(updateError)throw updateError;
+   await writeAudit("incident.create","incident",data.id,{severity:incidentForm.severity,affected_services:incidentForm.affected_services});
+   setIncidentForm({title:"",description:"",severity:"minor",status:"investigating",affected_services:[]});setNotice("تم تسجيل الحادث.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تسجيل الحادث.");}
   finally{setBusy(false);}
  };
@@ -352,8 +358,25 @@ export default function AdminConsole(){
   try{
    const {error}=await supabase.from("incidents").update({status,resolved_at:status==="resolved"?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",i.id);
    if(error)throw error;
-   await writeAudit("incident.status_change","incident",i.id,{status});setNotice("تم تحديث حالة الحادث.");await load();
+   const message=incidentUpdateNotes[i.id]?.trim()||("تم تحديث حالة الحادث إلى: "+label(status));
+   const {error:updateError}=await supabase.from("incident_updates").insert({incident_id:i.id,status,message,created_by:user?.id});
+   if(updateError)throw updateError;
+   setIncidentUpdateNotes(v=>({...v,[i.id]:""}));
+   await writeAudit("incident.status_change","incident",i.id,{status});setNotice("تم تحديث حالة الحادث وإضافة تحديث للسجل.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث الحادث.");}
+  finally{setBusy(false);}
+ };
+ const addIncidentUpdate=async(i:Incident)=>{
+  if(!supabase||!user)return;
+  const message=incidentUpdateNotes[i.id]?.trim();
+  if(!message){setError("اكتب التحديث أولاً.");return;}
+  setBusy(true);setError("");
+  try{
+   const {error}=await supabase.from("incident_updates").insert({incident_id:i.id,message,created_by:user.id});
+   if(error)throw error;
+   await writeAudit("incident.update","incident",i.id,{message});
+   setIncidentUpdateNotes(v=>({...v,[i.id]:""}));setNotice("تم إضافة تحديث الحادث.");await load();
+  }catch(e){setError(e instanceof Error?e.message:"تعذر إضافة تحديث الحادث.");}
   finally{setBusy(false);}
  };
  const saveDependency=async()=>{
@@ -497,7 +520,28 @@ export default function AdminConsole(){
      {!auditRows.length&&<p className={styles.empty}>لا توجد عمليات مطابقة للفلاتر.</p>}
      <div className={styles.actions}><button disabled={busy||auditRowsPage<=1} onClick={()=>void loadAuditLogs(auditRowsPage-1)}>السابق</button><button disabled={busy||auditRowsPage>=auditRowsTotalPages} onClick={()=>void loadAuditLogs(auditRowsPage+1)}>التالي</button></div>
     </section>}{tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
-   {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2><div className={styles.form}><label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label><label>الوصف<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label><div className={styles.formGrid}><label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label><label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label></div><button className={styles.primary} onClick={()=>void createIncident()}>تسجيل حادث</button></div>{incidents.map(i=><div className={styles.auditRow} key={i.id}><b>{i.title}</b><span>{label(i.severity)} · {label(i.status)}</span><time>{date(i.started_at)}</time><select value={i.status} onChange={e=>void changeIncident(i,e.target.value)}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option><option value="resolved">تم الحل</option></select></div>)}</section>}
+   {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2>
+    <div className={styles.form}>
+     <label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label>
+     <label>الوصف الأولي<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label>
+     <div className={styles.formGrid}>
+      <label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label>
+      <label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label>
+     </div>
+     <label>الخدمات المتأثرة</label><div className={styles.formGrid}>{services.filter(x=>!x.archived_at).map(x=><label className={styles.check} key={x.id}><input type="checkbox" checked={incidentForm.affected_services.includes(x.slug)} onChange={e=>setIncidentForm(v=>({...v,affected_services:e.target.checked?[...v.affected_services,x.slug]:v.affected_services.filter(y=>y!==x.slug)}))}/>{x.name}</label>)}</div>
+     <button className={styles.primary} disabled={busy||!incidentForm.title.trim()} onClick={()=>void createIncident()}>تسجيل حادث</button>
+    </div>
+    {incidents.map(i=><article className={styles.panel} key={i.id}>
+     <div className={styles.toolbar}><div><b>{i.title}</b><p className={styles.hint}>{label(i.severity)} · {label(i.status)} · {date(i.started_at)}</p></div>
+      <select value={i.status} disabled={busy} onChange={e=>void changeIncident(i,e.target.value)}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option><option value="resolved">تم الحل</option></select>
+     </div>
+     <p>{i.description}</p>
+     <p className={styles.hint}>الخدمات المتأثرة: {i.affected_services.map(slug=>services.find(x=>x.slug===slug)?.name||slug).join("، ")||"لا توجد خدمات محددة"}</p>
+     <div className={styles.form}><label>إضافة تحديث أو ملاحظة<textarea value={incidentUpdateNotes[i.id]||""} onChange={e=>setIncidentUpdateNotes(v=>({...v,[i.id]:e.target.value}))} placeholder="اكتب آخر المستجدات أو خطوات الحل"/></label><button disabled={busy||!incidentUpdateNotes[i.id]?.trim()} onClick={()=>void addIncidentUpdate(i)}>إضافة تحديث</button></div>
+     <h4>سجل التحديثات</h4>
+     {incidentUpdates.filter(u=>u.incident_id===i.id).map(u=><div className={styles.auditRow} key={u.id}><span>{u.status?label(u.status):"تحديث"}</span><p>{u.message}</p><time>{date(u.created_at)}</time></div>)}
+    </article>)}
+   </section>}
    {tab==="dependencies"&&<section className={styles.panel}>
     <div className={styles.toolbar}><div><h2>اعتماديات الخدمات</h2><p className={styles.hint}>حدد الخدمات التي تعتمد عليها كل خدمة. يمنع النظام إنشاء علاقات دائرية تلقائياً.</p></div></div>
     <div className={styles.form}>
