@@ -11,10 +11,12 @@ test("API key update RPC is not executable by anonymous/public roles", () => {
   assert.match(sql, /grant execute on function public\.bmg_update_api_key\(uuid, text, timestamptz\) to authenticated/i);
 });
 
-test("protected routes are gated before protected content is rendered", () => {
-  const portal = read("../components/portal.tsx");
-  assert.match(portal, /isProtectedPage=pathname===\"\/playground\"\|\|pathname===\"\/dashboard\"\|\|pathname\.startsWith\(\"\/dashboard\/\"\)/);
-  assert.match(portal, /!authReady\|\|\(user&&isAuthPage\)\|\|\(!user&&isProtectedPage\)/);
+test("protected routes are verified on the server before rendering", () => {
+  const proxy = read("../proxy.ts");
+  assert.match(proxy, /supabase\.auth\.getClaims\(\)/);
+  assert.match(proxy, /protectedRoute && !claims/);
+  assert.match(proxy, /NextResponse\.redirect/);
+  assert.match(proxy, /Cache-Control/);
 });
 
 test("server-only credentials are not referenced by browser application modules", () => {
