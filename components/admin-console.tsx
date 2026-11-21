@@ -105,7 +105,8 @@ export default function AdminConsole(){
     supabase.from("incidents").select("id,title,description,severity,status,affected_services,started_at,resolved_at").order("started_at",{ascending:false}),
     supabase.from("maintenance_windows").select("id,service_id,enabled,message,starts_at,ends_at").order("updated_at",{ascending:false}),
     supabase.rpc("bmg_admin_list_api_keys",{p_user_id:undefined,p_status:"all"}),
-    supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle()
+    supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle(),
+    supabase.from("api_service_dependencies").select("id,service_id,depends_on_service_id,dependency_type,description,created_by,created_at").order("created_at",{ascending:false})
    ]);
    for(const x of [p,s,sub,pl,au,inc,mw,k,al,dep])if(x.error)throw x.error;
    setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
