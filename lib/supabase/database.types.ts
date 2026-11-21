@@ -428,50 +428,7 @@ export type Database = {
       }
     }
     Views: {
-      public_status_incidents: {
-        Row: {
-          affected_services: string[] | null
-          id: string | null
-          resolved_at: string | null
-          severity: string | null
-          started_at: string | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          affected_services?: string[] | null
-          id?: string | null
-          resolved_at?: string | null
-          severity?: string | null
-          started_at?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          affected_services?: string[] | null
-          id?: string | null
-          resolved_at?: string | null
-          severity?: string | null
-          started_at?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      public_status_maintenance: {
-        Row: {
-          ends_at: string | null
-          id: string | null
-          message: string | null
-          service_name: string | null
-          starts_at: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       bmg_admin_get_service_versions: {
@@ -557,6 +514,7 @@ export type Database = {
         }
         Returns: Json
       }
+      bmg_get_public_status: { Args: never; Returns: Json }
       bmg_list_api_keys: {
         Args: never
         Returns: {
