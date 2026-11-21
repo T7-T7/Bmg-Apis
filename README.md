@@ -109,7 +109,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | رابط مشروع Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | مفتاح Supabase العام (anon/publishable) |
 | `GEMINI_SESSION_SECRET` | سر خادمي بطول 32 حرفاً على الأقل لتشفير جلسات Gemini وتجزئة معرف العميل |
-| `Nox_DEMO_RPC_SECRET` | السر الخادمي المطابق للبصمة المسجلة في `private.api_demo_config` |
+| `BMG_DEMO_RPC_SECRET` | السر الخادمي المطابق للبصمة المسجلة في `private.api_demo_config` |
 | `GEMINI_TIMEOUT_MS` | مهلة Gemini بالمللي ثانية؛ اختياري، الافتراضي 45000 |
 
 لا تستخدم `service_role` أو أي سر خادمي في متغير يبدأ بـ `NEXT_PUBLIC_`. لا تشارك قيم الأسرار في سجلات البناء أو الواجهة.
