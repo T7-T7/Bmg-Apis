@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, 
 const CONFIG = {
   home: "https://gemini.google.com/app",
   endpoint: "https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
-  timeout: Number(process.env.GEMINI_TIMEOUT_MS || 45_000),
+  timeout: Math.min(25_000, Math.max(5_000, Number(process.env.GEMINI_TIMEOUT_MS) || 25_000)),
   userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
 };
 
