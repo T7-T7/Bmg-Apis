@@ -102,6 +102,7 @@ export type Database = {
           source_type: string
           status: string
           updated_at: string
+          weight: number
         }
         Insert: {
           archived_at?: string | null
@@ -122,6 +123,7 @@ export type Database = {
           source_type?: string
           status?: string
           updated_at?: string
+          weight?: number
         }
         Update: {
           archived_at?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           source_type?: string
           status?: string
           updated_at?: string
+          weight?: number
         }
         Relationships: []
       }
