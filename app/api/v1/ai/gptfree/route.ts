@@ -9,6 +9,42 @@ const AGENT_URL = "https://us-central1-gptfree-2.cloudfunctions.net/agent_stream
 const MAX_BODY = 1_048_576;
 const MAX_HISTORY = 20;
 const MAX_MESSAGE = 30_000;
+class PayloadTooLargeError extends Error {}
+
+async function readJsonBody(request: NextRequest): Promise<unknown> {
+  const declaredLength = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY) {
+    throw new PayloadTooLargeError();
+  }
+
+  const reader = request.body?.getReader();
+  if (!reader) throw new SyntaxError("Request body is empty.");
+
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY) {
+        await reader.cancel();
+        throw new PayloadTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
 type AuthState = { idToken: string; refreshToken: string; expiresAt: number };
 let authState: AuthState | null = null;
 let authPromise: Promise<AuthState> | null = null;
@@ -129,10 +165,11 @@ export async function POST(request: NextRequest) {
   if (authorization && !match) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
   let body: unknown;
   try {
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).byteLength > MAX_BODY) return error("حجم الطلب يتجاوز 1 MB.", 413);
-    body = JSON.parse(raw);
-  } catch { return error("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400); }
+    body = await readJsonBody(request);
+  } catch (cause) {
+    if (cause instanceof PayloadTooLargeError) return error("حجم الطلب يتجاوز 1 MB.", 413);
+    return error("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400);
+  }
   if (!body || typeof body !== "object" || Array.isArray(body)) return error("جسم الطلب غير صالح.", 400);
   const data = body as Record<string, unknown>;
   if (typeof data.message !== "string" || !data.message.trim()) return error("الحقل message مطلوب.", 400);

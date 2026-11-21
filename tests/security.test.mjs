@@ -35,4 +35,7 @@ test("both public API routes enforce bounded request payloads", () => {
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
   assert.match(gemini, /MAX_BODY_BYTES\s*=\s*1_048_576/);
   assert.match(gptfree, /MAX_BODY\s*=\s*1_048_576/);
+  assert.match(gptfree, /request\.body\?\.getReader\(\)/);
+  assert.match(gptfree, /await reader\.cancel\(\)/);
+  assert.doesNotMatch(gptfree, /await request\.text\(\)/);
 });
