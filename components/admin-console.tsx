@@ -14,6 +14,8 @@ type Service = { id:string; slug:string; name:string; description:string; catego
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string };
 type Plan = { plan:string; requests_per_minute:number; max_api_keys:number; daily_weighted_limit:number; monthly_weighted_limit:number };
 type Audit = { id:number; actor_id:string|null; action:string; entity_type:string; entity_id:string|null; details:Record<string,unknown>; created_at:string };
+type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;actorEmail:string|null;action:string;entityType:string;entityId:string|null;details:Record<string,unknown>;createdAt:string};
+type AdminAuditResponse = {items:AdminAuditEntry[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type Incident = { id:string; title:string; description:string; severity:string; status:string; affected_services:string[]; started_at:string; resolved_at:string|null };
 type Maintenance = { id:string; service_id:string|null; enabled:boolean; message:string; starts_at:string|null; ends_at:string|null };
 type AdminKey = {id:string;userId:string;displayName:string|null;email:string|null;label:string;keyPrefix:string;scopes:string[];createdAt:string;lastUsedAt:string|null;expiresAt:string|null;revokedAt:string|null};
@@ -65,6 +67,15 @@ export default function AdminConsole(){
  const [requestLogsUser,setRequestLogsUser]=useState("");
  const [requestLogsResult,setRequestLogsResult]=useState("all");
  const [requestLogsStatus,setRequestLogsStatus]=useState("");
+ const [auditRows,setAuditRows]=useState<AdminAuditEntry[]>([]);
+ const [auditRowsTotal,setAuditRowsTotal]=useState(0);
+ const [auditRowsPage,setAuditRowsPage]=useState(1);
+ const [auditRowsTotalPages,setAuditRowsTotalPages]=useState(1);
+ const [auditHours,setAuditHours]=useState(0);
+ const [auditActor,setAuditActor]=useState("");
+ const [auditAction,setAuditAction]=useState("");
+ const [auditEntityType,setAuditEntityType]=useState("");
+ const [auditQuery,setAuditQuery]=useState("");
  const [analyticsDays,setAnalyticsDays]=useState(7);
  const [analyticsService,setAnalyticsService]=useState("");
  const [analyticsUser,setAnalyticsUser]=useState("");
@@ -149,6 +160,31 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  },[supabase,requestLogsService,requestLogsUser,requestLogsResult,requestLogsStatus,requestLogsHours]);
  useEffect(()=>{if(tab==="logs"&&ready&&user&&["admin","owner"].includes(role))void loadRequestLogs(1)},[tab,ready,user,role,loadRequestLogs]);
+ const loadAuditLogs=useCallback(async(page:number=1)=>{
+  if(!supabase)return;
+  setBusy(true);setError("");
+  try{
+   const {data,error}=await supabase.rpc("bmg_admin_get_audit_logs",{
+    p_page:page,p_page_size:25,p_actor_id:auditActor||undefined,
+    p_action:auditAction.trim()||undefined,p_entity_type:auditEntityType.trim()||undefined,
+    p_query:auditQuery.trim()||undefined,p_hours:auditHours
+   });
+   if(error)throw error;
+   const result=data as unknown as AdminAuditResponse;
+   setAuditRows(result.items||[]);setAuditRowsTotal(result.total||0);
+   setAuditRowsPage(result.page||page);setAuditRowsTotalPages(result.totalPages||1);
+  }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل سجل التدقيق.");}
+  finally{setBusy(false);}
+ },[supabase,auditActor,auditAction,auditEntityType,auditQuery,auditHours]);
+ useEffect(()=>{if(tab==="audit"&&ready&&user&&["admin","owner"].includes(role))void loadAuditLogs(1)},[tab,ready,user,role,loadAuditLogs]);
+ const exportAuditLogs=(format:"json"|"csv")=>{
+  const content=format==="json"?JSON.stringify(auditRows,null,2):[
+   "createdAt,actorName,actorEmail,action,entityType,entityId,details",
+   ...auditRows.map(x=>[x.createdAt,x.actorName||"",x.actorEmail||"",x.action,x.entityType,x.entityId||"",JSON.stringify(x.details||{})].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))
+  ].join("\\n");
+  const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-api-audit-page-"+auditRowsPage+"."+format;link.click();URL.revokeObjectURL(url);
+ };
  const exportRequestLogs=(format:"json"|"csv")=>{
   const content=format==="json"?JSON.stringify({total:requestLogsTotal,hours:requestLogsHours,items:requestLogs},null,2):[
    "createdAt,user,email,keyLabel,service,method,status,latencyMs,weight",
@@ -417,8 +453,21 @@ export default function AdminConsole(){
      {!requestLogs.length&&<p className={styles.empty}>لا توجد طلبات مطابقة للفلاتر في الفترة المحددة.</p>}
      <div className={styles.actions}><button disabled={busy||requestLogsPage<=1} onClick={()=>void loadRequestLogs(requestLogsPage-1)}>السابق</button><button disabled={busy||requestLogsPage>=requestLogsTotalPages} onClick={()=>void loadRequestLogs(requestLogsPage+1)}>التالي</button></div>
     </section>}
-   {tab==="audit"&&<section className={styles.panel}><h2>سجل التدقيق الإداري</h2>{audit.map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><small>{JSON.stringify(a.details||{})}</small><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة.</p>}</section>}
-   {tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
+   {tab==="audit"&&<section className={styles.panel}>
+     <div className={styles.toolbar}><div><h2>سجل التدقيق الإداري</h2><p className={styles.hint}>يسجل التغييرات الإدارية المهمة، ولا يتضمن كلمات المرور أو مفاتيح API السرية.</p></div><div className={styles.actions}><button onClick={()=>exportAuditLogs("csv")} disabled={!auditRows.length}>CSV الصفحة</button><button onClick={()=>exportAuditLogs("json")} disabled={!auditRows.length}>JSON الصفحة</button></div></div>
+     <div className={styles.formGrid}>
+      <label>الفترة<select value={auditHours} onChange={e=>setAuditHours(Number(e.target.value))}><option value="0">كل السجل</option><option value="24">24 ساعة</option><option value="168">7 أيام</option><option value="720">30 يوماً</option></select></label>
+      <label>المنفذ<select value={auditActor} onChange={e=>setAuditActor(e.target.value)}><option value="">كل المنفذين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label>
+      <label>نوع العملية<input value={auditAction} onChange={e=>setAuditAction(e.target.value)} placeholder="مثال: profile.admin_update"/></label>
+      <label>نوع العنصر<input value={auditEntityType} onChange={e=>setAuditEntityType(e.target.value)} placeholder="مثال: api_service"/></label>
+      <label>بحث عام<input value={auditQuery} onChange={e=>setAuditQuery(e.target.value)} placeholder="بحث في التفاصيل والمعرفات"/></label>
+      <div className={styles.actions}><button className={styles.primary} disabled={busy} onClick={()=>void loadAuditLogs(1)}>تطبيق الفلاتر</button><button onClick={()=>{setAuditHours(0);setAuditActor("");setAuditAction("");setAuditEntityType("");setAuditQuery("");}}>إعادة ضبط</button></div>
+     </div>
+     <div className={styles.toolbar}><strong>{auditRowsTotal.toLocaleString("en-US")} عملية</strong><span className={styles.hint}>الصفحة {auditRowsPage} من {auditRowsTotalPages}</span></div>
+     {auditRows.map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entityType} · {a.entityId||"—"}</span><small>{a.actorName||"حساب غير متاح"} · {a.actorEmail||a.actorId||"—"}</small><small>{JSON.stringify(a.details||{})}</small><time>{date(a.createdAt)}</time></div>)}
+     {!auditRows.length&&<p className={styles.empty}>لا توجد عمليات مطابقة للفلاتر.</p>}
+     <div className={styles.actions}><button disabled={busy||auditRowsPage<=1} onClick={()=>void loadAuditLogs(auditRowsPage-1)}>السابق</button><button disabled={busy||auditRowsPage>=auditRowsTotalPages} onClick={()=>void loadAuditLogs(auditRowsPage+1)}>التالي</button></div>
+    </section>}{tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
    {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2><div className={styles.form}><label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label><label>الوصف<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label><div className={styles.formGrid}><label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label><label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label></div><button className={styles.primary} onClick={()=>void createIncident()}>تسجيل حادث</button></div>{incidents.map(i=><div className={styles.auditRow} key={i.id}><b>{i.title}</b><span>{label(i.severity)} · {label(i.status)}</span><time>{date(i.started_at)}</time><select value={i.status} onChange={e=>void changeIncident(i,e.target.value)}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option><option value="resolved">تم الحل</option></select></div>)}</section>}
    {tab==="maintenance"&&<section className={styles.panel}><h2>وضع الصيانة</h2><div className={styles.form}><label>النطاق<select value={maintenanceForm.service_id} onChange={e=>setMaintenanceForm({...maintenanceForm,service_id:e.target.value})}><option value="">كل الخدمات (عام)</option>{services.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>رسالة الصيانة<textarea value={maintenanceForm.message} onChange={e=>setMaintenanceForm({...maintenanceForm,message:e.target.value})}/></label><div className={styles.formGrid}><label>البداية<input type="datetime-local" value={maintenanceForm.starts_at} onChange={e=>setMaintenanceForm({...maintenanceForm,starts_at:e.target.value})}/></label><label>النهاية<input type="datetime-local" value={maintenanceForm.ends_at} onChange={e=>setMaintenanceForm({...maintenanceForm,ends_at:e.target.value})}/></label></div><label className={styles.check}><input type="checkbox" checked={maintenanceForm.enabled} onChange={e=>setMaintenanceForm({...maintenanceForm,enabled:e.target.checked})}/> تفعيل الصيانة عند الحفظ</label><button className={styles.primary} onClick={()=>void saveMaintenance()}>حفظ إعداد الصيانة</button></div>{maintenance.map(m=><div className={styles.auditRow} key={m.id}><b>{m.service_id?services.find(s=>s.id===m.service_id)?.name||"خدمة":"كل الخدمات"}</b><span>{m.message}</span><time>{m.enabled?"مفعلة":"متوقفة"}</time><button onClick={()=>void markMaintenance(m)}>{m.enabled?"إيقاف":"تفعيل"}</button></div>)}</section>}
   </section>
