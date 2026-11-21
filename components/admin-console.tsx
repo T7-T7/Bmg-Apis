@@ -19,9 +19,11 @@ type Maintenance = { id:string; service_id:string|null; enabled:boolean; message
 type AdminKey = {id:string;userId:string;displayName:string|null;email:string|null;label:string;keyPrefix:string;scopes:string[];createdAt:string;lastUsedAt:string|null;expiresAt:string|null;revokedAt:string|null};
 type ServiceVersion = {id:string;version:number;snapshot:Record<string,unknown>;changeNote:string;createdBy:string|null;createdAt:string};
 type AdminLimit = {id:boolean;requests_per_minute:number;max_api_keys:number;daily_weighted_limit:number;monthly_weighted_limit:number};
+type AdminRequestLog = {id:number;userId:string|null;displayName:string|null;email:string|null;keyLabel:string|null;service:string;method:string;status:number|null;latency:number|null;weight:number;createdAt:string};
+type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
- {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
+ {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
  {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"}
 ];
 const blankService = {id:"",slug:"",name:"",description:"",category:"AI",endpoint_path:"",http_method:"POST",docs_markdown:"",status:"active",source_type:"official",weight:1};
@@ -54,6 +56,15 @@ export default function AdminConsole(){
  const [incidentForm,setIncidentForm]=useState({title:"",description:"",severity:"minor",status:"investigating"});
  const [maintenanceForm,setMaintenanceForm]=useState({service_id:"",message:"الخدمة تحت الصيانة مؤقتاً.",enabled:true,starts_at:"",ends_at:""});
  const [analytics,setAnalytics]=useState<AdminAnalytics|null>(null);
+ const [requestLogs,setRequestLogs]=useState<AdminRequestLog[]>([]);
+ const [requestLogsTotal,setRequestLogsTotal]=useState(0);
+ const [requestLogsPage,setRequestLogsPage]=useState(1);
+ const [requestLogsTotalPages,setRequestLogsTotalPages]=useState(1);
+ const [requestLogsHours,setRequestLogsHours]=useState(24);
+ const [requestLogsService,setRequestLogsService]=useState("");
+ const [requestLogsUser,setRequestLogsUser]=useState("");
+ const [requestLogsResult,setRequestLogsResult]=useState("all");
+ const [requestLogsStatus,setRequestLogsStatus]=useState("");
  const [analyticsDays,setAnalyticsDays]=useState(7);
  const [analyticsService,setAnalyticsService]=useState("");
  const [analyticsUser,setAnalyticsUser]=useState("");
@@ -121,6 +132,32 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  },[supabase,analyticsDays,analyticsService,analyticsUser,analyticsCategory,analyticsStatus]);
  useEffect(()=>{if(tab==="analytics"&&ready&&user&&["admin","owner"].includes(role))void loadAnalytics()},[tab,ready,user,role,loadAnalytics]);
+ const loadRequestLogs=useCallback(async(page:number=1)=>{
+  if(!supabase)return;
+  setBusy(true);setError("");
+  try{
+   const {data,error}=await supabase.rpc("bmg_admin_get_request_logs",{
+    p_page:page,p_page_size:25,p_service:requestLogsService||undefined,
+    p_user_id:requestLogsUser||undefined,p_result:requestLogsResult,
+    p_status_code:requestLogsStatus?Number(requestLogsStatus):undefined,p_hours:requestLogsHours
+   });
+   if(error)throw error;
+   const result=data as unknown as AdminRequestLogsResponse;
+   setRequestLogs(result.items||[]);setRequestLogsTotal(result.total||0);
+   setRequestLogsPage(result.page||page);setRequestLogsTotalPages(result.totalPages||1);
+  }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل سجلات الطلبات.");}
+  finally{setBusy(false);}
+ },[supabase,requestLogsService,requestLogsUser,requestLogsResult,requestLogsStatus,requestLogsHours]);
+ useEffect(()=>{if(tab==="logs"&&ready&&user&&["admin","owner"].includes(role))void loadRequestLogs(1)},[tab,ready,user,role,loadRequestLogs]);
+ const exportRequestLogs=(format:"json"|"csv")=>{
+  const content=format==="json"?JSON.stringify({total:requestLogsTotal,hours:requestLogsHours,items:requestLogs},null,2):[
+   "createdAt,user,email,keyLabel,service,method,status,latencyMs,weight",
+   ...requestLogs.map(x=>[x.createdAt,x.displayName||"",x.email||"",x.keyLabel||"",x.service,x.method,x.status??"",x.latency??"",x.weight].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))
+  ].join("\\n");
+  const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-api-request-logs-"+requestLogsHours+"h."+format;link.click();URL.revokeObjectURL(url);
+ };
+
  const exportAnalytics=(format:"json"|"csv")=>{
   if(!analytics)return;
   const content=format==="json"?JSON.stringify(analytics,null,2):[
@@ -363,6 +400,23 @@ export default function AdminConsole(){
    {tab==="keys"&&<section className={styles.panel}><div className={styles.toolbar}><h2>إدارة مفاتيح المستخدمين</h2><div><input value={keyQuery} onChange={e=>setKeyQuery(e.target.value)} placeholder="بحث بالمستخدم أو المفتاح"/><select value={keyStatus} onChange={e=>setKeyStatus(e.target.value)}><option value="all">كل المفاتيح</option><option value="active">نشطة</option><option value="revoked">ملغاة</option><option value="expired">منتهية</option></select></div></div>
     {keyForm.id&&<div className={styles.form}><h3>تعديل المفتاح</h3><div className={styles.formGrid}><label>اسم المفتاح<input value={keyForm.label} onChange={e=>setKeyForm({...keyForm,label:e.target.value})}/></label><label>تاريخ الانتهاء<input type="date" value={keyForm.expiresAt} onChange={e=>setKeyForm({...keyForm,expiresAt:e.target.value})}/></label></div><label>Scopes مفصولة بفواصل<input value={keyForm.scopes} onChange={e=>setKeyForm({...keyForm,scopes:e.target.value})} placeholder="api:use, service:aql-gemini"/></label><p className={styles.hint}>استخدم api:use دائمًا، ويمكن تقييد المفتاح بخدمة مثل service:aql-gemini أو مجال مثل category:ai.</p><div className={styles.actions}><button onClick={()=>setKeyForm({id:"",label:"",expiresAt:"",scopes:"api:use"})}>إلغاء</button><button className={styles.primary} disabled={busy} onClick={()=>void saveAdminKey()}>حفظ التعديلات</button></div></div>}
     <div className={styles.tableWrap}><table><thead><tr><th>صاحب المفتاح</th><th>المفتاح</th><th>الصلاحيات</th><th>آخر استخدام</th><th>الانتهاء</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>{filteredKeys.map(k=><tr key={k.id}><td><b>{k.displayName||"بدون اسم"}</b><small>{k.email}</small></td><td><b>{k.label}</b><small dir="ltr">{k.keyPrefix}••••</small></td><td><small>{k.scopes.join(" · ")}</small></td><td>{date(k.lastUsedAt)}</td><td>{date(k.expiresAt)}</td><td>{k.revokedAt?"ملغى":k.expiresAt&&new Date(k.expiresAt)<=new Date()?"منتهي":"نشط"}</td><td><div className={styles.actions}><button disabled={!!k.revokedAt||busy} onClick={()=>setKeyForm({id:k.id,label:k.label,expiresAt:k.expiresAt?.slice(0,10)||"",scopes:k.scopes.join(", ")})}>تعديل</button><button disabled={!!k.revokedAt||busy} onClick={()=>void revokeAdminKey(k)}>إلغاء</button></div></td></tr>)}</tbody></table></div>{!filteredKeys.length&&<p className={styles.empty}>لا توجد مفاتيح مطابقة.</p>}</section>}
+   {tab==="logs"&&<section className={styles.panel}>
+     <div className={styles.toolbar}><div><h2>سجلات طلبات API</h2><p className={styles.hint}>سجلات آخر 24 ساعة كحد أقصى وفق سياسة الاحتفاظ. لا يتم عرض عناوين IP أو بيانات الأجهزة.</p></div><div className={styles.actions}><button onClick={()=>exportRequestLogs("csv")} disabled={!requestLogs.length}>CSV</button><button onClick={()=>exportRequestLogs("json")} disabled={!requestLogs.length}>JSON</button></div></div>
+     <div className={styles.formGrid}>
+      <label>الفترة<select value={requestLogsHours} onChange={e=>{setRequestLogsHours(Number(e.target.value));setRequestLogsPage(1)}}><option value="1">آخر ساعة</option><option value="6">آخر 6 ساعات</option><option value="24">آخر 24 ساعة</option></select></label>
+      <label>الخدمة<select value={requestLogsService} onChange={e=>{setRequestLogsService(e.target.value);setRequestLogsPage(1)}}><option value="">كل الخدمات</option>{services.map(x=><option key={x.id} value={x.slug}>{x.name}</option>)}</select></label>
+      <label>المستخدم<select value={requestLogsUser} onChange={e=>{setRequestLogsUser(e.target.value);setRequestLogsPage(1)}}><option value="">كل المستخدمين</option>{profiles.map(x=><option key={x.id} value={x.id}>{x.display_name||x.email||x.id}</option>)}</select></label>
+      <label>النتيجة<select value={requestLogsResult} onChange={e=>{setRequestLogsResult(e.target.value);setRequestLogsPage(1)}}><option value="all">كل الطلبات</option><option value="success">ناجحة</option><option value="error">فاشلة</option></select></label>
+      <label>HTTP Status<input type="number" min="100" max="599" placeholder="كل الحالات" value={requestLogsStatus} onChange={e=>{setRequestLogsStatus(e.target.value);setRequestLogsPage(1)}}/></label>
+      <div className={styles.actions}><button className={styles.primary} onClick={()=>void loadRequestLogs(1)} disabled={busy}>تطبيق الفلاتر</button><button onClick={()=>{setRequestLogsService("");setRequestLogsUser("");setRequestLogsResult("all");setRequestLogsStatus("");setRequestLogsHours(24);setRequestLogsPage(1)}}>إعادة ضبط</button></div>
+     </div>
+     <div className={styles.toolbar}><strong>{requestLogsTotal.toLocaleString("en-US")} طلب</strong><span className={styles.hint}>الصفحة {requestLogsPage} من {requestLogsTotalPages}</span></div>
+     <div className={styles.tableWrap}><table><thead><tr><th>التوقيت</th><th>المستخدم</th><th>المفتاح</th><th>الخدمة / Method</th><th>HTTP</th><th>الزمن</th><th>الوزن</th></tr></thead><tbody>
+      {requestLogs.map(x=><tr key={x.id}><td>{date(x.createdAt)}</td><td><b>{x.displayName||"حساب"}</b><small>{x.email||x.userId||"—"}</small></td><td>{x.keyLabel||"—"}</td><td><b>{x.service}</b><small dir="ltr">{x.method}</small></td><td>{x.status??"—"}</td><td>{x.latency===null?"—":x.latency+" ms"}</td><td>{x.weight}</td></tr>)}
+     </tbody></table></div>
+     {!requestLogs.length&&<p className={styles.empty}>لا توجد طلبات مطابقة للفلاتر في الفترة المحددة.</p>}
+     <div className={styles.actions}><button disabled={busy||requestLogsPage<=1} onClick={()=>void loadRequestLogs(requestLogsPage-1)}>السابق</button><button disabled={busy||requestLogsPage>=requestLogsTotalPages} onClick={()=>void loadRequestLogs(requestLogsPage+1)}>التالي</button></div>
+    </section>}
    {tab==="audit"&&<section className={styles.panel}><h2>سجل التدقيق الإداري</h2>{audit.map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><small>{JSON.stringify(a.details||{})}</small><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة.</p>}</section>}
    {tab==="notifications"&&<section className={styles.panel}><h2>إرسال إشعار داخل المنصة</h2><div className={styles.form}><label>المستلم<select value={notification.user_id} onChange={e=>setNotification({...notification,user_id:e.target.value})}><option value="all">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label><label>الأهمية<select value={notification.type} onChange={e=>setNotification({...notification,type:e.target.value})}><option value="info">معلوماتي</option><option value="warning">تحذيري</option><option value="critical">حرج</option></select></label><label>العنوان<input value={notification.title} onChange={e=>setNotification({...notification,title:e.target.value})}/></label><label>المحتوى<textarea value={notification.body} onChange={e=>setNotification({...notification,body:e.target.value})}/></label><button className={styles.primary} disabled={busy} onClick={()=>void sendNotification()}>إرسال الإشعار</button></div></section>}
    {tab==="incidents"&&<section className={styles.panel}><h2>إدارة الحوادث</h2><div className={styles.form}><label>عنوان الحادث<input value={incidentForm.title} onChange={e=>setIncidentForm({...incidentForm,title:e.target.value})}/></label><label>الوصف<textarea value={incidentForm.description} onChange={e=>setIncidentForm({...incidentForm,description:e.target.value})}/></label><div className={styles.formGrid}><label>الخطورة<select value={incidentForm.severity} onChange={e=>setIncidentForm({...incidentForm,severity:e.target.value})}><option value="minor">منخفض</option><option value="major">مرتفع</option><option value="critical">حرج</option></select></label><label>الحالة<select value={incidentForm.status} onChange={e=>setIncidentForm({...incidentForm,status:e.target.value})}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option></select></label></div><button className={styles.primary} onClick={()=>void createIncident()}>تسجيل حادث</button></div>{incidents.map(i=><div className={styles.auditRow} key={i.id}><b>{i.title}</b><span>{label(i.severity)} · {label(i.status)}</span><time>{date(i.started_at)}</time><select value={i.status} onChange={e=>void changeIncident(i,e.target.value)}><option value="investigating">قيد التحقيق</option><option value="identified">تم تحديد السبب</option><option value="monitoring">تحت المراقبة</option><option value="resolved">تم الحل</option></select></div>)}</section>}
