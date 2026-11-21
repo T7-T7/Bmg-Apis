@@ -87,8 +87,8 @@ async function authorize(request: NextRequest, token: string | null) {
     if (rpcError) throw rpcError;
     const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
     if (!result?.authorized) return { ok: false as const, response: error(
-      result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : result?.reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة." : "مفتاح API غير صالح أو ملغى أو منتهي.",
-      result?.reason === "rate_limited" ? 429 : result?.reason === "account_suspended" ? 403 : result?.reason === "maintenance" ? 503 : 401
+      result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : result?.reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة." : result?.reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية استخدام هذه الخدمة." : "مفتاح API غير صالح أو ملغى أو منتهي.",
+      result?.reason === "rate_limited" ? 429 : result?.reason === "account_suspended" || result?.reason === "insufficient_scope" ? 403 : result?.reason === "maintenance" ? 503 : 401
     ) };
     return { ok: true as const, usageId: Number(result.usage_id) || null };
   }
