@@ -474,11 +474,19 @@ export type Database = {
       }
     }
     Functions: {
+      bmg_admin_get_service_versions: {
+        Args: { p_service_id: string }
+        Returns: Json
+      }
       bmg_admin_list_api_keys: {
         Args: { p_status?: string; p_user_id?: string }
         Returns: Json
       }
       bmg_admin_revoke_api_key: { Args: { p_id: string }; Returns: boolean }
+      bmg_admin_rollback_api_service: {
+        Args: { p_service_id: string; p_version: number }
+        Returns: number
+      }
       bmg_admin_update_api_key: {
         Args: {
           p_expires_at: string
