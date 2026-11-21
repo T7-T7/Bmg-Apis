@@ -1,1 +1,2 @@
-import Portal from "@/components/portal"; export default function StatusPage(){return <Portal/>;}
+import StatusPage from "@/components/status-page";
+export default function PublicStatusPage(){return <StatusPage/>;}
