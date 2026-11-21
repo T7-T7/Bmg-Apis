@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient, migrateLegacySession } from "@/lib/supabase/client";
 
 type ApiService = { slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:"GET"|"POST"; status:"active"|"maintenance"|"disabled" };
 type ApiKey = { id:string; label:string; key_prefix:string; created_at:string; last_used_at:string|null; expires_at:string|null; revoked_at:string|null };
@@ -34,7 +34,76 @@ export default function Portal(){
  const isProtectedPage=pathname==="/playground"||pathname==="/dashboard"||pathname.startsWith("/dashboard/");
  const supabase=useMemo(()=>{try{return getSupabaseBrowserClient()}catch{return null}},[]);
  // eslint-disable-next-line react-hooks/set-state-in-effect
- useEffect(()=>{if(!supabase){setAuthReady(true);return}let alive=true;const {data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)localStorage.setItem("nox-session-start:"+session.user.id,String(Date.now()));if(event==="SIGNED_OUT")Object.keys(localStorage).filter(k=>k.startsWith("nox-session-start:")).forEach(k=>localStorage.removeItem(k));authSnapshotUser=session?.user??null;authSnapshotReady=true;setUser(authSnapshotUser);setAuthReady(true)});supabase.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){authSnapshotUser=null;authSnapshotReady=true;setUser(null);setAuthReady(true);return}const {data:sessionData}=await supabase.auth.getSession();const current=sessionData.session;if(current){const key="nox-session-start:"+current.user.id;let started=Number(localStorage.getItem(key)||0);if(!started){started=Date.now();localStorage.setItem(key,String(started))}if(Date.now()-started>=48*60*60*1000){await supabase.auth.signOut();localStorage.removeItem(key);if(alive){authSnapshotUser=null;authSnapshotReady=true;setUser(null);setAuthReady(true)}return}}if(alive){authSnapshotUser=data.user;authSnapshotReady=true;setUser(data.user);setAuthReady(true)}}).catch(()=>{if(alive){authSnapshotUser=null;authSnapshotReady=true;setUser(null);setAuthReady(true)}});return()=>{alive=false;subscription.unsubscribe()}},[supabase]);
+ useEffect(() => {
+  if (!supabase) { setAuthReady(true); return; }
+  let alive = true;
+  let subscription: { unsubscribe: () => void } | null = null;
+
+  const initializeAuth = async () => {
+    await migrateLegacySession();
+    if (!alive) return;
+
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) localStorage.setItem("nox-session-start:" + session.user.id, String(Date.now()));
+      if (event === "SIGNED_OUT") Object.keys(localStorage).filter(key => key.startsWith("nox-session-start:")).forEach(key => localStorage.removeItem(key));
+      authSnapshotUser = session?.user ?? null;
+      authSnapshotReady = true;
+      setUser(authSnapshotUser);
+      setAuthReady(true);
+    });
+    subscription = authSubscription;
+
+    const { data, error } = await supabase.auth.getUser();
+    if (!alive) return;
+    if (error || !data.user) {
+      authSnapshotUser = null;
+      authSnapshotReady = true;
+      setUser(null);
+      setAuthReady(true);
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const current = sessionData.session;
+    if (current) {
+      const key = "nox-session-start:" + current.user.id;
+      let started = Number(localStorage.getItem(key) || 0);
+      if (!started) {
+        started = Date.now();
+        localStorage.setItem(key, String(started));
+      }
+      if (Date.now() - started >= 48 * 60 * 60 * 1000) {
+        await supabase.auth.signOut();
+        localStorage.removeItem(key);
+        if (alive) {
+          authSnapshotUser = null;
+          authSnapshotReady = true;
+          setUser(null);
+          setAuthReady(true);
+        }
+        return;
+      }
+    }
+
+    authSnapshotUser = data.user;
+    authSnapshotReady = true;
+    setUser(data.user);
+    setAuthReady(true);
+  };
+
+  void initializeAuth().catch(() => {
+    if (!alive) return;
+    authSnapshotUser = null;
+    authSnapshotReady = true;
+    setUser(null);
+    setAuthReady(true);
+  });
+
+  return () => {
+    alive = false;
+    subscription?.unsubscribe();
+  };
+ }, [supabase]);
  useEffect(()=>{const media=window.matchMedia("(prefers-color-scheme: dark)");const apply=()=>{const resolved=theme==="system"?(media.matches?"dark":"light"):theme;document.documentElement.dataset.theme=resolved;document.documentElement.style.colorScheme=resolved};apply();media.addEventListener("change",apply);try{localStorage.setItem("nox-theme",theme)}catch{}return()=>media.removeEventListener("change",apply)},[theme]);
  // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{if(!supabase||!user||pathname!=="/dashboard/settings")return;setProfileName(String(user.user_metadata?.display_name||user.user_metadata?.full_name||user.user_metadata?.name||""));supabase.auth.mfa.listFactors().then(({data})=>setTotpFactors(data?.totp||[]))},[supabase,user,pathname]);
