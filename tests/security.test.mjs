@@ -84,3 +84,12 @@ test("service dependency management is admin-only and rejects cycles", () => {
   assert.match(sql, /before insert or update of service_id,depends_on_service_id/i);
   assert.match(sql, /unique\(service_id,depends_on_service_id\)/i);
 });
+
+test("incident updates are public-readable but admin-write-only and append-only", () => {
+  const sql = read("../supabase/migrations/20261121174453_add_incident_update_timeline.sql");
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /for select to anon,authenticated using \(true\)/i);
+  assert.match(sql, /for insert to authenticated with check \(private\.bmg_is_admin\(\)/i);
+  assert.match(sql, /grant select on public\.incident_updates to anon,authenticated/i);
+  assert.doesNotMatch(sql, /grant update|grant delete/i);
+});
