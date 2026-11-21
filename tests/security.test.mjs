@@ -75,3 +75,12 @@ test("admin audit log RPC is restricted to administrators and paginates safely",
   assert.match(sql, /revoke all on function public\.bmg_admin_get_audit_logs[\s\S]*from public,anon/i);
   assert.match(sql, /grant execute on function public\.bmg_admin_get_audit_logs[\s\S]*to authenticated/i);
 });
+
+test("service dependency management is admin-only and rejects cycles", () => {
+  const sql = read("../supabase/migrations/20261121174225_add_service_dependency_management.sql");
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /using \(private\.bmg_is_admin\(\)\)/i);
+  assert.match(sql, /Service dependency would create a cycle/i);
+  assert.match(sql, /before insert or update of service_id,depends_on_service_id/i);
+  assert.match(sql, /unique\(service_id,depends_on_service_id\)/i);
+});
