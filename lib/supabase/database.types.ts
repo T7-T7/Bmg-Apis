@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_admin_limits: {
+        Row: {
+          daily_weighted_limit: number
+          id: boolean
+          max_api_keys: number
+          monthly_weighted_limit: number
+          requests_per_minute: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          daily_weighted_limit: number
+          id?: boolean
+          max_api_keys: number
+          monthly_weighted_limit: number
+          requests_per_minute: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          daily_weighted_limit?: number
+          id?: boolean
+          max_api_keys?: number
+          monthly_weighted_limit?: number
+          requests_per_minute?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       api_plan_limits: {
         Row: {
           daily_weighted_limit: number
@@ -444,6 +474,20 @@ export type Database = {
       }
     }
     Functions: {
+      bmg_admin_list_api_keys: {
+        Args: { p_status?: string; p_user_id?: string }
+        Returns: Json
+      }
+      bmg_admin_revoke_api_key: { Args: { p_id: string }; Returns: boolean }
+      bmg_admin_update_api_key: {
+        Args: {
+          p_expires_at: string
+          p_id: string
+          p_label: string
+          p_scopes: string[]
+        }
+        Returns: boolean
+      }
       bmg_admin_update_profile: {
         Args: {
           p_account_status: string
