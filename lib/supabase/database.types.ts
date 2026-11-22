@@ -506,6 +506,63 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          id: string; name: string; description: string; frequency: string; period_days: number;
+          timezone: string; schedule_hour: number; schedule_minute: number; schedule_weekday: number;
+          schedule_monthday: number; sections: string[]; filters: Json; recipient_ids: string[];
+          enabled: boolean; next_run_at: string | null; last_run_at: string | null;
+          created_by: string | null; created_at: string; updated_at: string;
+        }
+        Insert: {
+          id?: string; name: string; description?: string; frequency?: string; period_days?: number;
+          timezone?: string; schedule_hour?: number; schedule_minute?: number; schedule_weekday?: number;
+          schedule_monthday?: number; sections?: string[]; filters?: Json; recipient_ids?: string[];
+          enabled?: boolean; next_run_at?: string | null; last_run_at?: string | null;
+          created_by?: string | null; created_at?: string; updated_at?: string;
+        }
+        Update: {
+          id?: string; name?: string; description?: string; frequency?: string; period_days?: number;
+          timezone?: string; schedule_hour?: number; schedule_minute?: number; schedule_weekday?: number;
+          schedule_monthday?: number; sections?: string[]; filters?: Json; recipient_ids?: string[];
+          enabled?: boolean; next_run_at?: string | null; last_run_at?: string | null;
+          created_by?: string | null; created_at?: string; updated_at?: string;
+        }
+        Relationships: []
+      }
+      report_runs: {
+        Row: {
+          id: string; template_id: string | null; template_name: string; trigger_type: string; status: string;
+          period_start: string; period_end: string; period_days: number; timezone: string; sections: string[];
+          filters: Json; recipient_ids: string[]; report_data: Json | null; executive_summary: string | null;
+          data_quality: Json; attempts: number; max_attempts: number; last_error: string | null;
+          email_status: string; email_error: string | null; created_by: string | null; created_at: string;
+          started_at: string | null; completed_at: string | null;
+        }
+        Insert: {
+          id?: string; template_id?: string | null; template_name: string; trigger_type: string; status?: string;
+          period_start: string; period_end: string; period_days: number; timezone?: string; sections: string[];
+          filters?: Json; recipient_ids?: string[]; report_data?: Json | null; executive_summary?: string | null;
+          data_quality?: Json; attempts?: number; max_attempts?: number; last_error?: string | null;
+          email_status?: string; email_error?: string | null; created_by?: string | null; created_at?: string;
+          started_at?: string | null; completed_at?: string | null;
+        }
+        Update: {
+          id?: string; template_id?: string | null; template_name?: string; trigger_type?: string; status?: string;
+          period_start?: string; period_end?: string; period_days?: number; timezone?: string; sections?: string[];
+          filters?: Json; recipient_ids?: string[]; report_data?: Json | null; executive_summary?: string | null;
+          data_quality?: Json; attempts?: number; max_attempts?: number; last_error?: string | null;
+          email_status?: string; email_error?: string | null; created_by?: string | null; created_at?: string;
+          started_at?: string | null; completed_at?: string | null;
+        }
+        Relationships: []
+      }
+      report_run_attempts: {
+        Row: { id: number; report_id: string; attempt_number: number; status: string; message: string; created_at: string }
+        Insert: { id?: number; report_id: string; attempt_number: number; status: string; message?: string; created_at?: string }
+        Update: { id?: number; report_id?: string; attempt_number?: number; status?: string; message?: string; created_at?: string }
+        Relationships: []
+      }
       api_webhooks: {
         Row: {
           id: string
@@ -604,7 +661,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      bmg_admin_create_webhook: {
+      bmg_admin_queue_report: { Args: { p_period_days?: number; p_template_id: string }; Returns: string }\n      bmg_admin_create_webhook: {
         Args: {
           p_event_types: string[]
           p_name: string
