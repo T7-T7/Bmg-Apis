@@ -300,7 +300,7 @@ export default function AdminWebhooks() {
         )}
       </section>
 
-      <p className={styles.footnote}>التوقيع يُحسب على النص الخام للطلب: HMAC-SHA256(secret, timestamp + "." + rawBody). يجب على خادمك التحقق من التوقيع والوقت ومعرّف التسليم لمنع إعادة التشغيل.</p>
+      <p className={styles.footnote}>التوقيع يُحسب على النص الخام للطلب: HMAC-SHA256(secret, timestamp + &quot;.&quot; + rawBody). يجب على خادمك التحقق من التوقيع والوقت ومعرّف التسليم لمنع إعادة التشغيل.</p>
     </div>
   );
 }
