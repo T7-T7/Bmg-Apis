@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -147,7 +147,7 @@ export function CookieConsent(){
 }
 
 export function FeedbackWidget(){
- const [open,setOpen]=useState(false);const [title,setTitle]=useState("");const [details,setDetails]=useState("");const [rating,setRating]=useState(0);const [busy,setBusy]=useState(false);const [done,setDone]=useState(false);const [error,setError]=useState("");const [history,setHistory]=useState<Array<{id:string;title:string;status:string;created_at:string}>>([]);const db=useMemo(()=>dbClient(),[]);const pathname=typeof window!=="undefined"?window.location.pathname:"/";
+ const [open,setOpen]=useState(false);const [title,setTitle]=useState("");const [details,setDetails]=useState("");const [rating,setRating]=useState(0);const [busy,setBusy]=useState(false);const [done,setDone]=useState(false);const [error,setError]=useState("");const [history,setHistory]=useState<Array<{id:string;title:string;status:string;created_at:string}>>([]);const db=useMemo(()=>dbClient(),[]);const pathname=usePathname();
  useEffect(()=>{if(!db)return;db.auth.getUser().then(({data})=>{if(data.user)(db as any).from("user_feedback").select("id,title,status,created_at").order("created_at",{ascending:false}).limit(5).then(({data}:any)=>setHistory(data||[]))})},[db,done]);
  async function submit(){if(!db||!title.trim()||!details.trim()||rating<1)return;setBusy(true);setError("");const {data:{user}}=await db.auth.getUser();if(!user){setError("سجّل الدخول قبل إرسال الملاحظة.");setBusy(false);return}const {error}=await (db as any).from("user_feedback").insert({user_id:user.id,title:title.trim(),details:details.trim(),page_path:pathname,rating}).select("id").single();if(error){setError("تعذر إرسال الملاحظة. تأكد من تطبيق ترحيل قاعدة البيانات الخاص بالملاحظات.");setBusy(false);return}setDone(true);setTitle("");setDetails("");setRating(0);setBusy(false)}
  return <><button className="ex-feedback-trigger" onClick={()=>setOpen(true)}>إرسال ملاحظة</button>{open&&<div className="ex-modal-backdrop"><Card className="ex-modal"><div className="ex-card-head"><h3>تقديم ملاحظة</h3><button onClick={()=>setOpen(false)}>إغلاق</button></div>{done?<><p className="ex-good">تم إرسال ملاحظتك. يمكنك متابعة حالتها من القائمة التالية.</p>{history.map(x=><div className="ex-list-row" key={x.id}><b>{x.title}</b><span>{x.status}</span><small>{fmtDate(x.created_at)}</small></div>)}</>:<><label className="ex-field">عنوان مختصر<input value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/></label><label className="ex-field">التفاصيل<textarea rows={5} value={details} onChange={e=>setDetails(e.target.value)}/></label><p className="ex-muted">الصفحة المرتبطة تلقائيًا: {pathname}</p><div className="ex-stars">{[1,2,3,4,5].map(n=><button key={n} className={rating>=n?"selected":""} onClick={()=>setRating(n)}>★</button>)}</div>{error&&<p className="ex-error">{error}</p>}<button className="ex-primary" disabled={busy||!title.trim()||!details.trim()||!rating} onClick={submit}>{busy?"جارٍ الإرسال…":"إرسال الملاحظة"}</button></> }</Card></div>}</>;
