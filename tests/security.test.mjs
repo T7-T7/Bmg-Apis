@@ -135,3 +135,15 @@ test("retired admin features are unscheduled and removed without cascading unrel
   const extensionCleanup = read("../supabase/migrations/20261122233505_remove_unused_pg_net_extension.sql");
   assert.match(extensionCleanup, /drop extension if exists pg_net/i);
 });
+
+test("unused PostgreSQL extensions are removed and feedback RLS policies are optimized", () => {
+  const extensions = read("../supabase/migrations/20261122234644_remove_unused_http_and_uuid_ossp.sql");
+  assert.match(extensions, /drop extension if exists http/i);
+  assert.match(extensions, /drop extension if exists "uuid-ossp"/i);
+
+  const feedback = read("../supabase/migrations/20261122234750_optimize_feedback_rls_policies.sql");
+  assert.match(feedback, /\(select auth\.uid\(\)\)/i);
+  assert.match(feedback, /Users and admins can read feedback/i);
+  assert.match(feedback, /\(select private\.bmg_is_admin\(\)\)/i);
+  assert.doesNotMatch(feedback, /create policy "Admins can read all feedback"/i);
+});
