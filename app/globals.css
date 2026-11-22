@@ -548,3 +548,5 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 @media(max-width:760px){.ex-current-plan{align-items:flex-start;flex-direction:column}.ex-plan-limits{grid-template-columns:1fr 1fr}}
 
 .ex-empty-chart{height:145px;display:grid;place-items:center;border:1px dashed var(--line);background:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,var(--line-soft) 36px)}.ex-empty-chart span{font-size:11px;color:var(--muted);padding:8px 12px;background:var(--surface)}
+
+.ex-cookie-bar~.ex-feedback-trigger{bottom:145px}.ex-cookie-bar~.ex-markdown-float{bottom:145px}.ex-markdown-float{bottom:78px}
