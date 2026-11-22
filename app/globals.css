@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 :root{color-scheme:light;--bg:#f2f0e8;--paper:#fbfaf5;--surface:#fffef9;--surface-2:#eae8df;--ink:#171a18;--muted:#73766f;--dim:#999b92;--line:#d9d8cf;--line-soft:#e8e6dd;--accent:#ed5b32;--accent-dark:#c94725;--lime:#d9f36a;--green:#287d58;--red:#bd3e35;--radius:4px}
 *{box-sizing:border-box}
@@ -564,7 +565,7 @@ html[dir="rtl"] .user-shell .sidebar{inset-inline-start:auto;inset-inline-end:0;
 .user-shell .user-meta small,.user-shell .user-meta span{color:var(--muted)}
 .user-shell .icon-button{background:var(--surface);border:1px solid var(--line);border-radius:9px;color:var(--muted)}
 .user-shell .sidebar-scrim{z-index:49;background:#0009;backdrop-filter:blur(2px)}
-body:has(.user-shell.sidebar-open){overflow:hidden}
+body.sidebar-open:has(.user-shell){overflow:hidden}
 .user-shell .main-area{margin:0;width:100%;min-height:100vh}
 .user-shell .topbar{height:auto;min-height:60px;padding:10px 14px;background:var(--paper);border-color:var(--line);backdrop-filter:blur(14px);gap:12px;justify-content:flex-start}
 .user-shell .mobile-menu{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:var(--surface);color:var(--ink);font-size:20px}
