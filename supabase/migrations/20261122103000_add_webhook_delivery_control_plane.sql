@@ -6,7 +6,7 @@ create table if not exists public.api_webhooks (
   name text not null check (length(btrim(name)) between 2 and 80),
   target_url text not null check (
     target_url ~ '^https://'
-    and target_url !~* '^https://(localhost|127[.]|0[.]|10[.]|192[.]168[.]|169[.]254[.]|\[::1\\]|\[fc|\[fd|\[fe80)'
+    and target_url !~* '^https://(localhost|127[.]|0[.]|10[.]|192[.]168[.]|169[.]254[.]|\[::1\]|\[fc|\[fd|\[fe80)'
   ),
   event_types text[] not null check (cardinality(event_types) > 0),
   enabled boolean not null default true,
@@ -85,7 +85,7 @@ begin
   if length(btrim(coalesce(p_name,''))) not between 2 and 80 then
     raise exception 'Webhook name must be between 2 and 80 characters';
   end if;
-  if p_target_url !~ '^https://' or p_target_url ~* '^https://(localhost|127[.]|0[.]|10[.]|192[.]168[.]|169[.]254[.]|\[::1\\]|\[fc|\[fd|\[fe80)' then
+  if p_target_url !~ '^https://' or p_target_url ~* '^https://(localhost|127[.]|0[.]|10[.]|192[.]168[.]|169[.]254[.]|\[::1\]|\[fc|\[fd|\[fe80)' then
     raise exception 'A public HTTPS endpoint is required';
   end if;
   if p_secret is null or length(p_secret) < 32 or length(p_secret) > 256 then
