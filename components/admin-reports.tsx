@@ -38,7 +38,7 @@ const EMPTY_FORM: FormState = {
   sections:SECTION_OPTIONS.map(x=>x[0]),service:"",userId:"",category:"",statusCode:"",
   recipients:[],enabled:true
 };
-const date = (value: string | null) => value ? new Date(value).toLocaleString("ar-EG") : "—";
+const date = (value: string | null, timezone?: string) => value ? new Date(value).toLocaleString("ar-EG",timezone?{timeZone:timezone}:{}) : "—";
 const statusLabel = (value: string) => ({
   queued:"في قائمة الانتظار",running:"قيد الإنشاء",succeeded:"مكتمل",partial:"مكتمل جزئيًا",failed:"فشل",
   manual:"يدوي",scheduled:"مجدول",daily:"يومي",weekly:"أسبوعي",monthly:"شهري"
@@ -190,7 +190,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       const performance=objectValue(data.performance||null);
       for(const [key,value] of Object.entries(performance))rows.push({section:"performance",metric:key,value});
       const errors=objectValue(data.errors||null);
-      for(const [key,value] of Object.entries(errors))if(!Array.isArray(value))rows.push({section:"errors",metric:key,value});
+      for(const [key,value] of Object.entries(errors)){if(!Array.isArray(value))rows.push({section:"errors",metric:key,value});else if(key==="statusCodes")for(const item of value)if(item&&typeof item==="object"&&!Array.isArray(item))rows.push({section:"errors",...item as Record<string,unknown>});}
       const usage=objectValue(data.usage||null);
       for(const series of ["hourly","daily"]){
         const values=usage[series];
@@ -243,14 +243,14 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       <div className={styles.group}><b>الأقسام والإحصائيات</b><div className={styles.checkGrid}>{SECTION_OPTIONS.map(([id,label])=><label key={id}><input type="checkbox" checked={form.sections.includes(id)} onChange={e=>toggleSection(id,e.target.checked)}/>{label}</label>)}</div></div>
       <div className={styles.group}><b>مستلمو التقرير داخل لوحة الإدارة</b><div className={styles.checkGrid}>{profiles.map(p=><label key={p.id}><input type="checkbox" checked={form.recipients.includes(p.id)} onChange={e=>toggleRecipient(p.id,e.target.checked)}/>{p.display_name||p.email||p.id} <small>({p.role})</small></label>)}{!profiles.length&&<small>لا توجد حسابات إدارية محمّلة.</small>}</div></div>
       <label className={styles.enabled}><input type="checkbox" checked={form.enabled} onChange={e=>patch({enabled:e.target.checked})}/> تفعيل القالب والجدولة</label>
-      {selectedTemplate&&<p className={styles.hint}>الموعد التالي: {date(selectedTemplate.next_run_at)} · آخر تشغيل: {date(selectedTemplate.last_run_at)}</p>}
+      {selectedTemplate&&<p className={styles.hint}>الموعد التالي: {date(selectedTemplate.next_run_at,selectedTemplate.timezone)} · آخر تشغيل: {date(selectedTemplate.last_run_at)}</p>}
       <div className={styles.actions}><button className={styles.primary} type="button" disabled={busy||loading} onClick={()=>void saveTemplate()}>{form.id?"حفظ التعديلات":"حفظ القالب"}</button><button type="button" disabled={busy||loading} onClick={()=>setForm(EMPTY_FORM)}>إعادة ضبط</button></div>
     </section>
     <section className={styles.panel}>
       <div className={styles.panelHeading}><h3>قوالب التقارير</h3><span>{templates.length} قالب</span></div>
       {loading?<p className={styles.empty}>جارٍ تحميل القوالب…</p>:templates.map(template=><article className={styles.template} key={template.id}>
         <div><b>{template.name}</b><p>{template.description||"بدون وصف"} · {statusLabel(template.frequency)} · {template.period_days===1?"24 ساعة":template.period_days+" يوم"}</p>
-          <small>{template.frequency!=="manual"?"التنفيذ التالي: "+date(template.next_run_at):"تشغيل يدوي"} · {template.enabled?"مفعّل":"متوقف"}</small></div>
+          <small>{template.frequency!=="manual"?"التنفيذ التالي: "+date(template.next_run_at,template.timezone):"تشغيل يدوي"} · {template.enabled?"مفعّل":"متوقف"}</small></div>
         <div className={styles.actions}><button type="button" disabled={busy} onClick={()=>void runReport(template)}>إنشاء الآن</button><button type="button" disabled={busy} onClick={()=>editTemplate(template)}>تعديل</button><button type="button" disabled={busy} onClick={()=>void deleteTemplate(template)}>حذف</button></div>
       </article>)}
       {!loading&&!templates.length&&<p className={styles.empty}>لم يتم إنشاء قوالب بعد.</p>}
@@ -268,7 +268,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
     {selected&&<section className={styles.panel} id="report-preview">
       <div className={styles.panelHeading}><h3>معاينة: {selected.template_name}</h3><button type="button" onClick={()=>setSelected(null)}>إغلاق</button></div>
       <p className={styles.summary}>{selected.executive_summary||"التقرير قيد الإنشاء."}</p>
-      <p className={styles.hint}>الفترة: {date(selected.period_start)} — {date(selected.period_end)} · المنطقة: {selected.timezone}</p>
+      <p className={styles.hint}>الفترة: {date(selected.period_start,selected.timezone)} — {date(selected.period_end,selected.timezone)} · المنطقة: {selected.timezone}</p>
       {selected.last_error&&<div className={styles.error}>آخر خطأ: {selected.last_error}</div>}
       {selected.email_status==="not_configured"&&<div className={styles.info}>لم يُرسل بريد إلكتروني: لم يتم إعداد مزوّد بريد. إشعارات المستلمين داخل المنصة منفصلة عن البريد.</div>}
       {attempts.length>0&&<div className={styles.attempts}><b>سجل محاولات الإنشاء</b>{attempts.map(item=><div key={item.id}><span>#{item.attempt_number} · {statusLabel(item.status)}</span><small>{item.message}</small><time>{date(item.created_at)}</time></div>)}</div>}{selected.report_data&&<pre className={styles.json}>{JSON.stringify(visibleReportData(selected),null,2)}</pre>}
