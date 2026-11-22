@@ -102,3 +102,24 @@ test("public status RPC exposes only bounded public incident updates", () => {
   assert.doesNotMatch(sql, /created_by|actor_email|ip_address|user_agent/i);
   assert.match(sql, /grant execute on function public\.bmg_get_public_status\(\) to anon,authenticated/i);
 });
+
+test("webhook delivery is admin-managed, signed, retried, and keeps secrets in Vault", () => {
+  const sql = read("../supabase/migrations/20261122103000_add_webhook_delivery_control_plane.sql");
+  const worker = read("../supabase/functions/nox-webhook-worker/index.ts");
+  assert.match(sql, /create table if not exists public\.api_webhooks/i);
+  assert.match(sql, /create table if not exists public\.api_webhook_deliveries/i);
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /private\.bmg_is_admin\(\)/i);
+  assert.match(sql, /vault\.create_secret\(p_secret/i);
+  assert.match(sql, /nox_webhook_worker_token/i);
+  assert.match(sql, /create extension if not exists pg_net/i);
+  assert.match(sql, /cron\.schedule\([\s\S]*nox-webhook-delivery-worker/i);
+  assert.match(sql, /revoke all on function public\.bmg_webhook_claim_deliveries[\s\S]*from public,anon,authenticated/i);
+  assert.match(sql, /grant execute on function public\.bmg_webhook_claim_deliveries[\s\S]*to service_role/i);
+  assert.match(sql, /least\(21600,30 \* \(2 \^/i);
+  assert.match(worker, /HMAC/);
+  assert.match(worker, /X-NOX-Signature/);
+  assert.match(worker, /redirect: "manual"/);
+  assert.match(worker, /AbortSignal\.timeout\(10000\)/);
+  assert.match(worker, /safeTarget/);
+});
