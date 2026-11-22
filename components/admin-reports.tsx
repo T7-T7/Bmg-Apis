@@ -90,7 +90,15 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
   },[supabase]);
 
   useEffect(()=>{ void load(); },[load]);
-  useEffect(()=>{\n    if(!supabase||!selected){setAttempts([]);return;}\n    let active=true;\n    supabase.from("report_run_attempts").select("*").eq("report_id",selected.id).order("created_at",{ascending:true}).then(({data,error})=>{\n      if(!active)return;\n      if(error)setError(error.message);else setAttempts((data||[]) as RunAttempt[]);\n    });\n    return()=>{active=false;};\n  },[supabase,selected?.id]);
+  useEffect(()=>{
+    if(!supabase||!selected){setAttempts([]);return;}
+    let active=true;
+    supabase.from("report_run_attempts").select("*").eq("report_id",selected.id).order("created_at",{ascending:true}).then(({data,error})=>{
+      if(!active)return;
+      if(error)setError(error.message);else setAttempts((data||[]) as RunAttempt[]);
+    });
+    return()=>{active=false;};
+  },[supabase,selected?.id]);
 
   const selectedTemplate = useMemo(()=>templates.find(x=>x.id===form.id)||null,[templates,form.id]);
   const patch = (value: Partial<FormState>) => setForm(current=>({...current,...value}));
