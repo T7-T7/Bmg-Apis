@@ -1,0 +1,1 @@
+import Portal from "@/components/portal"; export default function DocumentationSectionPage(){return <Portal/>;}
