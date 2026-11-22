@@ -223,6 +223,9 @@ declare
   v_end timestamptz;
   v_prev_start timestamptz;
   v_prev_end timestamptz;
+  v_prev_requests bigint := 0;
+  v_prev_weighted bigint := 0;
+  v_measured bigint := 0;
   v_service text;
   v_user uuid;
   v_category text;
@@ -299,9 +302,10 @@ begin
         coalesce(sum(success_count) filter(where created_at>=v_start),0)::bigint,
         coalesce(sum(latency_count) filter(where created_at>=v_start),0)::bigint,
         coalesce(sum(total_latency_ms) filter(where created_at>=v_start),0)::bigint,
+        coalesce(sum(request_count) filter(where created_at>=v_start and status_code>0),0)::bigint,
         coalesce(sum(request_count) filter(where created_at<v_start),0)::bigint,
         coalesce(sum(weighted_usage) filter(where created_at<v_start),0)::bigint
-      into v_requests,v_weighted,v_errors,v_success,v_latency_count,v_latency_total,v_prev_start,v_prev_end
+      into v_requests,v_weighted,v_errors,v_success,v_latency_count,v_latency_total,v_measured,v_prev_requests,v_prev_weighted
       from filtered;
 
       with events as (
@@ -377,19 +381,19 @@ begin
         'خلال الفترة: %s طلب فعلي، %s استخدام موزون، %s خطأ، ومتوسط زمن استجابة %s ms. مقارنة بالفترة السابقة: %s طلب.',
         v_requests,v_weighted,v_errors,
         case when v_latency_count>0 then round(v_latency_total::numeric/v_latency_count)::text else 'غير متاح' end,
-        coalesce(v_prev_start,0)
+        coalesce(v_prev_requests,0)
       );
       v_data := jsonb_build_object(
         'overview',jsonb_build_object(
           'requests',v_requests,'weightedUsage',v_weighted,'errors',v_errors,
-          'successRate',case when v_requests-v_errors>0 then round(((v_requests-v_errors)::numeric/greatest(1,v_requests))*100)::integer else null end,
+          'successRate',case when v_measured>0 then round((v_success::numeric/v_measured)*100)::integer else null end,
           'avgLatency',case when v_latency_count>0 then round(v_latency_total::numeric/v_latency_count)::integer else null end
         ),
         'usage',jsonb_build_object('hourly',v_hourly,'daily',v_daily),
         'performance',jsonb_build_object('avgLatency',case when v_latency_count>0 then round(v_latency_total::numeric/v_latency_count)::integer else null end,'measuredRequests',v_latency_count),
         'errors',jsonb_build_object('total',v_errors,'statusCodes',v_statuses),
         'services',v_services,'users',v_users,'peakHours',v_peak,'statusCodes',v_statuses,
-        'comparison',jsonb_build_object('previousRequests',coalesce(v_prev_start,0),'previousWeightedUsage',coalesce(v_prev_end,0)),
+        'comparison',jsonb_build_object('previousRequests',coalesce(v_prev_requests,0),'previousWeightedUsage',coalesce(v_prev_weighted,0)),
         'dataQuality',v_quality
       );
 
@@ -477,10 +481,25 @@ end;
 $$;
 revoke all on function private.bmg_reports_enqueue_due() from public,anon,authenticated;
 
+create or replace function private.bmg_reports_tick()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare v_enqueued integer; v_processed integer;
+begin
+  v_enqueued := private.bmg_reports_enqueue_due();
+  v_processed := private.bmg_reports_process_queue();
+  return v_enqueued + v_processed;
+end;
+$;
+revoke all on function private.bmg_reports_tick() from public,anon,authenticated;
+
 select cron.schedule(
   'nox-reports-scheduler',
   '* * * * *',
-  'select private.bmg_reports_enqueue_due(); select private.bmg_reports_process_queue();'
+  'select private.bmg_reports_tick();'
 );
 
 commit;
