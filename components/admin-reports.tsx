@@ -187,6 +187,16 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       const rows:Record<string,unknown>[]=[];
       const overview=objectValue(data.overview||null);
       for(const [key,value] of Object.entries(overview))rows.push({section:"overview",metric:key,value});
+      const performance=objectValue(data.performance||null);
+      for(const [key,value] of Object.entries(performance))rows.push({section:"performance",metric:key,value});
+      const errors=objectValue(data.errors||null);
+      for(const [key,value] of Object.entries(errors))if(!Array.isArray(value))rows.push({section:"errors",metric:key,value});
+      const usage=objectValue(data.usage||null);
+      for(const series of ["hourly","daily"]){
+        const values=usage[series];
+        if(Array.isArray(values))for(const item of values)if(item&&typeof item==="object"&&!Array.isArray(item))
+          rows.push({section:"usage",series,...item as Record<string,unknown>});
+      }
       for(const key of ["services","users","statusCodes","peakHours"]){
         const values=data[key];
         if(Array.isArray(values)) for(const item of values) if(item&&typeof item==="object"&&!Array.isArray(item))
