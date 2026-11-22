@@ -45,7 +45,7 @@ const statusLabel = (value: string) => ({
 const objectValue = (value: Json | null): Record<string, Json> =>
   value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, Json> : {};
 
-export default function AdminReports() {
+export default function AdminReports({services}:{services:{slug:string;name:string}[]}) {
   const [supabase] = useState(() => { try { return getSupabaseBrowserClient(); } catch { return null; } });
   const [userId,setUserId] = useState("");
   const [templates,setTemplates] = useState<Template[]>([]);
@@ -210,7 +210,7 @@ export default function AdminReports() {
           {form.frequency==="weekly"&&<label>يوم التنفيذ<select value={form.weekday} onChange={e=>patch({weekday:Number(e.target.value)})}><option value={1}>الاثنين</option><option value={2}>الثلاثاء</option><option value={3}>الأربعاء</option><option value={4}>الخميس</option><option value={5}>الجمعة</option><option value={6}>السبت</option><option value={7}>الأحد</option></select></label>}
           {form.frequency==="monthly"&&<label>يوم الشهر<input type="number" min="1" max="28" value={form.monthday} onChange={e=>patch({monthday:Math.max(1,Math.min(28,Number(e.target.value)))})}/><small>من 1 إلى 28 لضمان وجود موعد في كل شهر.</small></label>}
         </>}
-        <label>الخدمة<select value={form.service} onChange={e=>patch({service:e.target.value})}><option value="">كل الخدمات</option>{/* loaded services are represented by the filter value; options below come from live catalog */}</select></label>
+        <label>الخدمة<select value={form.service} onChange={e=>patch({service:e.target.value})}><option value="">كل الخدمات</option>{services.map(service=><option key={service.slug} value={service.slug}>{service.name}</option>)}</select></label>
         <label>المستخدم<select value={form.userId} onChange={e=>patch({userId:e.target.value})}><option value="">كل المستخدمين</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.display_name||p.email||p.id}</option>)}</select></label>
         <label>المجال<input value={form.category} onChange={e=>patch({category:e.target.value})} placeholder="مثال: AI"/></label>
         <label>HTTP Status<select value={form.statusCode} onChange={e=>patch({statusCode:e.target.value})}><option value="">كل الحالات</option>{[200,201,400,401,403,404,408,429,500,502,503,504].map(x=><option key={x} value={x}>{x}</option>)}</select></label>
