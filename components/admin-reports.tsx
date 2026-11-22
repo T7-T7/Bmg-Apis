@@ -150,7 +150,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
     if(!supabase)return;
     setBusy(true);setError("");setNotice("");
     try {
-      const {data,error}=await supabase.rpc("bmg_admin_queue_report",{p_template_id:template.id,p_period_days:template.period_days});
+      const {error}=await supabase.rpc("bmg_admin_queue_report",{p_template_id:template.id,p_period_days:template.period_days});
       if(error)throw error;
       setNotice("تم وضع التقرير في قائمة الإنشاء. سيظهر هنا بعد معالجة المهمة.");
       await load();
