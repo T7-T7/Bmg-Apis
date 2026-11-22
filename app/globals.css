@@ -532,7 +532,6 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 
 
 /* NOX user-facing interface: graphite / Cloudflare-inspired dark palette */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 .user-shell{
  color-scheme:dark;
  --bg:#0e0f11;--paper:#15171a;--surface:#1b1d21;--surface-2:#2a2d33;
