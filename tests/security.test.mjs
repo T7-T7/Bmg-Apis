@@ -106,29 +106,27 @@ test("public status RPC exposes only bounded public incident updates", () => {
 test("API key deletion is permanent, serialized with authorization, and audited without secrets", () => {
   const sql = read("../supabase/migrations/20261122231638_hard_delete_api_keys.sql");
   assert.match(sql, /pg_advisory_xact_lock/i);
-  assert.match(sql, /delete from private\\.api_usage/i);
-  assert.match(sql, /delete from private\\.api_keys/i);
-  assert.match(sql, /bmg_revoke_api_key[\\s\\S]*select public\\.bmg_delete_api_key/i);
-  assert.match(sql, /bmg_admin_revoke_api_key[\\s\\S]*select public\\.bmg_admin_delete_api_key/i);
-  assert.match(sql, /api_key\\.admin_delete|api_key\\.delete/i);
-  assert.doesNotMatch(sql, /set revoked_at\\s*=/i);
+  assert.match(sql, /delete from private\.api_usage/i);
+  assert.match(sql, /delete from private\.api_keys/i);
+  assert.match(sql, /bmg_revoke_api_key[\s\S]*select public\.bmg_delete_api_key/i);
+  assert.match(sql, /bmg_admin_revoke_api_key[\s\S]*select public\.bmg_admin_delete_api_key/i);
+  assert.match(sql, /api_key\.admin_delete|api_key\.delete/i);
+  assert.doesNotMatch(sql, /set revoked_at\s*=/i);
 });
 
 test("retired admin features are unscheduled and removed without cascading unrelated tables", () => {
   const sql = read("../supabase/migrations/20261122232258_remove_retired_admin_features.sql");
   assert.match(sql, /nox-reports-scheduler/i);
   assert.match(sql, /nox-webhook-delivery-worker/i);
-  for (const table of [
-    "public.api_submissions",
-    "public.api_webhooks",
-    "public.api_webhook_deliveries",
-    "public.report_templates",
-    "public.report_runs",
-    "public.report_run_attempts",
-    "private.api_health_checks",
-  ]) assert.match(sql, new RegExp("drop table if exists " + table.replace(".", "\\\\."), "i"));
-  assert.match(sql, /delete from vault\\.secrets/i);
-  assert.match(sql, /drop function if exists public\\.bmg_webhook_claim_deliveries/i);
-  assert.match(sql, /drop function if exists private\\.bmg_reports_tick/i);
+  assert.match(sql, /drop table if exists public\.api_submissions/i);
+  assert.match(sql, /drop table if exists public\.api_webhooks/i);
+  assert.match(sql, /drop table if exists public\.api_webhook_deliveries/i);
+  assert.match(sql, /drop table if exists public\.report_templates/i);
+  assert.match(sql, /drop table if exists public\.report_runs/i);
+  assert.match(sql, /drop table if exists public\.report_run_attempts/i);
+  assert.match(sql, /drop table if exists private\.api_health_checks/i);
+  assert.match(sql, /delete from vault\.secrets/i);
+  assert.match(sql, /drop function if exists public\.bmg_webhook_claim_deliveries/i);
+  assert.match(sql, /drop function if exists private\.bmg_reports_tick/i);
   assert.doesNotMatch(sql, /drop table[^;]*cascade/i);
 });
