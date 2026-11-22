@@ -1,5 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
+declare const Deno: {
+  env: { get(name: string): string | undefined };
+  serve(handler: (request: Request) => Response | Promise<Response>): void;
+};
+
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type, x-worker-token",
