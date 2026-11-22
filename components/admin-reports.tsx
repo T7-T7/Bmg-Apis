@@ -45,6 +45,11 @@ const statusLabel = (value: string) => ({
 }[value] || value);
 const objectValue = (value: Json | null): Record<string, Json> =>
   value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, Json> : {};
+function visibleReportData(run: ReportRun): Record<string, Json> {
+  const aliases: Record<string,string> = {peak_hours:"peakHours",status_codes:"statusCodes"};
+  const allowed = new Set([...run.sections.map(section=>aliases[section]||section),"comparison","dataQuality"]);
+  return Object.fromEntries(Object.entries(objectValue(run.report_data)).filter(([key])=>allowed.has(key)));
+}
 
 export default function AdminReports({services}:{services:{slug:string;name:string}[]}) {
   const [supabase] = useState(() => { try { return getSupabaseBrowserClient(); } catch { return null; } });
@@ -164,12 +169,12 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
 
   const exportRun = (run: ReportRun,format:"json"|"csv") => {
     if(!run.report_data)return;
-    const data=objectValue(run.report_data);
+    const data=visibleReportData(run);
     const filename="nox-report-"+run.id.slice(0,8);
     let content="";
     if(format==="json") content=JSON.stringify({
       platform:"NOX APIS",name:run.template_name,period:{start:run.period_start,end:run.period_end,timezone:run.timezone},
-      summary:run.executive_summary,sections:run.sections,data:run.report_data,dataQuality:run.data_quality
+      summary:run.executive_summary,sections:run.sections,data,dataQuality:run.data_quality
     },null,2);
     else {
       const rows:Record<string,unknown>[]=[];
@@ -249,7 +254,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       <p className={styles.hint}>الفترة: {date(selected.period_start)} — {date(selected.period_end)} · المنطقة: {selected.timezone}</p>
       {selected.last_error&&<div className={styles.error}>آخر خطأ: {selected.last_error}</div>}
       {selected.email_status==="not_configured"&&<div className={styles.info}>لم يُرسل بريد إلكتروني: لم يتم إعداد مزوّد بريد. إشعارات المستلمين داخل المنصة منفصلة عن البريد.</div>}
-      {attempts.length>0&&<div className={styles.attempts}><b>سجل محاولات الإنشاء</b>{attempts.map(item=><div key={item.id}><span>#{item.attempt_number} · {statusLabel(item.status)}</span><small>{item.message}</small><time>{date(item.created_at)}</time></div>)}</div>}{selected.report_data&&<pre className={styles.json}>{JSON.stringify(Object.fromEntries(Object.entries(objectValue(selected.report_data)).filter(([key])=>new Set([...selected.sections.map(section=>({peak_hours:"peakHours",status_codes:"statusCodes"} as Record<string,string>)[section]||section),"comparison","dataQuality"]).has(key))),null,2)}</pre>}
+      {attempts.length>0&&<div className={styles.attempts}><b>سجل محاولات الإنشاء</b>{attempts.map(item=><div key={item.id}><span>#{item.attempt_number} · {statusLabel(item.status)}</span><small>{item.message}</small><time>{date(item.created_at)}</time></div>)}</div>}{selected.report_data&&<pre className={styles.json}>{JSON.stringify(visibleReportData(selected),null,2)}</pre>}
       <div className={styles.actions}><button type="button" disabled={!selected.report_data} onClick={()=>exportRun(selected,"json")}>تنزيل JSON</button><button type="button" disabled={!selected.report_data} onClick={()=>exportRun(selected,"csv")}>تنزيل CSV</button><button type="button" disabled={!selected.report_data} onClick={()=>window.print()}>طباعة / PDF</button></div>
     </section>}
   </div>;
