@@ -7,8 +7,9 @@ import type { User } from "@supabase/supabase-js";
 import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
+import AdminWebhooks from "./admin-webhooks";
 
-type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports";
+type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports" | "webhooks";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string; reviewed_at:string|null };
@@ -28,7 +29,7 @@ type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:numbe
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
  {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
- {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"},{id:"exports",label:"مركز التصدير"}
+ {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"},{id:"exports",label:"مركز التصدير"},{id:"webhooks",label:"Webhooks"}
 ];
 const blankService = {id:"",slug:"",name:"",description:"",category:"AI",endpoint_path:"",http_method:"POST",docs_markdown:"",status:"active",source_type:"official",weight:1};
 const label = (value:string) => ({basic:"Basic",pro:"Pro",premium:"Premium",user:"مستخدم",admin:"مشرف",owner:"مالك",active:"نشط",suspended:"موقوف",pending:"قيد المراجعة",approved:"مقبول",rejected:"مرفوض",changes_requested:"مطلوب تعديل",investigating:"قيد التحقيق",identified:"تم تحديد السبب",monitoring:"تحت المراقبة",resolved:"تم الحل",minor:"منخفض",major:"مرتفع",critical:"حرج"} as Record<string,string>)[value] || value;
@@ -591,6 +592,7 @@ export default function AdminConsole(){
     {!dependencies.length&&<p className={styles.empty}>لم يتم تعريف اعتماديات بعد.</p>}
    </section>}
    {tab==="maintenance"&&<section className={styles.panel}><h2>وضع الصيانة</h2><div className={styles.form}><label>النطاق<select value={maintenanceForm.service_id} onChange={e=>setMaintenanceForm({...maintenanceForm,service_id:e.target.value})}><option value="">كل الخدمات (عام)</option>{services.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>رسالة الصيانة<textarea value={maintenanceForm.message} onChange={e=>setMaintenanceForm({...maintenanceForm,message:e.target.value})}/></label><div className={styles.formGrid}><label>البداية<input type="datetime-local" value={maintenanceForm.starts_at} onChange={e=>setMaintenanceForm({...maintenanceForm,starts_at:e.target.value})}/></label><label>النهاية<input type="datetime-local" value={maintenanceForm.ends_at} onChange={e=>setMaintenanceForm({...maintenanceForm,ends_at:e.target.value})}/></label></div><label className={styles.check}><input type="checkbox" checked={maintenanceForm.enabled} onChange={e=>setMaintenanceForm({...maintenanceForm,enabled:e.target.checked})}/> تفعيل الصيانة عند الحفظ</label><button className={styles.primary} onClick={()=>void saveMaintenance()}>حفظ إعداد الصيانة</button></div>{maintenance.map(m=><div className={styles.auditRow} key={m.id}><b>{m.service_id?services.find(s=>s.id===m.service_id)?.name||"خدمة":"كل الخدمات"}</b><span>{m.message}</span><time>{m.enabled?"مفعلة":"متوقفة"}</time><button onClick={()=>void markMaintenance(m)}>{m.enabled?"إيقاف":"تفعيل"}</button></div>)}</section>}
+   {tab==="webhooks"&&(role==="admin"||role==="owner")&&<AdminWebhooks/>}
   </section>
  </div>;
 }
