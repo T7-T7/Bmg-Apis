@@ -16,7 +16,8 @@ create index if not exists user_feedback_user_created_idx
 
 alter table public.user_feedback enable row level security;
 
-grant select, insert, update on table public.user_feedback to authenticated;
+grant select, insert on table public.user_feedback to authenticated;
+grant update (status) on table public.user_feedback to authenticated;
 revoke all on table public.user_feedback from anon;
 
 drop policy if exists "Users can submit own feedback" on public.user_feedback;
@@ -32,6 +33,7 @@ create policy "Users can read own feedback"
   using (auth.uid() = user_id);
 
 drop policy if exists "Users cannot update feedback" on public.user_feedback;
+drop policy if exists "Admins can read all feedback" on public.user_feedback;
 create policy "Admins can read all feedback"
   on public.user_feedback for select
   to authenticated
