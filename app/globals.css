@@ -539,7 +539,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
  --ink:#f4f4f5;--muted:#a1a7b3;--dim:#777f8d;--line:#30343b;--line-soft:#252930;
  --accent:#f6821f;--accent-dark:#fbad41;--lime:#fbad41;--green:#4cc38a;--red:#ed6a64;
  --radius:14px;
- background:var(--bg);color:var(--ink);font-family:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;
+ background:var(--bg);color:var(--ink);font-family:"Space Grotesk","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;
 }
 body:has(.user-shell),html:has(.user-shell){background:#0e0f11!important;color-scheme:dark}
 .user-shell .app-frame{min-height:100vh;display:block;background:var(--bg)}
