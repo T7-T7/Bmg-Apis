@@ -103,47 +103,35 @@ test("public status RPC exposes only bounded public incident updates", () => {
   assert.match(sql, /grant execute on function public\.bmg_get_public_status\(\) to anon,authenticated/i);
 });
 
-test("webhook delivery is admin-managed, signed, retried, and keeps secrets in Vault", () => {
-  const sql = read("../supabase/migrations/20261122103000_add_webhook_delivery_control_plane.sql");
-  const worker = read("../supabase/functions/nox-webhook-worker/index.ts");
-  assert.match(sql, /create table if not exists public\.api_webhooks/i);
-  assert.match(sql, /create table if not exists public\.api_webhook_deliveries/i);
-  assert.match(sql, /enable row level security/i);
-  assert.match(sql, /private\.bmg_is_admin\(\)/i);
-  assert.match(sql, /vault\.create_secret\(p_secret/i);
-  assert.match(sql, /nox_webhook_worker_token/i);
-  assert.match(sql, /create extension if not exists pg_net/i);
-  assert.match(sql, /cron\.schedule\([\s\S]*nox-webhook-delivery-worker/i);
-  assert.match(sql, /revoke all on function public\.bmg_webhook_claim_deliveries[\s\S]*from public,anon,authenticated/i);
-  assert.match(sql, /grant execute on function public\.bmg_webhook_claim_deliveries[\s\S]*to service_role/i);
-  assert.match(sql, /least\(21600,30 \* \(2 \^/i);
-  assert.match(worker, /HMAC/);
-  assert.match(worker, /X-NOX-Signature/);
-  assert.match(worker, /redirect: "manual"/);
-  assert.match(worker, /AbortSignal\.timeout\(10000\)/);
-  assert.match(worker, /safeTarget/);
+test("API key deletion is permanent, serialized with authorization, and audited without secrets", () => {
+  const sql = read("../supabase/migrations/20261122231638_hard_delete_api_keys.sql");
+  assert.match(sql, /pg_advisory_xact_lock/i);
+  assert.match(sql, /delete from private\.api_usage/i);
+  assert.match(sql, /delete from private\.api_keys/i);
+  assert.match(sql, /bmg_revoke_api_key[\s\S]*select public\.bmg_delete_api_key/i);
+  assert.match(sql, /bmg_admin_revoke_api_key[\s\S]*select public\.bmg_admin_delete_api_key/i);
+  assert.match(sql, /api_key\.admin_delete|api_key\.delete/i);
+  assert.doesNotMatch(sql, /set revoked_at\s*=/i);
+  const notificationCleanup = read("../supabase/migrations/20261122233346_hard_delete_api_key_notifications.sql");
+  assert.match(notificationCleanup, /delete from public\.user_notifications/i);
+  assert.match(notificationCleanup, /metadata->>'key_id'/i);
 });
 
-
-test("scheduled reports are admin-only, persisted, retried, and driven by hourly usage rollups", () => {
-  const sql = read("../supabase/migrations/20261122120000_add_scheduled_reports.sql");
-  const ui = read("../components/admin-reports.tsx");
-  assert.match(sql, /create table if not exists public\.report_templates/i);
-  assert.match(sql, /create table if not exists public\.report_runs/i);
-  assert.match(sql, /create table if not exists public\.report_run_attempts/i);
-  assert.match(sql, /enable row level security/i);
-  assert.match(sql, /private\.bmg_is_admin\(\)/i);
-  assert.match(sql, /private\.api_usage_hourly/i);
-  assert.match(sql, /aggregated_at is null/i);
-  assert.match(sql, /max_attempts integer not null default 3/i);
-  assert.match(sql, /status=case when attempts>=max_attempts then 'failed' else 'queued' end/i);
-  assert.match(sql, /private\.bmg_report_next_run/i);
-  assert.match(sql, /pg_timezone_names/i);
-  assert.match(sql, /cron\.schedule\([\s\S]*nox-reports-scheduler/i);
-  assert.match(sql, /user_notifications/i);
-  assert.match(sql, /revoke all on function public\.bmg_admin_queue_report[\s\S]*from public,anon/i);
-  assert.match(ui, /bmg_admin_queue_report/);
-  assert.match(ui, /report_run_attempts/);
-  assert.match(ui, /not_configured/);
-  assert.doesNotMatch(sql, /delete from public\.report_runs/i);
+test("retired admin features are unscheduled and removed without cascading unrelated tables", () => {
+  const sql = read("../supabase/migrations/20261122232258_remove_retired_admin_features.sql");
+  assert.match(sql, /nox-reports-scheduler/i);
+  assert.match(sql, /nox-webhook-delivery-worker/i);
+  assert.match(sql, /drop table if exists public\.api_submissions/i);
+  assert.match(sql, /drop table if exists public\.api_webhooks/i);
+  assert.match(sql, /drop table if exists public\.api_webhook_deliveries/i);
+  assert.match(sql, /drop table if exists public\.report_templates/i);
+  assert.match(sql, /drop table if exists public\.report_runs/i);
+  assert.match(sql, /drop table if exists public\.report_run_attempts/i);
+  assert.match(sql, /drop table if exists private\.api_health_checks/i);
+  assert.match(sql, /delete from vault\.secrets/i);
+  assert.match(sql, /drop function if exists public\.bmg_webhook_claim_deliveries/i);
+  assert.match(sql, /drop function if exists private\.bmg_reports_tick/i);
+  assert.doesNotMatch(sql, /drop table[^;]*cascade/i);
+  const extensionCleanup = read("../supabase/migrations/20261122233505_remove_unused_pg_net_extension.sql");
+  assert.match(extensionCleanup, /drop extension if exists pg_net/i);
 });

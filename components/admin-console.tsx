@@ -11,7 +11,6 @@ import styles from "./admin-console.module.css";
 type Tab = "overview" | "analytics" | "users" | "keys" | "services" | "plans" | "audit" | "monitor";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
-type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string; reviewed_at:string|null };
 type Plan = { plan:string; requests_per_minute:number; max_api_keys:number; daily_weighted_limit:number; monthly_weighted_limit:number };
 type Audit = { id:number; actor_id:string|null; action:string; entity_type:string; entity_id:string|null; details:Record<string,unknown>; created_at:string };
 type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;actorEmail:string|null;action:string;entityType:string;entityId:string|null;details:Record<string,unknown>;createdAt:string};
@@ -52,7 +51,6 @@ export default function AdminConsole(){
  const [notice,setNotice]=useState("");
  const [profiles,setProfiles]=useState<Profile[]>([]);
  const [services,setServices]=useState<Service[]>([]);
- const [submissions,setSubmissions]=useState<Submission[]>([]);
  const [plans,setPlans]=useState<Plan[]>([]);
  const [audit,setAudit]=useState<Audit[]>([]);
  const [incidents,setIncidents]=useState<Incident[]>([]);
@@ -66,7 +64,6 @@ export default function AdminConsole(){
  const [moderatorCandidate,setModeratorCandidate]=useState("");
  const [serviceForm,setServiceForm]=useState(blankService);
  const [showServiceForm,setShowServiceForm]=useState(false);
- const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({});
  const [notification,setNotification]=useState({user_id:"all",title:"",body:"",type:"info"});
  const [incidentForm,setIncidentForm]=useState({title:"",description:"",severity:"minor",status:"investigating",affected_services:[] as string[]});
  const [maintenanceForm,setMaintenanceForm]=useState({service_id:"",message:"الخدمة تحت الصيانة مؤقتاً.",enabled:true,starts_at:"",ends_at:""});
@@ -106,10 +103,9 @@ export default function AdminConsole(){
   if(!supabase||!user)return;
   setBusy(true);setError("");
   try{
-   const [p,s,sub,pl,au,inc,iu,mw,k,al,dep]=await Promise.all([
+   const [p,s,pl,au,inc,iu,mw,k,al,dep]=await Promise.all([
     supabase.from("profiles").select("id,email,display_name,role,plan,plan_source,plan_expires_at,account_status,created_at").order("created_at",{ascending:false}),
     supabase.from("api_services").select("id,slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,archived_at,current_version,created_at").order("created_at",{ascending:false}),
-    supabase.from("api_submissions").select("id,user_id,name,slug,description,category,endpoint_url,http_method,documentation,review_status,review_note,created_at").order("created_at",{ascending:false}),
     supabase.from("api_plan_limits").select("plan,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").order("plan"),
     supabase.from("audit_logs").select("id,actor_id,action,entity_type,entity_id,details,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.from("incidents").select("id,title,description,severity,status,affected_services,started_at,resolved_at").order("started_at",{ascending:false}),
@@ -119,8 +115,8 @@ export default function AdminConsole(){
     supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle(),
     supabase.from("api_service_dependencies").select("id,service_id,depends_on_service_id,dependency_type,description,created_by,created_at").order("created_at",{ascending:false})
    ]);
-   for(const x of [p,s,sub,pl,au,inc,iu,mw,k,al,dep])if(x.error)throw x.error;
-   setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
+   for(const x of [p,s,pl,au,inc,iu,mw,k,al,dep])if(x.error)throw x.error;
+   setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);
    setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setIncidentUpdates((iu.data||[]) as IncidentUpdate[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);setDependencies((dep.data||[]) as ServiceDependency[]);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل بيانات الإدارة.");}
   finally{setBusy(false);}
@@ -146,7 +142,7 @@ export default function AdminConsole(){
  useEffect(()=>{if(ready&&user&&["admin","owner"].includes(role))void load()},[ready,user,role,load]);
  const filteredProfiles=useMemo(()=>profiles.filter(p=>[p.email,p.display_name,p.id,p.plan,p.role].some(v=>String(v||"").toLowerCase().includes(query.toLowerCase()))),[profiles,query]);
  const filteredServices=useMemo(()=>services.filter(s=>[s.name,s.slug,s.endpoint_path,s.category].some(v=>String(v||"").toLowerCase().includes(query.toLowerCase()))),[services,query]);
- const filteredKeys=useMemo(()=>apiKeys.filter(k=>(keyStatus==="all"||(keyStatus==="active"&&!k.revokedAt&&(!k.expiresAt||new Date(k.expiresAt)>new Date()))||(keyStatus==="revoked"&&!!k.revokedAt)||(keyStatus==="expired"&&!k.revokedAt&&!!k.expiresAt&&new Date(k.expiresAt)<=new Date()))&&[k.label,k.keyPrefix,k.email,k.displayName,k.userId,k.scopes.join(" ")].some(v=>String(v||"").toLowerCase().includes(keyQuery.toLowerCase()))),[apiKeys,keyStatus,keyQuery]);
+ const filteredKeys=useMemo(()=>apiKeys.filter(k=>(keyStatus==="all"||(keyStatus==="active"&&(!k.expiresAt||new Date(k.expiresAt)>new Date()))||(keyStatus==="expired"&&!!k.expiresAt&&new Date(k.expiresAt)<=new Date()))&&[k.label,k.keyPrefix,k.email,k.displayName,k.userId,k.scopes.join(" ")].some(v=>String(v||"").toLowerCase().includes(keyQuery.toLowerCase()))),[apiKeys,keyStatus,keyQuery]);
  const loadAnalytics=useCallback(async()=>{
   if(!supabase)return;
   setBusy(true);setError("");
@@ -198,8 +194,7 @@ export default function AdminConsole(){
    requests:{name:"request-logs",rows:requestLogs.map(x=>({id:x.id,createdAt:x.createdAt,userId:x.userId,displayName:x.displayName,email:x.email,keyLabel:x.keyLabel,service:x.service,method:x.method,status:x.status,latency:x.latency,weight:x.weight}))},
    users:{name:"users",rows:profiles.map(x=>({id:x.id,email:x.email,displayName:x.display_name,role:x.role,plan:x.plan,planSource:x.plan_source,planExpiresAt:x.plan_expires_at,accountStatus:x.account_status,createdAt:x.created_at}))},
    services:{name:"services",rows:services.map(x=>({id:x.id,slug:x.slug,name:x.name,category:x.category,status:x.status,method:x.http_method,path:x.endpoint_path,weight:x.weight,version:x.current_version,archivedAt:x.archived_at}))},
-   submissions:{name:"submissions",rows:submissions.map(x=>({id:x.id,userId:x.user_id,name:x.name,slug:x.slug,category:x.category,status:x.review_status,createdAt:x.created_at,reviewedAt:x.reviewed_at}))},
-   keys:{name:"api-keys",rows:apiKeys.map(x=>({id:x.id,userId:x.userId,displayName:x.displayName,email:x.email,label:x.label,keyPrefix:x.keyPrefix,scopes:x.scopes.join(" "),createdAt:x.createdAt,lastUsedAt:x.lastUsedAt,expiresAt:x.expiresAt,revokedAt:x.revokedAt}))},
+   keys:{name:"api-keys",rows:apiKeys.map(x=>({id:x.id,userId:x.userId,displayName:x.displayName,email:x.email,label:x.label,keyPrefix:x.keyPrefix,scopes:x.scopes.join(" "),createdAt:x.createdAt,lastUsedAt:x.lastUsedAt,expiresAt:x.expiresAt}))},
    incidents:{name:"incidents",rows:incidents.map(x=>({id:x.id,title:x.title,severity:x.severity,status:x.status,affectedServices:x.affected_services.join(" "),startedAt:x.started_at,resolvedAt:x.resolved_at}))},
    maintenance:{name:"maintenance",rows:maintenance.map(x=>({id:x.id,serviceId:x.service_id,enabled:x.enabled,message:x.message,startsAt:x.starts_at,endsAt:x.ends_at}))}
   };
@@ -316,18 +311,7 @@ export default function AdminConsole(){
   }catch(e){setError(e instanceof Error?e.message:"تعذر تغيير حالة الأرشفة.");}
   finally{setBusy(false);}
  };
- const reviewSubmission=async(s:Submission,status:string)=>{
-  if(!supabase||!user)return;
-  setBusy(true);setError("");
-  try{
-   const note=reviewNotes[s.id]||"";
-   const {error}=await supabase.from("api_submissions").update({review_status:status,review_note:note,reviewer_id:user.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",s.id);
-   if(error)throw error;
-   await writeAudit("submission.review","api_submission",s.id,{status,note});
-   setNotice("تم تحديث قرار مراجعة الطلب.");await load();
-  }catch(e){setError(e instanceof Error?e.message:"تعذر مراجعة الطلب.");}
-  finally{setBusy(false);}
- };
+
  const savePlan=async(plan:Plan)=>{
   if(!supabase)return;
   setBusy(true);setError("");
@@ -349,10 +333,10 @@ export default function AdminConsole(){
   setBusy(true);setError("");
   try{const {error}=await supabase.rpc("bmg_admin_update_api_key",{p_id:keyForm.id,p_label:keyForm.label,p_expires_at:(keyForm.expiresAt?new Date(keyForm.expiresAt+"T23:59:59").toISOString():null) as string,p_scopes:scopes});if(error)throw error;setNotice("تم تحديث المفتاح وتسجيل العملية.");setKeyForm({id:"",label:"",expiresAt:"",scopes:"api:use"});await load()}catch(e){setError(e instanceof Error?e.message:"تعذر تحديث المفتاح.")}finally{setBusy(false)}
  };
- const revokeAdminKey=async(key:AdminKey)=>{
-  if(!supabase||!confirm("إلغاء مفتاح "+key.label+" فورًا؟"))return;
+ const deleteAdminKey=async(key:AdminKey)=>{
+  if(!supabase||!confirm("حذف مفتاح "+key.label+" نهائيًا؟ ستُحذف سجلات الطلبات المرتبطة به ولن يمكن استعادته."))return;
   setBusy(true);setError("");
-  try{const {data,error}=await supabase.rpc("bmg_admin_revoke_api_key",{p_id:key.id});if(error)throw error;if(!data)throw new Error("المفتاح ملغى بالفعل أو غير موجود.");setNotice("تم إلغاء المفتاح وإبلاغ صاحبه.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر إلغاء المفتاح.")}finally{setBusy(false)}
+  try{const {data,error}=await supabase.rpc("bmg_admin_delete_api_key",{p_id:key.id});if(error)throw error;if(!data)throw new Error("المفتاح غير موجود أو حُذف بالفعل.");setNotice("تم حذف المفتاح نهائيًا.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر حذف المفتاح نهائيًا.")}finally{setBusy(false)}
  };
  const sendNotification=async()=>{
   if(!supabase)return;
@@ -465,10 +449,10 @@ export default function AdminConsole(){
    <div><small>NOX APIS / NEXUS OF XPERIENCE</small><h1>{TABS.find(t=>t.id===tab)?.label}</h1><span className={styles.roleLabel}>{role==="owner"?"مالك المنصة":"مشرف المنصة"} · {user.email}</span></div>
    <div className={styles.headerActions}><button onClick={()=>void load()} disabled={busy}>تحديث البيانات</button><Link href="/dashboard">لوحة المطور</Link></div>
   </header>
-  <nav className={styles.adminTabs} aria-label="أقسام إدارة المنصة">{TABS.filter(t=>t.id!=="moderators"||role==="owner").map(t=><button type="button" key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""} aria-current={tab===t.id?"page":undefined}>{t.label}</button>)}</nav>
+  <nav className={styles.adminTabs} aria-label="أقسام إدارة المنصة">{TABS.map(t=><button type="button" key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""} aria-current={tab===t.id?"page":undefined}>{t.label}</button>)}</nav>
   <section className={styles.main}>
    {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}{busy&&<div className={styles.busy}>جارٍ تنفيذ العملية…</div>}
-   {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>طلبات قيد المراجعة</small><strong>{submissions.filter(s=>s.review_status==="pending").length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
+   {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
    {tab==="analytics"&&<section className={styles.panel}>
     <div className={styles.toolbar}><h2>تحليلات المنصة</h2><div className={styles.actions}><button onClick={()=>exportAnalytics("csv")} disabled={!analytics}>تصدير CSV</button><button onClick={()=>exportAnalytics("json")} disabled={!analytics}>تصدير JSON</button><button onClick={()=>window.print()}>تصدير PDF / طباعة</button></div></div>
     <div className={styles.formGrid}>
@@ -512,9 +496,9 @@ export default function AdminConsole(){
    </section>}
    {tab==="services"&&<section className={styles.panel}><div className={styles.toolbar}><h2>كتالوج الخدمات وإصداراتها</h2><div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="بحث عن خدمة"/><button className={styles.primary} onClick={()=>{setServiceForm(blankService);setShowServiceForm(true)}}>إضافة خدمة</button></div></div>{showServiceForm&&<div className={styles.form}><div className={styles.formGrid}><label>الاسم<input value={serviceForm.name} onChange={e=>setServiceForm({...serviceForm,name:e.target.value})}/></label><label>المعرّف (slug)<input value={serviceForm.slug} onChange={e=>setServiceForm({...serviceForm,slug:e.target.value})}/></label><label>المجال<input value={serviceForm.category} onChange={e=>setServiceForm({...serviceForm,category:e.target.value})}/></label><label>المسار الداخلي<input value={serviceForm.endpoint_path} onChange={e=>setServiceForm({...serviceForm,endpoint_path:e.target.value})} placeholder="/api/v1/..."/></label><label>HTTP Method<select value={serviceForm.http_method} onChange={e=>setServiceForm({...serviceForm,http_method:e.target.value})}>{["GET","POST","PUT","PATCH","DELETE"].map(x=><option key={x}>{x}</option>)}</select></label><label>وزن الخدمة (1–100)<input type="number" min="1" max="100" value={serviceForm.weight} onChange={e=>setServiceForm({...serviceForm,weight:Number(e.target.value)})}/></label><label>الحالة<select value={serviceForm.status} onChange={e=>setServiceForm({...serviceForm,status:e.target.value})}><option value="active">نشطة</option><option value="maintenance">صيانة</option><option value="disabled">معطلة</option></select></label></div><label>الوصف<textarea value={serviceForm.description} onChange={e=>setServiceForm({...serviceForm,description:e.target.value})}/></label><label>التوثيق Markdown<textarea value={serviceForm.docs_markdown} onChange={e=>setServiceForm({...serviceForm,docs_markdown:e.target.value})}/></label><div className={styles.actions}><button onClick={()=>setShowServiceForm(false)}>إلغاء</button><button className={styles.primary} disabled={busy} onClick={()=>void saveService()}>حفظ ونشر</button></div></div>}{versionService&&<div className={styles.form}><div className={styles.toolbar}><h3>إصدارات {versionService.name}</h3><button onClick={()=>{setVersionService(null);setServiceVersions([])}}>إغلاق</button></div>{serviceVersions.map(v=><div className={styles.auditRow} key={v.id}><b>v{v.version}</b><span>{v.changeNote||"—"}</span><time>{date(v.createdAt)}</time><button disabled={busy||v.version===versionService.current_version} onClick={()=>void rollbackServiceVersion(v)}>استرجاع هذا الإصدار</button></div>)}</div>}<div className={styles.tableWrap}><table><thead><tr><th>الخدمة</th><th>المسار</th><th>الحالة</th><th>الوزن</th><th>الإصدار</th><th>إجراء</th></tr></thead><tbody>{filteredServices.map(s=><tr key={s.id}><td><b>{s.name}</b><small>{s.slug}</small></td><td dir="ltr">{s.http_method} {s.endpoint_path}</td><td>{s.archived_at?"مؤرشفة":label(s.status)}</td><td>{s.weight||1}</td><td>v{s.current_version||1}</td><td><div className={styles.actions}><button onClick={()=>{setServiceForm({...s});setShowServiceForm(true)}}>تعديل</button><button onClick={()=>void loadServiceVersions(s)}>الإصدارات</button><button onClick={()=>void archiveService(s)}>{s.archived_at?"استعادة":"أرشفة"}</button></div></td></tr>)}</tbody></table></div></section>}
    {tab==="plans"&&<section className={styles.panel}><h2>حدود مستويات المستخدمين</h2><p className={styles.hint}>هذه القيم هي الإعدادات الأساسية لكل مستوى، ويُحتسب الحد على Weighted Usage وليس عدد الطلبات الخام فقط. تجاوز الحدود يرسل تحذيرات ولا يوقف الطلبات.</p>{plans.map(p=><PlanEditor key={p.plan} plan={p} busy={busy} onSave={savePlan}/>)}{adminLimit&&<AdminLimitEditor value={adminLimit} busy={busy} onSave={saveAdminLimit}/>}</section>}
-   {tab==="keys"&&<section className={styles.panel}><div className={styles.toolbar}><h2>إدارة مفاتيح المستخدمين</h2><div><input value={keyQuery} onChange={e=>setKeyQuery(e.target.value)} placeholder="بحث بالمستخدم أو المفتاح"/><select value={keyStatus} onChange={e=>setKeyStatus(e.target.value)}><option value="all">كل المفاتيح</option><option value="active">نشطة</option><option value="revoked">ملغاة</option><option value="expired">منتهية</option></select></div></div>
+   {tab==="keys"&&<section className={styles.panel}><div className={styles.toolbar}><h2>إدارة مفاتيح المستخدمين</h2><div><input value={keyQuery} onChange={e=>setKeyQuery(e.target.value)} placeholder="بحث بالمستخدم أو المفتاح"/><select value={keyStatus} onChange={e=>setKeyStatus(e.target.value)}><option value="all">كل المفاتيح</option><option value="active">نشطة</option><option value="expired">منتهية</option></select></div></div>
     {keyForm.id&&<div className={styles.form}><h3>تعديل المفتاح</h3><div className={styles.formGrid}><label>اسم المفتاح<input value={keyForm.label} onChange={e=>setKeyForm({...keyForm,label:e.target.value})}/></label><label>تاريخ الانتهاء<input type="date" value={keyForm.expiresAt} onChange={e=>setKeyForm({...keyForm,expiresAt:e.target.value})}/></label></div><label>Scopes مفصولة بفواصل<input value={keyForm.scopes} onChange={e=>setKeyForm({...keyForm,scopes:e.target.value})} placeholder="api:use, service:aql-gemini"/></label><p className={styles.hint}>استخدم api:use دائمًا، ويمكن تقييد المفتاح بخدمة مثل service:aql-gemini أو مجال مثل category:ai.</p><div className={styles.actions}><button onClick={()=>setKeyForm({id:"",label:"",expiresAt:"",scopes:"api:use"})}>إلغاء</button><button className={styles.primary} disabled={busy} onClick={()=>void saveAdminKey()}>حفظ التعديلات</button></div></div>}
-    <div className={styles.tableWrap}><table><thead><tr><th>صاحب المفتاح</th><th>المفتاح</th><th>الصلاحيات</th><th>آخر استخدام</th><th>الانتهاء</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>{filteredKeys.map(k=><tr key={k.id}><td><b>{k.displayName||"بدون اسم"}</b><small>{k.email}</small></td><td><b>{k.label}</b><small dir="ltr">{k.keyPrefix}••••</small></td><td><small>{k.scopes.join(" · ")}</small></td><td>{date(k.lastUsedAt)}</td><td>{date(k.expiresAt)}</td><td>{k.revokedAt?"ملغى":k.expiresAt&&new Date(k.expiresAt)<=new Date()?"منتهي":"نشط"}</td><td><div className={styles.actions}><button disabled={!!k.revokedAt||busy} onClick={()=>setKeyForm({id:k.id,label:k.label,expiresAt:k.expiresAt?.slice(0,10)||"",scopes:k.scopes.join(", ")})}>تعديل</button><button disabled={!!k.revokedAt||busy} onClick={()=>void revokeAdminKey(k)}>إلغاء</button></div></td></tr>)}</tbody></table></div>{!filteredKeys.length&&<p className={styles.empty}>لا توجد مفاتيح مطابقة.</p>}</section>}
+    <div className={styles.tableWrap}><table><thead><tr><th>صاحب المفتاح</th><th>المفتاح</th><th>الصلاحيات</th><th>آخر استخدام</th><th>الانتهاء</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>{filteredKeys.map(k=><tr key={k.id}><td><b>{k.displayName||"بدون اسم"}</b><small>{k.email}</small></td><td><b>{k.label}</b><small dir="ltr">{k.keyPrefix}••••</small></td><td><small>{k.scopes.join(" · ")}</small></td><td>{date(k.lastUsedAt)}</td><td>{date(k.expiresAt)}</td><td>{k.expiresAt&&new Date(k.expiresAt)<=new Date()?"منتهي":"نشط"}</td><td><div className={styles.actions}><button disabled={busy} onClick={()=>setKeyForm({id:k.id,label:k.label,expiresAt:k.expiresAt?.slice(0,10)||"",scopes:k.scopes.join(", ")})}>تعديل</button><button disabled={busy} onClick={()=>void deleteAdminKey(k)}>حذف نهائي</button></div></td></tr>)}</tbody></table></div>{!filteredKeys.length&&<p className={styles.empty}>لا توجد مفاتيح مطابقة.</p>}</section>}
    {tab==="analytics"&&<section className={styles.panel}>
      <div className={styles.toolbar}><div><h2>سجلات طلبات API</h2><p className={styles.hint}>سجلات آخر 24 ساعة كحد أقصى وفق سياسة الاحتفاظ. لا يتم عرض عناوين IP أو بيانات الأجهزة.</p></div><div className={styles.actions}><button onClick={()=>exportRequestLogs("csv")} disabled={!requestLogs.length}>CSV</button><button onClick={()=>exportRequestLogs("json")} disabled={!requestLogs.length}>JSON</button></div></div>
      <div className={styles.formGrid}>
