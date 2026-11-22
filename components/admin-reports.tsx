@@ -154,7 +154,6 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       if(error)throw error;
       setNotice("تم وضع التقرير في قائمة الإنشاء. سيظهر هنا بعد معالجة المهمة.");
       await load();
-      if(data) setSelected(runs.find(x=>x.id===data)||null);
     } catch(e) { setError(e instanceof Error?e.message:"تعذر طلب إنشاء التقرير."); }
     finally { setBusy(false); }
   };
