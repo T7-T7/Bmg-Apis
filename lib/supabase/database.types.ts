@@ -223,63 +223,6 @@ export type Database = {
         }
         Relationships: []
       }
-      api_submissions: {
-        Row: {
-          category: string
-          created_at: string
-          description: string
-          documentation: string
-          endpoint_url: string
-          healthcheck_config: Json
-          http_method: string
-          id: string
-          name: string
-          review_note: string | null
-          review_status: string
-          reviewed_at: string | null
-          reviewer_id: string | null
-          slug: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          category?: string
-          created_at?: string
-          description: string
-          documentation?: string
-          endpoint_url: string
-          healthcheck_config?: Json
-          http_method?: string
-          id?: string
-          name: string
-          review_note?: string | null
-          review_status?: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          slug: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          documentation?: string
-          endpoint_url?: string
-          healthcheck_config?: Json
-          http_method?: string
-          id?: string
-          name?: string
-          review_note?: string | null
-          review_status?: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          slug?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       audit_logs: {
         Row: {
           action: string
@@ -473,6 +416,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          created_at: string
+          details: string
+          id: string
+          page_path: string
+          rating: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details: string
+          id?: string
+          page_path?: string
+          rating: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          id?: string
+          page_path?: string
+          rating?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           body: string
@@ -506,171 +485,12 @@ export type Database = {
         }
         Relationships: []
       }
-      report_templates: {
-        Row: {
-          id: string; name: string; description: string; frequency: string; period_days: number;
-          timezone: string; schedule_hour: number; schedule_minute: number; schedule_weekday: number;
-          schedule_monthday: number; sections: string[]; filters: Json; recipient_ids: string[];
-          enabled: boolean; next_run_at: string | null; last_run_at: string | null;
-          created_by: string | null; created_at: string; updated_at: string;
-        }
-        Insert: {
-          id?: string; name: string; description?: string; frequency?: string; period_days?: number;
-          timezone?: string; schedule_hour?: number; schedule_minute?: number; schedule_weekday?: number;
-          schedule_monthday?: number; sections?: string[]; filters?: Json; recipient_ids?: string[];
-          enabled?: boolean; next_run_at?: string | null; last_run_at?: string | null;
-          created_by?: string | null; created_at?: string; updated_at?: string;
-        }
-        Update: {
-          id?: string; name?: string; description?: string; frequency?: string; period_days?: number;
-          timezone?: string; schedule_hour?: number; schedule_minute?: number; schedule_weekday?: number;
-          schedule_monthday?: number; sections?: string[]; filters?: Json; recipient_ids?: string[];
-          enabled?: boolean; next_run_at?: string | null; last_run_at?: string | null;
-          created_by?: string | null; created_at?: string; updated_at?: string;
-        }
-        Relationships: []
-      }
-      report_runs: {
-        Row: {
-          id: string; template_id: string | null; template_name: string; trigger_type: string; status: string;
-          period_start: string; period_end: string; period_days: number; timezone: string; sections: string[];
-          filters: Json; recipient_ids: string[]; report_data: Json | null; executive_summary: string | null;
-          data_quality: Json; attempts: number; max_attempts: number; last_error: string | null;
-          email_status: string; email_error: string | null; created_by: string | null; created_at: string;
-          started_at: string | null; completed_at: string | null;
-        }
-        Insert: {
-          id?: string; template_id?: string | null; template_name: string; trigger_type: string; status?: string;
-          period_start: string; period_end: string; period_days: number; timezone?: string; sections: string[];
-          filters?: Json; recipient_ids?: string[]; report_data?: Json | null; executive_summary?: string | null;
-          data_quality?: Json; attempts?: number; max_attempts?: number; last_error?: string | null;
-          email_status?: string; email_error?: string | null; created_by?: string | null; created_at?: string;
-          started_at?: string | null; completed_at?: string | null;
-        }
-        Update: {
-          id?: string; template_id?: string | null; template_name?: string; trigger_type?: string; status?: string;
-          period_start?: string; period_end?: string; period_days?: number; timezone?: string; sections?: string[];
-          filters?: Json; recipient_ids?: string[]; report_data?: Json | null; executive_summary?: string | null;
-          data_quality?: Json; attempts?: number; max_attempts?: number; last_error?: string | null;
-          email_status?: string; email_error?: string | null; created_by?: string | null; created_at?: string;
-          started_at?: string | null; completed_at?: string | null;
-        }
-        Relationships: []
-      }
-      report_run_attempts: {
-        Row: { id: number; report_id: string; attempt_number: number; status: string; message: string; created_at: string }
-        Insert: { id?: number; report_id: string; attempt_number: number; status: string; message?: string; created_at?: string }
-        Update: { id?: number; report_id?: string; attempt_number?: number; status?: string; message?: string; created_at?: string }
-        Relationships: []
-      }
-      api_webhooks: {
-        Row: {
-          id: string
-          name: string
-          target_url: string
-          event_types: string[]
-          enabled: boolean
-          secret_id: string
-          created_by: string | null
-          created_at: string
-          updated_at: string
-          last_delivery_at: string | null
-          last_success_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          target_url: string
-          event_types: string[]
-          enabled?: boolean
-          secret_id: string
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          last_delivery_at?: string | null
-          last_success_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          target_url?: string
-          event_types?: string[]
-          enabled?: boolean
-          secret_id?: string
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          last_delivery_at?: string | null
-          last_success_at?: string | null
-        }
-        Relationships: []
-      }
-      api_webhook_deliveries: {
-        Row: {
-          id: string
-          webhook_id: string
-          event_type: string
-          payload: Json
-          status: string
-          attempts: number
-          max_attempts: number
-          next_attempt_at: string
-          last_attempt_at: string | null
-          response_status: number | null
-          response_excerpt: string | null
-          last_error: string | null
-          delivered_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          webhook_id: string
-          event_type: string
-          payload: Json
-          status?: string
-          attempts?: number
-          max_attempts?: number
-          next_attempt_at?: string
-          last_attempt_at?: string | null
-          response_status?: number | null
-          response_excerpt?: string | null
-          last_error?: string | null
-          delivered_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          webhook_id?: string
-          event_type?: string
-          payload?: Json
-          status?: string
-          attempts?: number
-          max_attempts?: number
-          next_attempt_at?: string
-          last_attempt_at?: string | null
-          response_status?: number | null
-          response_excerpt?: string | null
-          last_error?: string | null
-          delivered_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      bmg_admin_queue_report: { Args: { p_period_days?: number; p_template_id: string }; Returns: string }
-      bmg_admin_create_webhook: {
-        Args: {
-          p_event_types: string[]
-          p_name: string
-          p_secret: string
-          p_target_url: string
-        }
-        Returns: string
-      }
+      bmg_admin_delete_api_key: { Args: { p_id: string }; Returns: boolean }
       bmg_admin_get_audit_logs: {
         Args: {
           p_action?: string
@@ -758,6 +578,7 @@ export type Database = {
           label: string
         }[]
       }
+      bmg_delete_api_key: { Args: { p_id: string }; Returns: boolean }
       bmg_get_admin_analytics: {
         Args: {
           p_category?: string
