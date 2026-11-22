@@ -661,7 +661,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      bmg_admin_queue_report: { Args: { p_period_days?: number; p_template_id: string }; Returns: string }\n      bmg_admin_create_webhook: {
+      bmg_admin_queue_report: { Args: { p_period_days?: number; p_template_id: string }; Returns: string }
+      bmg_admin_create_webhook: {
         Args: {
           p_event_types: string[]
           p_name: string
