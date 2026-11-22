@@ -21,6 +21,7 @@ type ReportRun = {
   started_at: string | null; completed_at: string | null;
 };
 type AdminProfile = { id: string; email: string | null; display_name: string | null; role: string };
+type RunAttempt = {id:number;report_id:string;attempt_number:number;status:string;message:string;created_at:string};
 type FormState = {
   id: string; name: string; description: string; frequency: string; periodDays: number; timezone: string;
   time: string; weekday: number; monthday: number; sections: string[]; service: string;
@@ -53,6 +54,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
   const [profiles,setProfiles] = useState<AdminProfile[]>([]);
   const [form,setForm] = useState<FormState>(EMPTY_FORM);
   const [selected,setSelected] = useState<ReportRun|null>(null);
+  const [attempts,setAttempts] = useState<RunAttempt[]>([]);
   const [busy,setBusy] = useState(false);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState("");
@@ -83,6 +85,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
   },[supabase]);
 
   useEffect(()=>{ void load(); },[load]);
+  useEffect(()=>{\n    if(!supabase||!selected){setAttempts([]);return;}\n    let active=true;\n    supabase.from("report_run_attempts").select("*").eq("report_id",selected.id).order("created_at",{ascending:true}).then(({data,error})=>{\n      if(!active)return;\n      if(error)setError(error.message);else setAttempts((data||[]) as RunAttempt[]);\n    });\n    return()=>{active=false;};\n  },[supabase,selected?.id]);
 
   const selectedTemplate = useMemo(()=>templates.find(x=>x.id===form.id)||null,[templates,form.id]);
   const patch = (value: Partial<FormState>) => setForm(current=>({...current,...value}));
@@ -202,7 +205,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       <div className={styles.grid}>
         <label>اسم القالب<input value={form.name} onChange={e=>patch({name:e.target.value})} placeholder="مثال: تقرير الاستخدام الأسبوعي"/></label>
         <label>وصف القالب<input value={form.description} onChange={e=>patch({description:e.target.value})} placeholder="وصف اختياري"/></label>
-        <label>نوع الجدولة<select value={form.frequency} onChange={e=>patch({frequency:e.target.value})}><option value="manual">يدوي فقط</option><option value="daily">يومي</option><option value="weekly">أسبوعي</option><option value="monthly">شهري</option></select></label>
+        <label>نوع الجدولة<select value={form.frequency} onChange={e=>patch({frequency:e.target.value,periodDays:e.target.value==="daily"?1:e.target.value==="weekly"?7:e.target.value==="monthly"?30:form.periodDays})}><option value="manual">يدوي فقط</option><option value="daily">يومي</option><option value="weekly">أسبوعي</option><option value="monthly">شهري</option></select></label>
         <label>الفترة التي يغطيها التقرير<select value={form.periodDays} onChange={e=>patch({periodDays:Number(e.target.value)})}><option value={1}>24 ساعة</option><option value={7}>7 أيام</option><option value={30}>30 يومًا</option><option value={90}>90 يومًا</option></select></label>
         {form.frequency!=="manual"&&<>
           <label>المنطقة الزمنية<select value={form.timezone} onChange={e=>patch({timezone:e.target.value})}><option value="UTC">UTC</option><option value="Africa/Cairo">Africa/Cairo</option><option value="Asia/Riyadh">Asia/Riyadh</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option></select></label>
@@ -246,7 +249,7 @@ export default function AdminReports({services}:{services:{slug:string;name:stri
       <p className={styles.hint}>الفترة: {date(selected.period_start)} — {date(selected.period_end)} · المنطقة: {selected.timezone}</p>
       {selected.last_error&&<div className={styles.error}>آخر خطأ: {selected.last_error}</div>}
       {selected.email_status==="not_configured"&&<div className={styles.info}>لم يُرسل بريد إلكتروني: لم يتم إعداد مزوّد بريد. إشعارات المستلمين داخل المنصة منفصلة عن البريد.</div>}
-      {selected.report_data&&<pre className={styles.json}>{JSON.stringify(selected.report_data,null,2)}</pre>}
+      {attempts.length>0&&<div className={styles.attempts}><b>سجل محاولات الإنشاء</b>{attempts.map(item=><div key={item.id}><span>#{item.attempt_number} · {statusLabel(item.status)}</span><small>{item.message}</small><time>{date(item.created_at)}</time></div>)}</div>}{selected.report_data&&<pre className={styles.json}>{JSON.stringify(Object.fromEntries(Object.entries(objectValue(selected.report_data)).filter(([key])=>new Set([...selected.sections.map(section=>({peak_hours:"peakHours",status_codes:"statusCodes"} as Record<string,string>)[section]||section),"comparison","dataQuality"]).has(key))),null,2)}</pre>}
       <div className={styles.actions}><button type="button" disabled={!selected.report_data} onClick={()=>exportRun(selected,"json")}>تنزيل JSON</button><button type="button" disabled={!selected.report_data} onClick={()=>exportRun(selected,"csv")}>تنزيل CSV</button><button type="button" disabled={!selected.report_data} onClick={()=>window.print()}>طباعة / PDF</button></div>
     </section>}
   </div>;
