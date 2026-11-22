@@ -8,8 +8,9 @@ import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 import AdminWebhooks from "./admin-webhooks";
+import AdminReports from "./admin-reports";
 
-type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports" | "webhooks";
+type Tab = "overview" | "analytics" | "users" | "moderators" | "logs" | "keys" | "services" | "submissions" | "plans" | "audit" | "notifications" | "incidents" | "maintenance" | "dependencies" | "exports" | "webhooks" | "reports";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
 type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string; reviewed_at:string|null };
@@ -28,7 +29,7 @@ type AdminRequestLog = {id:number;userId:string|null;displayName:string|null;ema
 type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
- {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
+ {id:"overview",label:"نظرة عامة"},{id:"analytics",label:"التحليلات"},{id:"reports",label:"التقارير المجدولة"},{id:"users",label:"المستخدمون"},{id:"moderators",label:"إدارة المشرفين"},{id:"logs",label:"سجلات الطلبات"},{id:"keys",label:"مفاتيح API"},{id:"services",label:"الخدمات"},{id:"submissions",label:"طلبات الإضافة"},
  {id:"plans",label:"المستويات والحدود"},{id:"audit",label:"سجل التدقيق"},{id:"notifications",label:"الإشعارات"},{id:"incidents",label:"الحوادث"},{id:"maintenance",label:"الصيانة"},{id:"dependencies",label:"اعتماديات الخدمات"},{id:"exports",label:"مركز التصدير"},{id:"webhooks",label:"Webhooks"}
 ];
 const blankService = {id:"",slug:"",name:"",description:"",category:"AI",endpoint_path:"",http_method:"POST",docs_markdown:"",status:"active",source_type:"official",weight:1};
@@ -464,6 +465,7 @@ export default function AdminConsole(){
   <section className={styles.main}>
    {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}{busy&&<div className={styles.busy}>جارٍ تنفيذ العملية…</div>}
    {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>طلبات قيد المراجعة</small><strong>{submissions.filter(s=>s.review_status==="pending").length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
+   {tab==="reports"&&(role==="admin"||role==="owner")&&<AdminReports services={services.map(x=>({slug:x.slug,name:x.name}))}/>}
    {tab==="analytics"&&<section className={styles.panel}>
     <div className={styles.toolbar}><h2>تحليلات المنصة</h2><div className={styles.actions}><button onClick={()=>exportAnalytics("csv")} disabled={!analytics}>تصدير CSV</button><button onClick={()=>exportAnalytics("json")} disabled={!analytics}>تصدير JSON</button><button onClick={()=>window.print()}>تصدير PDF / طباعة</button></div></div>
     <div className={styles.formGrid}>
