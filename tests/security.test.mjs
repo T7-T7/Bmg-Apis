@@ -132,4 +132,6 @@ test("retired admin features are unscheduled and removed without cascading unrel
   assert.match(sql, /drop function if exists public\.bmg_webhook_claim_deliveries/i);
   assert.match(sql, /drop function if exists private\.bmg_reports_tick/i);
   assert.doesNotMatch(sql, /drop table[^;]*cascade/i);
+  const extensionCleanup = read("../supabase/migrations/20261122233505_remove_unused_pg_net_extension.sql");
+  assert.match(extensionCleanup, /drop extension if exists pg_net/i);
 });
