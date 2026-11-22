@@ -11,7 +11,6 @@ import styles from "./admin-console.module.css";
 type Tab = "overview" | "analytics" | "users" | "keys" | "services" | "plans" | "audit" | "monitor";
 type Profile = { id:string; email:string|null; display_name:string|null; role:string; plan:string; plan_source:string; plan_expires_at:string|null; account_status:string; created_at:string };
 type Service = { id:string; slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:string; docs_markdown:string; status:string; source_type:string; weight:number; archived_at:string|null; current_version:number; created_at:string };
-type Submission = { id:string; user_id:string; name:string; slug:string; description:string; category:string; endpoint_url:string; http_method:string; documentation:string; review_status:string; review_note:string|null; created_at:string; reviewed_at:string|null };
 type Plan = { plan:string; requests_per_minute:number; max_api_keys:number; daily_weighted_limit:number; monthly_weighted_limit:number };
 type Audit = { id:number; actor_id:string|null; action:string; entity_type:string; entity_id:string|null; details:Record<string,unknown>; created_at:string };
 type AdminAuditEntry = {id:number;actorId:string|null;actorName:string|null;actorEmail:string|null;action:string;entityType:string;entityId:string|null;details:Record<string,unknown>;createdAt:string};
@@ -52,7 +51,6 @@ export default function AdminConsole(){
  const [notice,setNotice]=useState("");
  const [profiles,setProfiles]=useState<Profile[]>([]);
  const [services,setServices]=useState<Service[]>([]);
- const [submissions,setSubmissions]=useState<Submission[]>([]);
  const [plans,setPlans]=useState<Plan[]>([]);
  const [audit,setAudit]=useState<Audit[]>([]);
  const [incidents,setIncidents]=useState<Incident[]>([]);
@@ -66,7 +64,6 @@ export default function AdminConsole(){
  const [moderatorCandidate,setModeratorCandidate]=useState("");
  const [serviceForm,setServiceForm]=useState(blankService);
  const [showServiceForm,setShowServiceForm]=useState(false);
- const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({});
  const [notification,setNotification]=useState({user_id:"all",title:"",body:"",type:"info"});
  const [incidentForm,setIncidentForm]=useState({title:"",description:"",severity:"minor",status:"investigating",affected_services:[] as string[]});
  const [maintenanceForm,setMaintenanceForm]=useState({service_id:"",message:"الخدمة تحت الصيانة مؤقتاً.",enabled:true,starts_at:"",ends_at:""});
@@ -106,10 +103,9 @@ export default function AdminConsole(){
   if(!supabase||!user)return;
   setBusy(true);setError("");
   try{
-   const [p,s,sub,pl,au,inc,iu,mw,k,al,dep]=await Promise.all([
+   const [p,s,pl,au,inc,iu,mw,k,al,dep]=await Promise.all([
     supabase.from("profiles").select("id,email,display_name,role,plan,plan_source,plan_expires_at,account_status,created_at").order("created_at",{ascending:false}),
     supabase.from("api_services").select("id,slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,archived_at,current_version,created_at").order("created_at",{ascending:false}),
-    supabase.from("api_submissions").select("id,user_id,name,slug,description,category,endpoint_url,http_method,documentation,review_status,review_note,created_at").order("created_at",{ascending:false}),
     supabase.from("api_plan_limits").select("plan,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").order("plan"),
     supabase.from("audit_logs").select("id,actor_id,action,entity_type,entity_id,details,created_at").order("created_at",{ascending:false}).limit(100),
     supabase.from("incidents").select("id,title,description,severity,status,affected_services,started_at,resolved_at").order("started_at",{ascending:false}),
@@ -119,8 +115,8 @@ export default function AdminConsole(){
     supabase.from("api_admin_limits").select("id,requests_per_minute,max_api_keys,daily_weighted_limit,monthly_weighted_limit").eq("id",true).maybeSingle(),
     supabase.from("api_service_dependencies").select("id,service_id,depends_on_service_id,dependency_type,description,created_by,created_at").order("created_at",{ascending:false})
    ]);
-   for(const x of [p,s,sub,pl,au,inc,iu,mw,k,al,dep])if(x.error)throw x.error;
-   setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);setSubmissions((sub.data||[]) as Submission[]);
+   for(const x of [p,s,pl,au,inc,iu,mw,k,al,dep])if(x.error)throw x.error;
+   setProfiles((p.data||[]) as Profile[]);setServices((s.data||[]) as Service[]);
    setPlans((pl.data||[]) as Plan[]);setAudit((au.data||[]) as Audit[]);setIncidents((inc.data||[]) as Incident[]);setIncidentUpdates((iu.data||[]) as IncidentUpdate[]);setMaintenance((mw.data||[]) as Maintenance[]);setApiKeys((k.data||[]) as unknown as AdminKey[]);setAdminLimit((al.data||null) as AdminLimit|null);setDependencies((dep.data||[]) as ServiceDependency[]);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل بيانات الإدارة.");}
   finally{setBusy(false);}
@@ -198,7 +194,6 @@ export default function AdminConsole(){
    requests:{name:"request-logs",rows:requestLogs.map(x=>({id:x.id,createdAt:x.createdAt,userId:x.userId,displayName:x.displayName,email:x.email,keyLabel:x.keyLabel,service:x.service,method:x.method,status:x.status,latency:x.latency,weight:x.weight}))},
    users:{name:"users",rows:profiles.map(x=>({id:x.id,email:x.email,displayName:x.display_name,role:x.role,plan:x.plan,planSource:x.plan_source,planExpiresAt:x.plan_expires_at,accountStatus:x.account_status,createdAt:x.created_at}))},
    services:{name:"services",rows:services.map(x=>({id:x.id,slug:x.slug,name:x.name,category:x.category,status:x.status,method:x.http_method,path:x.endpoint_path,weight:x.weight,version:x.current_version,archivedAt:x.archived_at}))},
-   submissions:{name:"submissions",rows:submissions.map(x=>({id:x.id,userId:x.user_id,name:x.name,slug:x.slug,category:x.category,status:x.review_status,createdAt:x.created_at,reviewedAt:x.reviewed_at}))},
    keys:{name:"api-keys",rows:apiKeys.map(x=>({id:x.id,userId:x.userId,displayName:x.displayName,email:x.email,label:x.label,keyPrefix:x.keyPrefix,scopes:x.scopes.join(" "),createdAt:x.createdAt,lastUsedAt:x.lastUsedAt,expiresAt:x.expiresAt}))},
    incidents:{name:"incidents",rows:incidents.map(x=>({id:x.id,title:x.title,severity:x.severity,status:x.status,affectedServices:x.affected_services.join(" "),startedAt:x.started_at,resolvedAt:x.resolved_at}))},
    maintenance:{name:"maintenance",rows:maintenance.map(x=>({id:x.id,serviceId:x.service_id,enabled:x.enabled,message:x.message,startsAt:x.starts_at,endsAt:x.ends_at}))}
@@ -316,18 +311,7 @@ export default function AdminConsole(){
   }catch(e){setError(e instanceof Error?e.message:"تعذر تغيير حالة الأرشفة.");}
   finally{setBusy(false);}
  };
- const reviewSubmission=async(s:Submission,status:string)=>{
-  if(!supabase||!user)return;
-  setBusy(true);setError("");
-  try{
-   const note=reviewNotes[s.id]||"";
-   const {error}=await supabase.from("api_submissions").update({review_status:status,review_note:note,reviewer_id:user.id,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",s.id);
-   if(error)throw error;
-   await writeAudit("submission.review","api_submission",s.id,{status,note});
-   setNotice("تم تحديث قرار مراجعة الطلب.");await load();
-  }catch(e){setError(e instanceof Error?e.message:"تعذر مراجعة الطلب.");}
-  finally{setBusy(false);}
- };
+
  const savePlan=async(plan:Plan)=>{
   if(!supabase)return;
   setBusy(true);setError("");
@@ -468,7 +452,7 @@ export default function AdminConsole(){
   <nav className={styles.adminTabs} aria-label="أقسام إدارة المنصة">{TABS.filter(t=>t.id!=="moderators"||role==="owner").map(t=><button type="button" key={t.id} onClick={()=>setTab(t.id)} className={tab===t.id?styles.active:""} aria-current={tab===t.id?"page":undefined}>{t.label}</button>)}</nav>
   <section className={styles.main}>
    {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}{busy&&<div className={styles.busy}>جارٍ تنفيذ العملية…</div>}
-   {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>طلبات قيد المراجعة</small><strong>{submissions.filter(s=>s.review_status==="pending").length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
+   {tab==="overview"&&<><div className={styles.stats}><article><small>المستخدمون</small><strong>{profiles.length}</strong></article><article><small>المشرفون</small><strong>{profiles.filter(p=>p.role==="admin").length}</strong></article><article><small>الخدمات النشطة</small><strong>{services.filter(s=>s.status==="active"&&!s.archived_at).length}</strong></article><article><small>الحوادث المفتوحة</small><strong>{incidents.filter(i=>i.status!=="resolved").length}</strong></article><article><small>نوافذ الصيانة المفعلة</small><strong>{maintenance.filter(m=>m.enabled).length}</strong></article></div><section className={styles.panel}><h2>آخر عمليات الإدارة</h2>{audit.slice(0,8).map(a=><div className={styles.auditRow} key={a.id}><b>{a.action}</b><span>{a.entity_type} · {a.entity_id||"—"}</span><time>{date(a.created_at)}</time></div>)}{!audit.length&&<p className={styles.empty}>لا توجد عمليات مسجلة بعد.</p>}</section></>}
    {tab==="analytics"&&<section className={styles.panel}>
     <div className={styles.toolbar}><h2>تحليلات المنصة</h2><div className={styles.actions}><button onClick={()=>exportAnalytics("csv")} disabled={!analytics}>تصدير CSV</button><button onClick={()=>exportAnalytics("json")} disabled={!analytics}>تصدير JSON</button><button onClick={()=>window.print()}>تصدير PDF / طباعة</button></div></div>
     <div className={styles.formGrid}>
