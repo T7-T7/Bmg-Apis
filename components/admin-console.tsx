@@ -101,7 +101,6 @@ export default function AdminConsole(){
  const [adminLimit,setAdminLimit]=useState<AdminLimit|null>(null);
  const [versionService,setVersionService]=useState<Service|null>(null);
  const [serviceVersions,setServiceVersions]=useState<ServiceVersion[]>([]);
- const [feedbackRows,setFeedbackRows]=useState<Array<{id:string;user_id:string;title:string;details:string;page_path:string;rating:number;status:string;created_at:string}>>([]);
 
  const load=useCallback(async()=>{
   if(!supabase||!user)return;
@@ -456,10 +455,6 @@ export default function AdminConsole(){
   const {error}=await supabase.from("maintenance_windows").update({enabled:!m.enabled,updated_at:new Date().toISOString(),updated_by:user?.id}).eq("id",m.id);
   if(error)setError(error.message);else{await writeAudit("maintenance.toggle","maintenance_window",m.id,{enabled:!m.enabled});setNotice("تم تحديث وضع الصيانة.");await load();}
  };
-
- const loadFeedback=useCallback(async()=>{if(!supabase)return;setBusy(true);setError("");try{const {data,error}=await (supabase as any).from("user_feedback").select("id,user_id,title,details,page_path,rating,status,created_at").order("created_at",{ascending:false}).limit(100);if(error)throw error;setFeedbackRows((data||[]) as typeof feedbackRows)}catch(e){setError(e instanceof Error?e.message:"تعذر تحميل ملاحظات المستخدمين. تأكد من تطبيق ترحيل user_feedback.")}finally{setBusy(false)}},[supabase]);
- const updateFeedbackStatus=useCallback(async(id:string,status:string)=>{if(!supabase)return;setBusy(true);setError("");try{const {error}=await (supabase as any).from("user_feedback").update({status}).eq("id",id);if(error)throw error;setFeedbackRows(rows=>rows.map(row=>row.id===id?{...row,status}:row));setNotice("تم تحديث حالة الملاحظة.")}catch(e){setError(e instanceof Error?e.message:"تعذر تحديث حالة الملاحظة.")}finally{setBusy(false)}},[supabase]);
- useEffect(()=>{if(tab==="feedback"&&ready&&user&&["admin","owner"].includes(role))void loadFeedback()},[tab,ready,user,role,loadFeedback]);
 
  if(!ready)return <main className={styles.loading}>جارٍ التحقق من صلاحيات الإدارة…</main>;
  if(!user)return <main className={styles.loading}>جارٍ تحويلك إلى تسجيل الدخول…</main>;
