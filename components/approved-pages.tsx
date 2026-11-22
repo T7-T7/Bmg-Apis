@@ -26,6 +26,20 @@ function dbClient(){try{return getSupabaseBrowserClient()}catch{return null}}
 function Heading({eyebrow,title,desc}:{eyebrow:string;title:string;desc:string}){return <header className="ex-heading"><span>{eyebrow}</span><h1>{title}</h1><p>{desc}</p></header>}
 function Card({children,className=""}:{children:React.ReactNode;className?:string}){return <section className={"ex-card "+className}>{children}</section>}
 function fmtDate(v:string|null|undefined){return v?new Date(v).toLocaleString("ar-EG"):"—"}
+function renderMarkdown(markdown:string):React.ReactNode[]{
+ const lines=markdown.split("\n");const nodes:React.ReactNode[]=[];let code=false;let codeLines:string[]=[];
+ lines.forEach((line,index)=>{
+  if(line.startsWith("```")){if(code){nodes.push(<pre key={"code-"+index}><code>{codeLines.join("\n")}</code></pre>);codeLines=[];code=false}else code=true;return}
+  if(code){codeLines.push(line);return}
+  if(line.startsWith("# ")){nodes.push(<h3 key={index}>{line.slice(2)}</h3>);return}
+  if(line.startsWith("## ")){nodes.push(<h4 key={index}>{line.slice(3)}</h4>);return}
+  if(line.startsWith("- ")){nodes.push(<p key={index}>• {line.slice(2)}</p>);return}
+  if(line.startsWith("|")){nodes.push(<p className="ex-md-table-line" key={index}>{line}</p>);return}
+  if(line)nodes.push(<p key={index}>{line}</p>);else nodes.push(<div key={index} className="ex-spacer"/>);
+ });
+ if(codeLines.length)nodes.push(<pre key="unfinished-code"><code>{codeLines.join("\n")}</code></pre>);
+ return nodes;
+}
 
 export function HomeEnhancements({user,analytics,keys}:{user:User|null;analytics:AnalyticsData|null;keys:KeyRow[]}){
  const name=String(user?.user_metadata?.display_name||user?.user_metadata?.full_name||user?.user_metadata?.name||user?.email?.split("@")[0]||"مطورنا");
@@ -57,7 +71,7 @@ export function DocsWorkspace({section="intro"}:{section?:string}){
  const current=DOCS.find(x=>x.id===section)||DOCS[0];
  async function copyPage(){await navigator.clipboard.writeText(current.md);setShowMarkdown(true)}
  function openMarkdown(){const url="data:text/markdown;charset=utf-8,"+encodeURIComponent(current.md);window.open(url,"_blank","noopener,noreferrer")}
- return <div className="ex-docs"><Heading eyebrow="DEVELOPER DOCUMENTATION" title="المستندات والتوثيق" desc="دليل مقسم إلى صفحات مستقلة. اختر القسم من شريط التبويبات."/><nav className="ex-doc-tabs" aria-label="أقسام التوثيق">{DOCS.map(x=><Link className={current.id===x.id?"active":""} href={x.id==="intro"?"/docs":"/docs/"+x.id} key={x.id}>{x.label}</Link>)}</nav><Card className="ex-doc-page"><div className="ex-doc-page-head"><span>NOX APIS · DOCUMENTATION</span><button onClick={copyPage}>انسخ صفحة</button></div><h2>{current.title}</h2><p>{current.desc}</p><div className="ex-doc-body">{current.md.split("\n").map((line,i)=>line.startsWith("# ")?<h3 key={i}>{line.slice(2)}</h3>:line.startsWith("## ")?<h4 key={i}>{line.slice(3)}</h4>:line.startsWith("- ")?<p key={i}>• {line.slice(2)}</p>:line?<p key={i}>{line}</p>:<div key={i} className="ex-spacer"/> )}</div><div className="ex-doc-nav"><Link href={DOCS[Math.max(0,DOCS.findIndex(x=>x.id===current.id)-1)].id==="intro"?"/docs":"/docs/"+DOCS[Math.max(0,DOCS.findIndex(x=>x.id===current.id)-1)].id}>القسم السابق</Link><Link href={DOCS[Math.min(DOCS.length-1,DOCS.findIndex(x=>x.id===current.id)+1)].id==="intro"?"/docs":"/docs/"+DOCS[Math.min(DOCS.length-1,DOCS.findIndex(x=>x.id===current.id)+1)].id}>القسم التالي</Link></div></Card>{showMarkdown&&<button className="ex-markdown-float" onClick={openMarkdown}>↗ عرض الصفحة بصيغة Markdown</button>}<Link className="ex-reference-link" href="/reference"><span>مرجع واجهة برمجة التطبيقات</span><b>API Reference</b><small>عرض مرجع المسارات والطلبات والاستجابات بشكل مستقل ←</small></Link></div>;
+ return <div className="ex-docs"><Heading eyebrow="DEVELOPER DOCUMENTATION" title="المستندات والتوثيق" desc="دليل مقسم إلى صفحات مستقلة. اختر القسم من شريط التبويبات."/><nav className="ex-doc-tabs" aria-label="أقسام التوثيق">{DOCS.map(x=><Link className={current.id===x.id?"active":""} href={x.id==="intro"?"/docs":"/docs/"+x.id} key={x.id}>{x.label}</Link>)}</nav><Card className="ex-doc-page"><div className="ex-doc-page-head"><span>NOX APIS · DOCUMENTATION</span><button onClick={copyPage}>انسخ صفحة</button></div><h2>{current.title}</h2><p>{current.desc}</p><div className="ex-doc-body">{renderMarkdown(current.md)}</div><div className="ex-doc-nav"><Link href={DOCS[Math.max(0,DOCS.findIndex(x=>x.id===current.id)-1)].id==="intro"?"/docs":"/docs/"+DOCS[Math.max(0,DOCS.findIndex(x=>x.id===current.id)-1)].id}>القسم السابق</Link><Link href={DOCS[Math.min(DOCS.length-1,DOCS.findIndex(x=>x.id===current.id)+1)].id==="intro"?"/docs":"/docs/"+DOCS[Math.min(DOCS.length-1,DOCS.findIndex(x=>x.id===current.id)+1)].id}>القسم التالي</Link></div></Card>{showMarkdown&&<button className="ex-markdown-float" onClick={openMarkdown}>↗ عرض الصفحة بصيغة Markdown</button>}<Link className="ex-reference-link" href="/reference"><span>مرجع واجهة برمجة التطبيقات</span><b>API Reference</b><small>عرض مرجع المسارات والطلبات والاستجابات بشكل مستقل ←</small></Link></div>;
 }
 
 export function ApiReferencePage(){
@@ -140,8 +154,8 @@ export function SupportWorkspace(){
 
 export function CookieConsent(){
  const [visible,setVisible]=useState(false);const [custom,setCustom]=useState(false);const [prefs,setPrefs]=useState({necessary:true,analytics:false,marketing:false});
- useEffect(()=>{const open=()=>{setVisible(true);setCustom(true)};window.addEventListener("nox:cookie-settings",open);try{const raw=localStorage.getItem("nox-cookie-consent-v1");if(!raw)setVisible(true);else setPrefs(JSON.parse(raw))}catch{setVisible(true)}return()=>window.removeEventListener("nox:cookie-settings",open)},[]);
- function save(next= prefs){localStorage.setItem("nox-cookie-consent-v1",JSON.stringify({...next,necessary:true,updatedAt:new Date().toISOString()}));setPrefs(next);setVisible(false);setCustom(false)}
+ useEffect(()=>{const open=()=>{setVisible(true);setCustom(true)};window.addEventListener("nox:cookie-settings",open);try{const cookie=document.cookie.split("; ").find(x=>x.startsWith("nox-cookie-consent-v1="));const raw=cookie?decodeURIComponent(cookie.slice("nox-cookie-consent-v1=".length)):localStorage.getItem("nox-cookie-consent-v1");if(!raw)setVisible(true);else setPrefs(JSON.parse(raw))}catch{setVisible(true)}return()=>window.removeEventListener("nox:cookie-settings",open)},[]);
+ function save(next= prefs){const value=JSON.stringify({...next,necessary:true,updatedAt:new Date().toISOString()});localStorage.setItem("nox-cookie-consent-v1",value);document.cookie="nox-cookie-consent-v1="+encodeURIComponent(value)+"; Path=/; Max-Age=31536000; SameSite=Lax; Secure";setPrefs(next);setVisible(false);setCustom(false)}
  if(!visible)return null;
  return <><div className="ex-cookie-bar"><div><b>ملفات تعريف الارتباط</b><p>نستخدم الملفات الضرورية لتشغيل المنصة، ويمكنك اختيار الموافقة على الفئات الاختيارية.</p><Link href="/cookies">سياسة ملفات تعريف الارتباط</Link></div><div className="ex-cookie-actions"><button onClick={()=>save({necessary:true,analytics:true,marketing:true})}>قبول الكل</button><button onClick={()=>save({necessary:true,analytics:false,marketing:false})}>رفض غير الضروري</button><button onClick={()=>setCustom(true)}>تخصيص</button></div></div>{custom&&<div className="ex-modal-backdrop"><Card className="ex-modal"><h3>تفضيلات ملفات تعريف الارتباط</h3><label className="ex-check"><input type="checkbox" checked disabled/> ضرورية — مطلوبة لتشغيل الموقع</label><label className="ex-check"><input type="checkbox" checked={prefs.analytics} onChange={e=>setPrefs(p=>({...p,analytics:e.target.checked}))}/> تحليلية — قياس الاستخدام</label><label className="ex-check"><input type="checkbox" checked={prefs.marketing} onChange={e=>setPrefs(p=>({...p,marketing:e.target.checked}))}/> تسويقية — محتوى وتخصيص الحملات</label><div className="ex-actions"><button onClick={()=>setCustom(false)}>إلغاء</button><button className="ex-primary" onClick={()=>save()}>حفظ الاختيارات</button></div></Card></div>}</>;
 }
