@@ -486,14 +486,14 @@ returns integer
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare v_enqueued integer; v_processed integer;
 begin
   v_enqueued := private.bmg_reports_enqueue_due();
   v_processed := private.bmg_reports_process_queue();
   return v_enqueued + v_processed;
 end;
-$;
+$$;
 revoke all on function private.bmg_reports_tick() from public,anon,authenticated;
 
 select cron.schedule(
