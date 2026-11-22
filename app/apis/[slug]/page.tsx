@@ -1,1 +1,0 @@
-import Portal from "@/components/portal"; export default function ApiDetailsPage(){return <Portal/>;}
