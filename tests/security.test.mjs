@@ -123,3 +123,27 @@ test("webhook delivery is admin-managed, signed, retried, and keeps secrets in V
   assert.match(worker, /AbortSignal\.timeout\(10000\)/);
   assert.match(worker, /safeTarget/);
 });
+
+
+test("scheduled reports are admin-only, persisted, retried, and driven by hourly usage rollups", () => {
+  const sql = read("../supabase/migrations/20261122120000_add_scheduled_reports.sql");
+  const ui = read("../components/admin-reports.tsx");
+  assert.match(sql, /create table if not exists public\.report_templates/i);
+  assert.match(sql, /create table if not exists public\.report_runs/i);
+  assert.match(sql, /create table if not exists public\.report_run_attempts/i);
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /private\.bmg_is_admin\(\)/i);
+  assert.match(sql, /private\.api_usage_hourly/i);
+  assert.match(sql, /aggregated_at is null/i);
+  assert.match(sql, /max_attempts integer not null default 3/i);
+  assert.match(sql, /status=case when attempts>=max_attempts then 'failed' else 'queued' end/i);
+  assert.match(sql, /private\.bmg_report_next_run/i);
+  assert.match(sql, /pg_timezone_names/i);
+  assert.match(sql, /cron\.schedule\([\s\S]*nox-reports-scheduler/i);
+  assert.match(sql, /user_notifications/i);
+  assert.match(sql, /revoke all on function public\.bmg_admin_queue_report[\s\S]*from public,anon/i);
+  assert.match(ui, /bmg_admin_queue_report/);
+  assert.match(ui, /report_run_attempts/);
+  assert.match(ui, /not_configured/);
+  assert.doesNotMatch(sql, /delete from public\.report_runs/i);
+});
