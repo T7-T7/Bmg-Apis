@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://bmg-apis-b2-902b.vercel.app"),
   openGraph: { title: "NOX APIS — NEXUS OF XPERIENCE", description: "Developer API platform", type: "website" },
 };
-export const viewport: Viewport = { themeColor: "#111315", colorScheme: "dark light", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#111315", colorScheme: "dark", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:`(()=>{try{const saved=localStorage.getItem("nox-theme");const mode=saved==="dark"||saved==="light"||saved==="system"?saved:"dark";const resolved=mode==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):mode;document.documentElement.dataset.theme=resolved;document.documentElement.style.colorScheme=resolved}catch{}})()`}} /></head><body>{children}</body></html>;
+  return <html lang="ar" dir="rtl" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:`(()=>{document.documentElement.dataset.theme="dark";document.documentElement.style.colorScheme="dark";try{localStorage.setItem("nox-theme","dark")}catch{}})()`}} /></head><body>{children}</body></html>;
 }
