@@ -112,6 +112,9 @@ test("API key deletion is permanent, serialized with authorization, and audited 
   assert.match(sql, /bmg_admin_revoke_api_key[\s\S]*select public\.bmg_admin_delete_api_key/i);
   assert.match(sql, /api_key\.admin_delete|api_key\.delete/i);
   assert.doesNotMatch(sql, /set revoked_at\s*=/i);
+  const notificationCleanup = read("../supabase/migrations/20261122233346_hard_delete_api_key_notifications.sql");
+  assert.match(notificationCleanup, /delete from public\.user_notifications/i);
+  assert.match(notificationCleanup, /metadata->>'key_id'/i);
 });
 
 test("retired admin features are unscheduled and removed without cascading unrelated tables", () => {
