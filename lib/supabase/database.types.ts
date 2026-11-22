@@ -506,11 +506,113 @@ export type Database = {
         }
         Relationships: []
       }
+      api_webhooks: {
+        Row: {
+          id: string
+          name: string
+          target_url: string
+          event_types: string[]
+          enabled: boolean
+          secret_id: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          last_delivery_at: string | null
+          last_success_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          target_url: string
+          event_types: string[]
+          enabled?: boolean
+          secret_id: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          last_delivery_at?: string | null
+          last_success_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          target_url?: string
+          event_types?: string[]
+          enabled?: boolean
+          secret_id?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          last_delivery_at?: string | null
+          last_success_at?: string | null
+        }
+        Relationships: []
+      }
+      api_webhook_deliveries: {
+        Row: {
+          id: string
+          webhook_id: string
+          event_type: string
+          payload: Json
+          status: string
+          attempts: number
+          max_attempts: number
+          next_attempt_at: string
+          last_attempt_at: string | null
+          response_status: number | null
+          response_excerpt: string | null
+          last_error: string | null
+          delivered_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          webhook_id: string
+          event_type: string
+          payload: Json
+          status?: string
+          attempts?: number
+          max_attempts?: number
+          next_attempt_at?: string
+          last_attempt_at?: string | null
+          response_status?: number | null
+          response_excerpt?: string | null
+          last_error?: string | null
+          delivered_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          webhook_id?: string
+          event_type?: string
+          payload?: Json
+          status?: string
+          attempts?: number
+          max_attempts?: number
+          next_attempt_at?: string
+          last_attempt_at?: string | null
+          response_status?: number | null
+          response_excerpt?: string | null
+          last_error?: string | null
+          delivered_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_create_webhook: {
+        Args: {
+          p_event_types: string[]
+          p_name: string
+          p_secret: string
+          p_target_url: string
+        }
+        Returns: string
+      }
       bmg_admin_get_audit_logs: {
         Args: {
           p_action?: string
