@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-:root{color-scheme:light;--bg:#f2f0e8;--paper:#fbfaf5;--surface:#fffef9;--surface-2:#eae8df;--ink:#171a18;--muted:#73766f;--dim:#999b92;--line:#d9d8cf;--line-soft:#e8e6dd;--accent:#ed5b32;--accent-dark:#c94725;--lime:#d9f36a;--green:#287d58;--red:#bd3e35;--radius:4px}
+:root{color-scheme:light;--bg:#f2f0e8;--paper:#fbfaf5;--surface:#fffef9;--surface-2:#eae8df;--ink:#171a18;--muted:#73766f;--dim:#999b92;--line:#d9d8cf;--line-soft:#e8e6dd;--accent:#ed5b32;--accent-dark:#c94725;--lime:#d9f36a;--green:#287d58;--red:#bd3e35;--success-bg:#edf1e4;--success-ink:#426a3b;--success-line:#dbe5ca;--warning-bg:#f5efdd;--warning-ink:#986b23;--warning-line:#e8d8ae;--danger-bg:#f8e6dc;--danger-ink:#a64329;--danger-line:#edd4c7;--nav-active-bg:#30372f;--nav-active-line:#4d5948;--radius:4px}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',Inter,sans-serif;font-size:14px;line-height:1.7}
@@ -246,7 +246,7 @@ textarea{resize:vertical;line-height:1.8}
  .hero-proof{font-size:9px}
 }
 
-:root[data-theme="dark"]{color-scheme:dark;--bg:#101412;--paper:#171d19;--surface:#1b221e;--surface-2:#252d27;--ink:#edf1e9;--muted:#a2ada0;--dim:#7d897d;--line:#354137;--line-soft:#2a342d;--accent:#ff7952;--accent-dark:#ff9879;--lime:#c8ec68}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#101412;--paper:#171d19;--surface:#1b221e;--surface-2:#252d27;--ink:#edf1e9;--muted:#a2ada0;--dim:#7d897d;--line:#354137;--line-soft:#2a342d;--accent:#ff7952;--accent-dark:#ff9879;--lime:#c8ec68;--success-bg:#26362a;--success-ink:#b7dfa0;--success-line:#3e5943;--warning-bg:#3b321f;--warning-ink:#f0cc83;--warning-line:#65512b;--danger-bg:#402722;--danger-ink:#ffb0a0;--danger-line:#704035;--nav-active-bg:#30372f;--nav-active-line:#4d5948}
 :root[data-theme="dark"] .topbar{background:#101412ed}:root[data-theme="dark"] .sidebar{background:#090d0b}
 :root[data-theme="dark"] .panel,:root[data-theme="dark"] .stat-card,:root[data-theme="dark"] .service-card,:root[data-theme="dark"] .auth-card{background:var(--surface);border-color:var(--line);color:var(--ink)}
 :root[data-theme="dark"] .button.secondary,:root[data-theme="dark"] input,:root[data-theme="dark"] textarea,:root[data-theme="dark"] select{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
