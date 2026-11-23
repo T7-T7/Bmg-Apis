@@ -147,3 +147,9 @@ test("unused PostgreSQL extensions are removed and feedback RLS policies are opt
   assert.match(feedback, /\(select private\.bmg_is_admin\(\)\)/i);
   assert.doesNotMatch(feedback, /create policy "Admins can read all feedback"/i);
 });
+
+
+test("admin profile updates reject actors without a profile role", () => {
+  const sql = read("../supabase/migrations/20261123075727_harden_admin_profile_missing_role_guard.sql");
+  assert.match(sql, /v_actor_role is null or v_actor_role not in \('admin','owner'\)/i);
+});
