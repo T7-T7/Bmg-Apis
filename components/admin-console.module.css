@@ -92,3 +92,7 @@
  .auditRow time{grid-column:1/-1}
 }
 @media print{.adminTabs,.headerActions,.toolbar .actions,.formGrid,.error,.notice,.busy{display:none!important}.panel{break-inside:avoid;border:0}.tableWrap{overflow:visible}.tableWrap table{min-width:0}}
+
+:global(:root[data-theme="dark"]) .error{color:#ffb0a0;background:#402722;border-color:#704035}
+:global(:root[data-theme="dark"]) .notice{color:#b7dfa0;background:#26362a;border-color:#3e5943}
+:global(:root[data-theme="dark"]) .busy{color:var(--muted);background:var(--surface-2);border-color:var(--line)}
