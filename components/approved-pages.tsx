@@ -51,8 +51,8 @@ export function HomeEnhancements({user,analytics,keys,analyticsLoading}:{user:Us
  useEffect(()=>{
   let alive=true;
   if(!db){setServicesLoading(false);setNoticesLoading(false);return}
-  db.from("api_services").select("slug,name,endpoint_path,status,last_health_status").order("name").then(({data})=>{if(alive){setServices((data||[]) as typeof services);setServicesLoading(false)}});
-  if(user)db.from("user_notifications").select("id,title,body,type,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(4).then(({data})=>{if(alive){setNotices(data||[]);setNoticesLoading(false)}});
+  db.from("api_services").select("slug,name,endpoint_path,status,last_health_status").order("name").then(({data})=>{if(alive)setServices((data||[]) as typeof services)}).catch(()=>{}).finally(()=>{if(alive)setServicesLoading(false)});
+  if(user)db.from("user_notifications").select("id,title,body,type,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(4).then(({data})=>{if(alive)setNotices(data||[])}).catch(()=>{}).finally(()=>{if(alive)setNoticesLoading(false)});
   else setNoticesLoading(false);
   return()=>{alive=false};
  },[db,user]);
