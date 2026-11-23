@@ -569,3 +569,5 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 .ex-skeleton-list i:nth-child(2){width:88%}.ex-skeleton-list i:nth-child(3){width:72%}
 @keyframes ex-skeleton-shimmer{to{background-position:-220% 0}}
 @media(prefers-reduced-motion:reduce){.ex-skeleton,.ex-skeleton-list i{animation:none;background:var(--surface-2)}}
+
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
