@@ -7,6 +7,14 @@ const CONFIG = {
   userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
 };
 
+const REQUEST_BUDGET_MS = 50_000; // Keep 10 seconds for authorization, response serialization, and usage completion.
+
+function timeoutFor(deadline: number) {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) throw new Error("Gemini request time budget exhausted.");
+  return Math.max(1, Math.min(CONFIG.timeout, remaining));
+}
+
 type SessionState = { cookie: string; resume?: unknown[]; resumeArray?: unknown[]; uid: string; instruction?: string };
 type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
 
@@ -119,7 +127,7 @@ function parseMethod2(raw: string) {
   return null;
 }
 
-async function askGeminiMethod2(message: string, instruction: string, previous: SessionState | null) {
+async function askGeminiMethod2(message: string, instruction: string, previous: SessionState | null, deadline: number) {
   let cookie = previous?.cookie || "";
   const resumeArray = previous?.resumeArray || null;
   if (!cookie) {
@@ -129,7 +137,7 @@ async function askGeminiMethod2(message: string, instruction: string, previous: 
         method: "POST",
         headers: { "content-type": "application/x-www-form-urlencoded;charset=UTF-8", "user-agent": CONFIG.userAgent },
         body: "f.req=%5B%5B%5B%22maGuAc%22%2C%22%5B0%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&",
-        signal: AbortSignal.timeout(CONFIG.timeout),
+        signal: AbortSignal.timeout(timeoutFor(deadline)),
         cache: "no-store",
       }
     );
@@ -150,7 +158,7 @@ async function askGeminiMethod2(message: string, instruction: string, previous: 
         "user-agent": CONFIG.userAgent,
       },
       body: form.toString(),
-      signal: AbortSignal.timeout(CONFIG.timeout),
+      signal: AbortSignal.timeout(timeoutFor(deadline)),
       cache: "no-store",
     }
   );
@@ -170,11 +178,11 @@ async function askGeminiMethod2(message: string, instruction: string, previous: 
 }
 
 let bootstrapCache: { value: { cookie: string; bl: string; fsid: string; uid: string }; expiresAt: number } | null = null;
-async function bootstrap() {
+async function bootstrap(deadline: number) {
   if (bootstrapCache && bootstrapCache.expiresAt > Date.now()) return bootstrapCache.value;
   const response = await fetch(CONFIG.home, {
     headers: { "user-agent": CONFIG.userAgent, "accept-language": "en-US,en;q=0.9" },
-    signal: AbortSignal.timeout(CONFIG.timeout),
+    signal: AbortSignal.timeout(timeoutFor(deadline)),
     cache: "no-store",
   });
   if (!response.ok) throw new Error("تعذر تهيئة اتصال Gemini.");
@@ -192,13 +200,14 @@ async function bootstrap() {
 }
 
 export async function askGemini(input: { prompt: string; instruction?: string; sessionId?: string }): Promise<GeminiResult> {
+  const deadline = Date.now() + REQUEST_BUDGET_MS;
   const prompt = input.prompt.trim();
   const previous = unpack(input.sessionId);
   const instruction = input.instruction?.trim() || previous?.instruction || "";
   const preferFallback = Boolean(previous?.resumeArray || instruction);
 
   const runPrimary = async () => {
-    const boot = await bootstrap();
+    const boot = await bootstrap(deadline);
     const cookie = previous?.cookie || boot.cookie;
     const uid = previous?.uid || boot.uid;
     const resume = previous?.resume || ["", "", "", null, null, null, null, null, null, ""];
@@ -225,7 +234,7 @@ export async function askGemini(input: { prompt: string; instruction?: string; s
         cookie,
       },
       body: buildBody(message, resume, uid),
-      signal: AbortSignal.timeout(CONFIG.timeout),
+      signal: AbortSignal.timeout(timeoutFor(deadline)),
       cache: "no-store",
     });
     const raw = await response.text();
@@ -243,7 +252,7 @@ export async function askGemini(input: { prompt: string; instruction?: string; s
   };
 
   const attempts = preferFallback
-    ? [() => askGeminiMethod2(prompt, instruction, previous), runPrimary]
+    ? [() => askGeminiMethod2(prompt, instruction, previous, deadline), runPrimary]
     : [runPrimary, () => askGeminiMethod2(prompt, instruction, previous)];
   const errors: string[] = [];
   for (const attempt of attempts) {
