@@ -15,3 +15,8 @@
 @keyframes status-shimmer{to{background-position:-220% 0}}
 @media(prefers-reduced-motion:reduce){.skeletonStack span{animation:none;background:var(--surface-2)}}
 @media(max-width:600px){.error{align-items:flex-start;flex-direction:column}.retry{width:100%}}
+
+:global(:root[data-theme="dark"]) .minor{color:#b7dfa0;background:#26362a;border-color:#3e5943}
+:global(:root[data-theme="dark"]) .major,:global(:root[data-theme="dark"]) .warning,:global(:root[data-theme="dark"]) .maintenance{color:#f0cc83;background:#3b321f;border-color:#65512b}
+:global(:root[data-theme="dark"]) .critical{color:#ffb0a0;background:#402722;border-color:#704035}
+:global(:root[data-theme="dark"]) .error{color:#ffb0a0;background:#402722;border-color:#704035}
