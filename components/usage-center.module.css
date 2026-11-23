@@ -9,3 +9,5 @@
 @keyframes usage-shimmer{to{background-position:-220% 0}}
 @media(max-width:650px){.skeletonGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.skeletonMetric i,.skeletonMetric b,.skeletonWide i{animation:none;background:var(--surface-2)}}
+
+:global(:root[data-theme="dark"]) .warning{color:#f0cc83;background:#3b321f;border-color:#65512b}
