@@ -522,3 +522,38 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 .ex-empty-chart{height:145px;display:grid;place-items:center;border:1px dashed var(--line);background:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,var(--line-soft) 36px)}.ex-empty-chart span{font-size:11px;color:var(--muted);padding:8px 12px;background:var(--surface)}
 
 .ex-cookie-bar~.ex-feedback-trigger{bottom:145px}.ex-cookie-bar~.ex-markdown-float{bottom:145px}.ex-markdown-float{bottom:78px}
+
+
+/* Cross-page UX and accessibility refinements */
+:where(a,button,input,textarea,select,[tabindex]):focus-visible{
+ outline:2px solid var(--accent);
+ outline-offset:3px;
+}
+:where(button,a,[role="button"]){touch-action:manipulation}
+:where(button,a):disabled,
+:where(button,a)[aria-disabled="true"]{cursor:not-allowed}
+:where(input,textarea,select){min-height:42px}
+:where(textarea){min-height:96px}
+:where(button:not(:disabled),a.button){transition:background-color .18s,border-color .18s,color .18s,transform .18s}
+:where(.icon-button,.theme-button){min-width:40px;min-height:40px}
+:where(.panel,.stat-card,.service-card,.docs-article,.ex-card){min-width:0}
+:where(pre,code){overflow-wrap:anywhere}
+.table-wrap,.ex-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+:where(.panel,.ex-card) :where(input,select,textarea){max-width:100%}
+::selection{background:var(--lime);color:#172016}
+@media(max-width:650px){
+ .create-key-form{min-width:0;flex-wrap:wrap}
+ .create-key-form .button{flex:1 1 auto;min-height:42px}
+ .key-controls{display:flex;flex-wrap:wrap;gap:8px}
+ .key-controls .catalog-search{min-width:0;width:100%;flex-basis:100%}
+ .currency-fields{grid-template-columns:1fr}
+ .panel{padding:16px}
+ .ex-toolbar{gap:8px}
+ .ex-toolbar>*{min-width:0}
+ .ex-list-row{align-items:flex-start;flex-wrap:wrap}
+ .ex-list-row small{max-width:100%;overflow-wrap:anywhere}
+ .ex-metric-grid b{font-size:clamp(18px,5vw,24px)}
+}
+@media(hover:none){
+ .service-card:hover{transform:none;box-shadow:none}
+}
