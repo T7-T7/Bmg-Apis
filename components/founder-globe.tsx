@@ -83,10 +83,10 @@ export default function FounderGlobe() {
             </g>
 
             <path className={styles.egypt} d="M165 111 181 108 187 117 182 128 168 128 162 120Z" />
-            <circle className={styles.marker-halo} cx="176" cy="119" r="12" />
+            <circle className={styles["marker-halo"]} cx="176" cy="119" r="12" />
             <circle className={styles.marker} cx="176" cy="119" r="4.2" filter="url(#egypt-glow)" />
-            <path className={styles.marker-line} d="M184 113 213 91 246 91" />
-            <g className={styles.marker-label}>
+            <path className={styles["marker-line"]} d="M184 113 213 91 246 91" />
+            <g className={styles["marker-label"]}>
               <rect x="218" y="77" width="66" height="24" rx="3" />
               <text x="251" y="93" textAnchor="middle">EGYPT</text>
             </g>
