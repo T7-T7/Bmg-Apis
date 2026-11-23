@@ -26,7 +26,7 @@ export default function FounderGlobe() {
         aria-label="خريطة عالم مسطحة مع تحديد مصر باللون البنفسجي"
         dangerouslySetInnerHTML={{ __html: worldMapSvg }}
       />
-      <span className={styles.mapCaption}>WORLD MAP <i /> EGYPT · NORTH AFRICA</span>
+      <span className={styles.visualTag}>WORLD MAP <i /> EGYPT · NORTH AFRICA · MAP DATA: NATURAL EARTH / VECTORATLAS (CC BY 4.0)</span>
     </section>
   );
 }
