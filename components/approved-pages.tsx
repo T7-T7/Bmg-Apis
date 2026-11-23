@@ -116,7 +116,8 @@ export function ModelTestWorkspace({slug}:{slug:string}){
  const [busy,setBusy]=useState(false);
  const [result,setResult]=useState<{ok:boolean;ms:number;text:string;json:string}|null>(null);
  const [format,setFormat]=useState<"json"|"text">("text");
- if(!meta)return <><Heading eyebrow="MODEL TEST" title="النموذج غير موجود" desc="لا توجد صفحة اختبار لهذا النموذج."/><Link href="/models">العودة إلى النماذج</Link></>;\n const model=meta;
+ if(!meta)return <><Heading eyebrow="MODEL TEST" title="النموذج غير موجود" desc="لا توجد صفحة اختبار لهذا النموذج."/><Link href="/models">العودة إلى النماذج</Link></>;
+ const model=meta;
  async function run(){
   if(!prompt.trim()||busy)return;
   setBusy(true);setResult(null);const start=performance.now();
