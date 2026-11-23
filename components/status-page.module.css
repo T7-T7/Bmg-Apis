@@ -4,3 +4,14 @@
 .incidentUpdates span{font-size:9px;font-weight:700;color:var(--accent-dark)}
 .incidentUpdates p{margin:3px 0;font-size:10px;color:var(--ink)}
 .incidentUpdates small{font-size:8px;color:var(--muted)}
+
+.skeletonStack{display:grid;gap:9px;margin-bottom:8px}
+.skeletonStack span{display:block;height:58px;border:1px solid var(--line);background:linear-gradient(100deg,var(--surface) 25%,var(--surface-2) 42%,var(--surface) 62%);background-size:220% 100%;animation:status-shimmer 1.35s ease-in-out infinite}
+.skeletonStack span:nth-child(2){width:92%}
+.skeletonStack span:nth-child(3){width:84%}
+.error{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.retry{flex:none;min-height:38px;padding:8px 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 10px inherit;cursor:pointer}
+.retry:hover{border-color:var(--accent);color:var(--accent-dark)}
+@keyframes status-shimmer{to{background-position:-220% 0}}
+@media(prefers-reduced-motion:reduce){.skeletonStack span{animation:none;background:var(--surface-2)}}
+@media(max-width:600px){.error{align-items:flex-start;flex-direction:column}.retry{width:100%}}
