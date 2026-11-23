@@ -423,9 +423,17 @@ body.sidebar-open{overflow:hidden;touch-action:pan-y}
 .book-docs-end p{color:var(--muted);font-size:12px;line-height:1.9}
 .book-docs-end a,.book-article a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .footer>span:first-child{direction:ltr;text-align:left}
-input:focus,input:focus-visible,textarea:focus,textarea:focus-visible,select:focus,select:focus-visible,button:focus,button:focus-visible,a:focus,a:focus-visible{outline:none!important;box-shadow:none!important}
-input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
-:root[data-theme="dark"] .button:focus-visible,:root[data-theme="dark"] a:focus-visible,:root[data-theme="dark"] input:focus-visible,:root[data-theme="dark"] textarea:focus-visible,:root[data-theme="dark"] select:focus-visible{outline:none!important;box-shadow:none!important}
+/* Accessible keyboard focus: preserve a clear indicator in both pointer and keyboard workflows. */
+:where(button,a,input,textarea,select,[tabindex]):focus-visible{
+ outline:2px solid var(--accent)!important;
+ outline-offset:3px;
+ box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)!important;
+}
+:where(input,textarea,select):focus-visible{border-color:var(--accent)!important}
+:root[data-theme="dark"] :where(button,a,input,textarea,select,[tabindex]):focus-visible{
+ outline-color:var(--lime)!important;
+ box-shadow:0 0 0 4px color-mix(in srgb,var(--lime) 18%,transparent)!important;
+}
 @media(max-width:850px){.book-docs-grid{grid-template-columns:1fr;gap:18px}.book-index{position:relative;top:auto;border-left:0;border-bottom:1px solid var(--line);padding:0 0 14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.book-index>.eyebrow,.book-index>b{grid-column:1/-1}.book-index a{padding:8px 0}}
 @media(max-width:650px){.book-breadcrumb{margin-bottom:24px}.book-docs-heading h1{font-size:39px}.book-docs-heading>p{font-size:12px}.book-article{padding:20px 16px}.book-article section h2{font-size:22px}.book-article pre{font-size:10px;padding:13px}.book-article th,.book-article td{padding:8px 6px;font-size:10px}}
 
