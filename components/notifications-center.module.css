@@ -5,3 +5,7 @@
 .skeletonCard i{width:68px;height:12px}.skeletonCard b{width:42%;height:17px}.skeletonCard span{width:88%;height:10px}.skeletonCard span:last-child{width:64%}
 @keyframes notification-shimmer{to{background-position:-220% 0}}
 @media(prefers-reduced-motion:reduce){.skeletonCard i,.skeletonCard b,.skeletonCard span{animation:none;background:var(--surface-2)}}
+
+:global(:root[data-theme="dark"]) .info{color:#b7dfa0;background:#26362a;border-color:#3e5943}
+:global(:root[data-theme="dark"]) .warning{color:#f0cc83;background:#3b321f;border-color:#65512b}
+:global(:root[data-theme="dark"]) .critical{color:#ffb0a0;background:#402722;border-color:#704035}
