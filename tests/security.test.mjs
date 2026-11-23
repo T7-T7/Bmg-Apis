@@ -11,6 +11,17 @@ test("API key update RPC is not executable by anonymous/public roles", () => {
   assert.match(sql, /grant execute on function public\.bmg_update_api_key\(uuid, text, timestamptz\) to authenticated/i);
 });
 
+test("API key authorization RPC requires the server secret and rejects the legacy signature", () => {
+  const sql = read("../supabase/migrations/20261123100000_secure_api_key_authorization_rpc.sql");
+  assert.match(sql, /p_server_secret text/i);
+  assert.match(sql, /private\.api_demo_config/i);
+  assert.match(sql, /extensions\.digest\(convert_to\(p_server_secret/i);
+  assert.match(sql, /drop function public\.bmg_authorize_api_request\(text,text,text\)/i);
+  for (const path of ["../app/api/v1/ai/gemini/route.ts", "../app/api/v1/ai/gptfree/route.ts"]) {
+    assert.match(read(path), /p_server_secret:\s*process\.env\.BMG_DEMO_RPC_SECRET/);
+  }
+});
+
 test("protected routes are verified on the server before rendering", () => {
   const proxy = read("../proxy.ts");
   assert.match(proxy, /supabase\.auth\.getClaims\(\)/);
