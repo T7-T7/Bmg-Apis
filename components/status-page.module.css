@@ -10,7 +10,7 @@
 .skeletonStack span:nth-child(2){width:92%}
 .skeletonStack span:nth-child(3){width:84%}
 .error{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.retry{flex:none;min-height:38px;padding:8px 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 10px inherit;cursor:pointer}
+.retry{flex:none;min-height:38px;padding:8px 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:10px;font-weight:600;cursor:pointer}
 .retry:hover{border-color:var(--accent);color:var(--accent-dark)}
 @keyframes status-shimmer{to{background-position:-220% 0}}
 @media(prefers-reduced-motion:reduce){.skeletonStack span{animation:none;background:var(--surface-2)}}
