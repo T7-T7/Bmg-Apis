@@ -583,3 +583,36 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 
 /* Dedicated model test workspaces */
 .ex-model-test{align-items:start}.ex-test-model-head{display:flex;align-items:center;gap:10px;margin-bottom:17px;padding-bottom:13px;border-bottom:1px solid var(--line)}.ex-test-model-head b{font-size:16px;color:var(--ink)}.ex-test-model-head small{margin-right:auto;color:var(--muted);font-size:11px}.ex-playground-grid .ex-test-model-head+.ex-field{margin-top:0}.ex-playground-grid label{display:grid;gap:8px;margin-bottom:15px;font-size:12px;color:var(--muted)}.ex-playground-grid textarea{min-height:120px;padding:13px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font:inherit;font-size:13px;line-height:1.9;resize:vertical}.ex-playground-grid textarea:focus{outline:2px solid var(--accent);outline-offset:1px}.ex-playground-grid label:nth-of-type(2) textarea{min-height:94px}.ex-run-test{width:100%;min-height:45px;font-size:12px}.ex-test-result-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px}.ex-test-output{min-height:180px;max-height:520px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;direction:auto;text-align:start;padding:15px;margin:12px 0 0;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);color:var(--ink);font:12px/1.9 ui-monospace,monospace}.ex-test-empty{min-height:230px;display:grid;align-content:center;justify-items:center;border:1px dashed var(--line);border-radius:6px;background:var(--surface-2);color:var(--muted);text-align:center}.ex-test-empty span{font-size:28px;opacity:.6}.ex-test-empty p{font-size:12px}.ex-test-back{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}.ex-test-back a{padding:9px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);font-size:11px}@media(max-width:760px){.ex-playground-grid{grid-template-columns:minmax(0,1fr)}.ex-playground-grid>.ex-card{padding:16px}.ex-test-output{min-height:150px}}
+
+
+/* Fix native checkbox/radio sizing globally.
+   Generic form-control rules must not stretch binary controls. */
+input[type="checkbox"],
+input[type="radio"]{
+  appearance:auto;
+  -webkit-appearance:auto;
+  display:inline-block;
+  width:20px!important;
+  min-width:20px!important;
+  max-width:20px!important;
+  height:20px!important;
+  min-height:20px!important;
+  max-height:20px!important;
+  flex:0 0 20px;
+  padding:0!important;
+  margin:0;
+  border:1px solid var(--line);
+  border-radius:3px;
+  accent-color:var(--accent);
+  vertical-align:middle;
+  cursor:pointer;
+}
+input[type="radio"]{border-radius:50%}
+.ex-check{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:44px;
+  padding:10px 0;
+}
+.ex-check input[type="checkbox"]{flex:0 0 20px}
