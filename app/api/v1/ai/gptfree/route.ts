@@ -82,7 +82,7 @@ async function authorize(request: NextRequest, token: string | null) {
   const db = supabase();
   if (token) {
     const { data, error: rpcError } = await db.rpc("bmg_authorize_api_request", {
-      p_key: token, p_service_slug: "gptfree", p_method: "POST"
+      p_key: token, p_service_slug: "gptfree", p_method: "POST", p_server_secret: process.env.BMG_DEMO_RPC_SECRET
     });
     if (rpcError) throw rpcError;
     const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
