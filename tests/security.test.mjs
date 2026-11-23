@@ -169,7 +169,7 @@ test("admin profile updates reject actors without a profile role", () => {
 test("Gemini retries share one deadline shorter than the Vercel route limit", () => {
   const service = read("../lib/server/gemini.ts");
   const route = read("../app/api/v1/ai/gemini/route.ts");
-  const budget = Number(service.match(/REQUEST_BUDGET_MS\s*=\s*(\d+)/)?.[1]);
+  const budget = Number(service.match(/REQUEST_BUDGET_MS\s*=\s*([\d_]+)/)?.[1]?.replaceAll("_", ""));
   const routeLimit = Number(route.match(/maxDuration\s*=\s*(\d+)/)?.[1]);
   assert.equal(routeLimit, 60);
   assert.equal(budget, 50_000);
