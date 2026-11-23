@@ -557,3 +557,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--line)!important}
 @media(hover:none){
  .service-card:hover{transform:none;box-shadow:none}
 }
+
+.skip-link{position:fixed;z-index:120;top:10px;right:10px;transform:translateY(-160%);padding:10px 14px;background:var(--ink);color:var(--surface);border:2px solid var(--accent);font-size:12px}
+.skip-link:focus{transform:translateY(0)}
+#main-content:focus{outline:none}
