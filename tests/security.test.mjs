@@ -175,7 +175,7 @@ test("Gemini retries share one deadline shorter than the Vercel route limit", ()
   assert.equal(budget, 50_000);
   assert.match(service, /function timeoutFor\\(deadline: number\\)/);
   assert.doesNotMatch(service, /AbortSignal\\.timeout\\(CONFIG\\.timeout\\)/);
-  assert.equal((service.match(/AbortSignal\\.timeout\\(timeoutFor\\(deadline\\)\\)/g) || []).length, 3);
+  assert.equal((service.match(/AbortSignal\\.timeout\\(timeoutFor\\(deadline\\)\\)/g) || []).length, 4);
   assert.match(service, /askGeminiMethod2\\(prompt, instruction, previous, deadline\\)/);
   assert.match(service, /bootstrap\\(deadline\\)/);
 });
