@@ -164,3 +164,18 @@ test("admin profile updates reject actors without a profile role", () => {
   const sql = read("../supabase/migrations/20261123075727_harden_admin_profile_missing_role_guard.sql");
   assert.match(sql, /v_actor_role is null or v_actor_role not in \('admin','owner'\)/i);
 });
+
+
+test("Gemini retries share one deadline shorter than the Vercel route limit", () => {
+  const service = read("../lib/server/gemini.ts");
+  const route = read("../app/api/v1/ai/gemini/route.ts");
+  const budget = Number(service.match(/REQUEST_BUDGET_MS\\s*=\\s*(\\d+)/)?.[1]);
+  const routeLimit = Number(route.match(/maxDuration\\s*=\\s*(\\d+)/)?.[1]);
+  assert.equal(routeLimit, 60);
+  assert.equal(budget, 50_000);
+  assert.match(service, /function timeoutFor\\(deadline: number\\)/);
+  assert.doesNotMatch(service, /AbortSignal\\.timeout\\(CONFIG\\.timeout\\)/);
+  assert.equal((service.match(/AbortSignal\\.timeout\\(timeoutFor\\(deadline\\)\\)/g) || []).length, 3);
+  assert.match(service, /askGeminiMethod2\\(prompt, instruction, previous, deadline\\)/);
+  assert.match(service, /bootstrap\\(deadline\\)/);
+});
