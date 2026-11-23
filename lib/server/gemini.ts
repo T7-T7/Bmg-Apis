@@ -253,7 +253,7 @@ export async function askGemini(input: { prompt: string; instruction?: string; s
 
   const attempts = preferFallback
     ? [() => askGeminiMethod2(prompt, instruction, previous, deadline), runPrimary]
-    : [runPrimary, () => askGeminiMethod2(prompt, instruction, previous)];
+    : [runPrimary, () => askGeminiMethod2(prompt, instruction, previous, deadline)];
   const errors: string[] = [];
   for (const attempt of attempts) {
     try {
