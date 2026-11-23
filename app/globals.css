@@ -252,7 +252,7 @@ textarea{resize:vertical;line-height:1.8}
 :root[data-theme="dark"] .button.secondary,:root[data-theme="dark"] input,:root[data-theme="dark"] textarea,:root[data-theme="dark"] select{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
 .theme-button{border:1px solid var(--line);background:var(--surface);color:var(--ink);width:34px;height:34px;border-radius:3px}
 .avatar-image{overflow:hidden;padding:0;display:grid;place-items:center}.avatar-image img{width:100%;height:100%;object-fit:cover}.avatar.large{width:64px;height:64px}
-.google-icon{width:18px;height:18px;flex:none}.google-button{display:flex;align-items:center;justify-content:center;gap:10px}
+.google-icon{width:18px;height:18px;flex:none}.google-button{display:flex;align-items:center;justify-content:center;gap:10px}.github-button{display:flex;align-items:center;justify-content:center;gap:10px}
 .settings-panel{padding:23px;margin-bottom:18px}.settings-profile{display:flex;align-items:center;gap:15px}.settings-profile p,.settings-profile small{margin:2px 0;color:var(--muted);font-size:11px}
 .theme-options{display:flex;gap:8px;margin:14px 0}.theme-options button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);padding:9px 13px}
 .factor-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.totp-enroll{display:grid;gap:12px;max-width:360px;margin-top:16px}.totp-enroll img{width:190px;height:190px;background:white;padding:8px}.totp-enroll input{max-width:180px;letter-spacing:5px;text-align:center;direction:ltr}
