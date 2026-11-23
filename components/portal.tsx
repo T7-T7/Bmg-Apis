@@ -153,7 +153,7 @@ export default function Portal(){
  {pathname==="/dashboard/admin"&&<AdminConsole/>}
  {pathname==="/dashboard/notifications"&&<NotificationsCenter/>}
  {pathname==="/dashboard/usage"&&<UsageCenter/>}
- {pathname==="/"&&<HomeEnhancements user={user} analytics={analytics} keys={keys}/>}
+ {pathname==="/"&&<HomeEnhancements user={user} analytics={analytics} keys={keys} analyticsLoading={analyticsLoading}/>}
  {pathname==="/models"&&<ModelsCatalog/>}
  {pathname.startsWith("/models/")&&<ModelDetails slug={pathname.split("/")[2]||""}/>}
  {pathname==="/apis"&&<><PageHeading eyebrow="API CATALOG" title="كتالوج الواجهات" desc="تصفح الخدمات النشطة وتفاصيل نقاط النهاية وطرق المصادقة."/><div className="catalog-controls"><label className="catalog-search"><Icon name="search"/><input value={catalogQuery} onChange={e=>setCatalogQuery(e.target.value)} placeholder="ابحث عن واجهة أو وظيفة…"/></label><select value={catalogCategory} onChange={e=>setCatalogCategory(e.target.value)} aria-label="تصنيف الواجهات"><option value="all">كل التصنيفات</option><option value="ذكاء اصطناعي">ذكاء اصطناعي</option></select></div><div className="catalog-toolbar"><span>{filteredServices.length} من {SERVICES.length} واجهات منشورة</span><span className="filter-pill"><i/> Active services</span></div>{filteredServices.length?<div className="service-grid">{filteredServices.map(s=><ServiceCard key={s.slug} service={s}/>)}</div>:<div className="panel empty-state"><b>لا توجد نتائج مطابقة</b><p>جرّب تغيير عبارة البحث أو التصنيف.</p></div>}</>}
