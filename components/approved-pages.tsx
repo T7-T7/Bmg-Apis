@@ -41,16 +41,39 @@ function renderMarkdown(markdown:string):React.ReactNode[]{
  return nodes;
 }
 
-export function HomeEnhancements({user,analytics,keys}:{user:User|null;analytics:AnalyticsData|null;keys:KeyRow[]}){
- const db=useMemo(()=>dbClient(),[]);const [services,setServices]=useState<Array<{slug:string;name:string;endpoint_path:string;status:string;last_health_status:string|null}>>([]);const [notices,setNotices]=useState<Array<{id:string;title:string;body:string;type:string;created_at:string}>>([]);
+export function HomeEnhancements({user,analytics,keys,analyticsLoading}:{user:User|null;analytics:AnalyticsData|null;keys:KeyRow[];analyticsLoading:boolean}){
+ const db=useMemo(()=>dbClient(),[]);
+ const [services,setServices]=useState<Array<{slug:string;name:string;endpoint_path:string;status:string;last_health_status:string|null}>>([]);
+ const [notices,setNotices]=useState<Array<{id:string;title:string;body:string;type:string;created_at:string}>>([]);
+ const [servicesLoading,setServicesLoading]=useState(true);
+ const [noticesLoading,setNoticesLoading]=useState(true);
  const name=String(user?.user_metadata?.display_name||user?.user_metadata?.full_name||user?.user_metadata?.name||user?.email?.split("@")[0]||"مطورنا");
- useEffect(()=>{let alive=true;if(!db)return;db.from("api_services").select("slug,name,endpoint_path,status,last_health_status").order("name").then(({data})=>{if(alive)setServices((data||[]) as typeof services)});if(user)db.from("user_notifications").select("id,title,body,type,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(4).then(({data})=>{if(alive)setNotices(data||[])});return()=>{alive=false}},[db,user]);
+ useEffect(()=>{
+  let alive=true;
+  if(!db){setServicesLoading(false);setNoticesLoading(false);return}
+  db.from("api_services").select("slug,name,endpoint_path,status,last_health_status").order("name").then(({data})=>{if(alive){setServices((data||[]) as typeof services);setServicesLoading(false)}});
+  if(user)db.from("user_notifications").select("id,title,body,type,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(4).then(({data})=>{if(alive){setNotices(data||[]);setNoticesLoading(false)}});
+  else setNoticesLoading(false);
+  return()=>{alive=false};
+ },[db,user]);
  return <div className="ex-home">
   <Card className="ex-welcome"><div><span className="ex-kicker">مساحة العمل</span><h2>مرحبًا، {name}</h2><p>هذه نظرة سريعة على حسابك والخدمات المتاحة.</p></div><Link href="/dashboard">فتح لوحة التحكم ←</Link></Card>
   <div className="ex-shortcuts"><Link href="/dashboard/api-keys/new">إنشاء مفتاح API</Link><Link href="/models">استكشاف النماذج</Link><Link href="/docs">مستندات المطور</Link><Link href="/dashboard">إحصائيات الاستخدام</Link></div>
-  <div className="ex-metric-grid"><Card><small>طلبات آخر 24 ساعة</small><b>{analytics?.totals?.requests??"—"}</b></Card><Card><small>معدل النجاح</small><b>{analytics?.totals?.successRate==null?"—":analytics.totals.successRate+"%"}</b></Card><Card><small>متوسط الاستجابة</small><b>{analytics?.totals?.avgLatency==null?"—":analytics.totals.avgLatency+" ms"}</b></Card><Card><small>الاستهلاك الموزون</small><b>{analytics?.totals?.weightedUsage?.toLocaleString("en-US")??"—"}</b></Card><Card><small>مفاتيح نشطة</small><b>{keys.filter(k=>!k.revoked_at).length}</b></Card></div>
-  <div className="ex-two-col"><Card><div className="ex-card-head"><h3>النشاط الأخير</h3></div>{analytics?.recent?.length?analytics.recent.slice(0,5).map(x=><div className="ex-list-row" key={x.id}><span>{x.service}</span><b>{x.status??"—"}</b><small>{x.latency==null?"—":x.latency+" ms"}</small></div>):<p className="ex-muted">لا توجد طلبات حديثة مسجلة.</p>}</Card><Card><div className="ex-card-head"><h3>حالة الخدمات</h3><Link href="/status">تفاصيل الحالة</Link></div>{services.length?services.map(x=><div className="ex-list-row" key={x.slug}><span>{x.name}</span><b className={x.last_health_status==="up"?"ex-good":x.last_health_status==="down"?"ex-bad":""}>{x.status==="active"?"مفعّل":"غير متاح"} · {x.last_health_status==="up"?"يستجيب":x.last_health_status==="down"?"لا يستجيب":"لم يُفحص"}</b><small>{x.endpoint_path}</small></div>):<p className="ex-muted">لا توجد بيانات خدمات متاحة.</p>}</Card></div>
-  <div className="ex-two-col"><Card><div className="ex-card-head"><h3>النماذج المتاحة</h3><Link href="/models">عرض النماذج</Link></div><div className="ex-model-strip">{MODELS.map(m=><Link href={"/models/"+m.slug} key={m.slug}><b>{m.name}</b><small>{m.provider}</small></Link>)}</div></Card><Card><div className="ex-card-head"><h3>إعلانات وتنبيهات</h3></div>{notices.length?notices.map(n=><div className="ex-list-row" key={n.id}><div><b>{n.title}</b><small>{n.body}</small></div><small>{fmtDate(n.created_at)}</small></div>):<p className="ex-muted">{user?"لا توجد إشعارات جديدة.":"سجّل الدخول لعرض تنبيهات حسابك."}</p>}</Card></div>
+  <div className="ex-metric-grid">
+   <Card><small>طلبات آخر 24 ساعة</small>{analyticsLoading?<span className="ex-skeleton ex-skeleton-metric"/>:<b>{analytics?.totals?.requests??"—"}</b>}</Card>
+   <Card><small>معدل النجاح</small>{analyticsLoading?<span className="ex-skeleton ex-skeleton-metric"/>:<b>{analytics?.totals?.successRate==null?"—":analytics.totals.successRate+"%"}</b>}</Card>
+   <Card><small>متوسط الاستجابة</small>{analyticsLoading?<span className="ex-skeleton ex-skeleton-metric"/>:<b>{analytics?.totals?.avgLatency==null?"—":analytics.totals.avgLatency+" ms"}</b>}</Card>
+   <Card><small>الاستهلاك الموزون</small>{analyticsLoading?<span className="ex-skeleton ex-skeleton-metric"/>:<b>{analytics?.totals?.weightedUsage?.toLocaleString("en-US")??"—"}</b>}</Card>
+   <Card><small>مفاتيح نشطة</small><b>{keys.filter(k=>!k.revoked_at).length}</b></Card>
+  </div>
+  <div className="ex-two-col">
+   <Card><div className="ex-card-head"><h3>النشاط الأخير</h3></div>{analyticsLoading?<div className="ex-skeleton-list"><i/><i/><i/></div>:analytics?.recent?.length?analytics.recent.slice(0,5).map(x=><div className="ex-list-row" key={x.id}><span>{x.service}</span><b>{x.status??"—"}</b><small>{x.latency==null?"—":x.latency+" ms"}</small></div>):<p className="ex-muted">لا توجد طلبات حديثة مسجلة.</p>}</Card>
+   <Card><div className="ex-card-head"><h3>حالة الخدمات</h3><Link href="/status">تفاصيل الحالة</Link></div>{servicesLoading?<div className="ex-skeleton-list"><i/><i/><i/></div>:services.length?services.map(x=><div className="ex-list-row" key={x.slug}><span>{x.name}</span><b className={x.last_health_status==="up"?"ex-good":x.last_health_status==="down"?"ex-bad":""}>{x.status==="active"?"مفعّل":"غير متاح"} · {x.last_health_status==="up"?"يستجيب":x.last_health_status==="down"?"لا يستجيب":"لم يُفحص"}</b><small>{x.endpoint_path}</small></div>):<p className="ex-muted">لا توجد بيانات خدمات متاحة.</p>}</Card>
+  </div>
+  <div className="ex-two-col">
+   <Card><div className="ex-card-head"><h3>النماذج المتاحة</h3><Link href="/models">عرض النماذج</Link></div><div className="ex-model-strip">{MODELS.map(m=><Link href={"/models/"+m.slug} key={m.slug}><b>{m.name}</b><small>{m.provider}</small></Link>)}</div></Card>
+   <Card><div className="ex-card-head"><h3>إعلانات وتنبيهات</h3></div>{noticesLoading?<div className="ex-skeleton-list"><i/><i/></div>:notices.length?notices.map(n=><div className="ex-list-row" key={n.id}><div><b>{n.title}</b><small>{n.body}</small></div><small>{fmtDate(n.created_at)}</small></div>):<p className="ex-muted">{user?"لا توجد إشعارات جديدة.":"سجّل الدخول لعرض تنبيهات حسابك."}</p>}</Card>
+  </div>
  </div>
 }
 
