@@ -66,6 +66,20 @@ export function listManagedServices(): readonly ManagedServiceDefinition[] {
   return Object.freeze(Object.values(SERVICE_REGISTRY));
 }
 
+/** Shared CORS preflight response for every managed API endpoint. */
+export function managedServiceOptions(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
 function managerError(message: string, status: number, requestId: string) {
   return Response.json(
     { success: false, error: message, code: status === 404 ? "SERVICE_NOT_FOUND" : "SERVICE_MANAGER_ERROR", requestId },
