@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-export type ManagedServiceSlug = "aql-gemini" | "gptfree";
+export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x";
 
 export type ManagedServiceDefinition = Readonly<{
   slug: ManagedServiceSlug;
@@ -43,6 +43,17 @@ export const SERVICE_REGISTRY: Readonly<Record<ManagedServiceSlug, ManagedServic
       authorization: "supabase-rpc",
       capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
       upstream: "GPTFree",
+    }),
+    "star-x": Object.freeze({
+      slug: "star-x",
+      category: "ai",
+      method: "POST",
+      runtime: "nodejs",
+      maxDuration: 180,
+      route: "/api/v1/ai/star-x",
+      authorization: "supabase-rpc",
+      capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
+      upstream: "Star X (PhotoRoom AI tools)",
     }),
   });
 
