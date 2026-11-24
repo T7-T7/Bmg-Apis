@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
+import { executeService } from "@/lib/server/service-manager";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
     const access = await authorize(request, match?.[1] ?? null);
     if (!access.ok) return access.response;
     usageId=access.usageId??null;
-    const upstream = await requestAgent({ message: data.message, images: [], history });
+    const upstream = await executeService("gptfree", () => requestAgent({ message: data.message, images: [], history }));
     const raw = await upstream.text();
     let responseText = "";
     let upstreamError = "";
