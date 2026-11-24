@@ -23,9 +23,9 @@ type ModelInfo = {
  price: string;
 };
 const MODELS: ModelInfo[] = [
-  {slug:"gemini",name:"Gemini",provider:"Gemini",logo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTm4gheCqenUoTJzI7NNSdnbb5FDDyngC0jpX0-ZFQAOaPUdlHfssfUt54&s",type:"محادثة نصية",description:"واجهة محادثة نصية تعتمد على محرك Gemini مع دعم التعليمات والجلسات.",endpoint:"/api/v1/ai/gemini",capabilities:["نص","محادثات","تعليمات","جلسات"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
-  {slug:"gptfree",name:"GPTFree",provider:"GPTFree",logo:"https://gptfree.com/new/logo.svg",description:"توليد الردود النصية مع إمكانية إرسال سجل محادثة.",endpoint:"/api/v1/ai/gptfree",capabilities:["نص","سجل محادثة"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
-  {slug:"star-x",name:"Star X",provider:"Star X",logo:"https://starx.bmg-inc.web.id/1795458731193.jpg",type:"معالجة وتوليد الصور",description:"تعديل المشهد وتوليد الصور واستبدال الخلفية وتحسين الإضاءة.",endpoint:"/api/v1/ai/star-x",capabilities:["تعديل المشهد","توليد الصور","استبدال الخلفية","تحسين الإضاءة"],status:"نشط",context:"معالجة الصور",price:"حسب حدود الخدمة"}
+  {slug:"gemini",name:"Gemini",provider:"Gemini",logo:"https://i.ibb.co/mVYZVhKC/cutout.png",type:"محادثة نصية",description:"واجهة محادثة نصية تعتمد على محرك Gemini مع دعم التعليمات والجلسات.",endpoint:"/api/v1/ai/gemini",capabilities:["نص","محادثات","تعليمات","جلسات"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
+  {slug:"gptfree",name:"GPTFree",provider:"GPTFree",logo:"https://i.ibb.co/JwmgT4g2/logo.jpg",description:"توليد الردود النصية مع إمكانية إرسال سجل محادثة.",endpoint:"/api/v1/ai/gptfree",capabilities:["نص","سجل محادثة"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
+  {slug:"star-x",name:"Star X",provider:"Star X",logo:"https://i.ibb.co/5f7T0n3/cutout-1.png",type:"معالجة وتوليد الصور",description:"تعديل المشهد وتوليد الصور واستبدال الخلفية وتحسين الإضاءة.",endpoint:"/api/v1/ai/star-x",capabilities:["تعديل المشهد","توليد الصور","استبدال الخلفية","تحسين الإضاءة"],status:"نشط",context:"معالجة الصور",price:"حسب حدود الخدمة"}
 ];
 const DOCS = [
  {id:"intro",label:"المقدمة",title:"مقدمة وتعريف بالمنصة",desc:"تعرف على NOX APIS والخدمات النشطة وطريقة بدء التكامل.",md:"# NOX APIS — مقدمة\n\nمنصة مطورين لإدارة مفاتيح API واختبار الخدمات ومراجعة الاستخدام.\n\n## الخدمات النشطة\n- Gemini: POST /api/v1/ai/gemini\n- GPTFree: POST /api/v1/ai/gptfree\n\nابدأ بإنشاء مفتاح API ثم انتقل إلى قسم المصادقة."},
