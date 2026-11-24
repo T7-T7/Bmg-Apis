@@ -34,6 +34,7 @@ test("registered API routes execute through the central service manager", () => 
   assert.match(gemini, /executeManagedService\("aql-gemini", request/);
   assert.match(gptfree, /executeManagedService\("gptfree", request/);
   assert.match(starx, /executeManagedService\("star-x", request/);
+  for (const route of [gemini, gptfree, starx]) assert.match(route, /managedServiceOptions\(\)/);
   assert.match(gemini, /p_service_slug:\s*"aql-gemini"/);
   assert.match(gptfree, /p_service_slug:\s*"gptfree"/);
   assert.match(starx, /p_service_slug:\s*"star-x"/);
@@ -50,6 +51,16 @@ test("manager responses are not cacheable and never expose handler source", () =
   assert.match(manager, /X-Service-Slug/);
   assert.match(manager, /new Response\(response\.body/);
   assert.doesNotMatch(manager, /sourceCode|scriptPath|handler\.toString/);
+});
+
+test("managed API routes share one consistent CORS preflight policy", () => {
+  const manager = read("../lib/server/service-manager.ts");
+  assert.match(manager, /function managedServiceOptions\(\): Response/);
+  assert.match(manager, /Access-Control-Allow-Origin": "\*"/);
+  assert.match(manager, /Access-Control-Allow-Methods": "POST, OPTIONS"/);
+  assert.match(manager, /Access-Control-Allow-Headers": "Content-Type, Authorization"/);
+  assert.match(manager, /Access-Control-Max-Age": "86400"/);
+  assert.match(manager, /Cache-Control": "no-store"/);
 });
 
 test("GPTFree maps service state, permission and quota failures to correct HTTP statuses", () => {
