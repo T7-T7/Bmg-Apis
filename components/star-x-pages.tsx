@@ -9,7 +9,7 @@ const ACTIONS = [
   { value: "edit-scene", label: "تعديل المشهد", description: "تعديل مشهد صورة موجودة باستخدام وصف نصي." },
   { value: "generate-image", label: "توليد صورة", description: "إنشاء صورة من وصف نصي دون الحاجة إلى صورة مصدر." },
   { value: "change-background", label: "استبدال الخلفية", description: "تغيير خلفية صورة موجودة وفق الوصف." },
-  { value: "improve-lighting", label: "تحسين الإضاءة", description: "تحسين الظلال والإضاءة عبر أداة PhotoRoom المتاحة." },
+  { value: "improve-lighting", label: "تحسين الإضاءة", description: "تحسين الظلال والإضاءة باستخدام أداة التحسين المتاحة." },
 ] as const;
 
 type Action = (typeof ACTIONS)[number]["value"];
@@ -24,7 +24,7 @@ export function StarXDetails() {
     <section className="ex-card" style={{ display: "grid", gap: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <img src={LOGO} alt="Star X" width={76} height={76} style={{ objectFit: "contain", borderRadius: 14 }} />
-        <div><h2 style={{ margin: 0 }}>Star X</h2><p style={{ margin: "6px 0" }}>PhotoRoom · Image Processing</p><span className="ex-status">POST · Active</span></div>
+        <div><h2 style={{ margin: 0 }}>Star X</h2><p style={{ margin: "6px 0" }}>معالجة الصور</p><span className="ex-status">POST · Active</span></div>
       </div>
       <p>توفر Star X أربع وظائف للصور: تعديل المشهد، توليد صورة، استبدال الخلفية، وتحسين الإضاءة باستخدام أداة الظلال المتاحة لدى المزود.</p>
       <div className="ex-model-grid">
@@ -33,7 +33,7 @@ export function StarXDetails() {
       <div className="ex-facts">
         <span>المسار <b dir="ltr">{ENDPOINT}</b></span>
         <span>الطريقة <b>POST</b></span>
-        <span>المزود <b>PhotoRoom</b></span>
+        <span>المزود <b>Star X</b></span>
         <span>لغة التعليمات <b>English only</b></span>
         <span>حجم الطلب الأقصى <b>1 MB</b></span>
       </div>
@@ -124,7 +124,7 @@ export function StarXTest() {
     </header>
     <div className="ex-playground-grid ex-model-test">
       <section className="ex-card" style={{ display: "grid", gap: 14 }}>
-        <div className="ex-test-model-head"><img src={LOGO} alt="" width={42} height={42} /><b>Star X</b><small>PhotoRoom</small></div>
+        <div className="ex-test-model-head"><img src={LOGO} alt="" width={42} height={42} /><b>Star X</b><small>Image AI</small></div>
         <label>الوظيفة
           <select value={action} onChange={(event) => { setAction(event.target.value as Action); setError(""); }}>
             {ACTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
