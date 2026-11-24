@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeManagedService } from "@/lib/server/service-manager";
+import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 
@@ -178,10 +178,7 @@ async function requestAgent(payload: { message: string; images: string[]; histor
   return response;
 }
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: {
-    "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400"
-  }});
+  return managedServiceOptions();
 }
 async function handlePost(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
