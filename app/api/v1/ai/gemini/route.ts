@@ -45,7 +45,7 @@ async function handlePost(request: NextRequest) {
  if(data.prompt.length>MAX_PROMPT_CHARS)return jsonError("تجاوز النص الحد الأقصى المسموح وهو 30000 حرف.",413);
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
- let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,match?.[1]??null);if(!access.ok)return access.response;usageId=access.usageId??null;
+ let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,match?.[1]??null);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);usageId=access.usageId??null;
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
  await completeUsage(usageId,200,startedAt);
  return NextResponse.json({...response,access:match?"api_key":"demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
