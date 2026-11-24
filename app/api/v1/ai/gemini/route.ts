@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { executeManagedService } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 import { askGemini } from "@/lib/server/gemini";
@@ -33,7 +34,7 @@ async function authorize(request:NextRequest,token:string|null){
  return{ok:true,usageId:Number(result.usage_id)||null};
 }
 export async function OPTIONS(){return new NextResponse(null,{status:204,headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Allow-Headers":"Content-Type, Authorization","Access-Control-Max-Age":"86400"}})}
-export async function POST(request:NextRequest){
+async function handlePost(request: NextRequest) {
  const authorization=request.headers.get("authorization")??"";
  const match=authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
  if(authorization&&!match)return jsonError("صيغة ترويسة Authorization غير صحيحة.",401);
@@ -49,4 +50,8 @@ export async function POST(request:NextRequest){
  await completeUsage(usageId,200,startedAt);
  return NextResponse.json({...response,access:match?"api_key":"demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
  }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]",error instanceof Error?error.message:error);return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
+}
+
+export async function POST(request: NextRequest) {
+  return executeManagedService("aql-gemini", request, () => handlePost(request));
 }

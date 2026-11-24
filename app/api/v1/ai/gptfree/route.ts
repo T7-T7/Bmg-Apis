@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { executeManagedService } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 
@@ -169,7 +170,7 @@ export async function OPTIONS() {
     "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400"
   }});
 }
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
   const match = authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
   if (authorization && !match) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
@@ -222,4 +223,9 @@ export async function POST(request: NextRequest) {
     console.error("[Nox GPTFree API]", cause instanceof Error ? cause.message : cause);
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
+}
+
+
+export async function POST(request: NextRequest) {
+  return executeManagedService("gptfree", request, () => handlePost(request));
 }
