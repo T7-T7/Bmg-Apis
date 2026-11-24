@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeManagedService } from "@/lib/server/service-manager";
+import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 import { askGemini } from "@/lib/server/gemini";
@@ -33,7 +33,9 @@ async function authorize(request:NextRequest,token:string|null){
  if(!result?.authorized)return{ok:false,response:jsonError(result?.reason==="rate_limited"?"وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.":result?.reason==="maintenance"?(result.message||"الخدمة تحت الصيانة مؤقتًا."):"الخدمة غير متاحة حاليًا.",result?.reason==="rate_limited"?429:503)};
  return{ok:true,usageId:Number(result.usage_id)||null};
 }
-export async function OPTIONS(){return new NextResponse(null,{status:204,headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Allow-Headers":"Content-Type, Authorization","Access-Control-Max-Age":"86400"}})}
+export async function OPTIONS() {
+  return managedServiceOptions();
+}
 async function handlePost(request: NextRequest) {
  const authorization=request.headers.get("authorization")??"";
  const match=authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
