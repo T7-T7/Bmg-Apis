@@ -17,7 +17,7 @@
 | الخدمة | الطريقة | المسار | المصدر |
 |---|---|---|---|
 | عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini |
-| GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree |
+| GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree |\n| Star X | POST | `/api/v1/ai/star-x` | PhotoRoom AI tools |
 
 لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.
 
