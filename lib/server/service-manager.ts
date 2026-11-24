@@ -4,38 +4,55 @@ export type ManagedServiceSlug = "aql-gemini" | "gptfree";
 
 export type ManagedServiceDefinition = Readonly<{
   slug: ManagedServiceSlug;
+  category: "ai";
   method: "POST";
   runtime: "nodejs";
   maxDuration: number;
   route: string;
+  authorization: "supabase-rpc";
+  capabilities: readonly ("api-key" | "demo" | "usage-tracking")[];
+  upstream: string;
 }>;
 
 /**
- * Handlers are registered at build time and remain server-side.
- * Supabase remains authoritative for availability, maintenance, API-key scopes,
- * quotas and usage authorization inside each service handler.
+ * Build-time manifest for server-side service handlers.
+ * Add a service here only alongside its server route implementation.
+ * Supabase remains authoritative for availability, maintenance, scopes,
+ * quotas and usage authorization. No executable code is loaded from the DB.
  */
 export const SERVICE_REGISTRY: Readonly<Record<ManagedServiceSlug, ManagedServiceDefinition>> =
   Object.freeze({
     "aql-gemini": Object.freeze({
       slug: "aql-gemini",
+      category: "ai",
       method: "POST",
       runtime: "nodejs",
       maxDuration: 60,
       route: "/api/v1/ai/gemini",
+      authorization: "supabase-rpc",
+      capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
+      upstream: "Gemini",
     }),
     gptfree: Object.freeze({
       slug: "gptfree",
+      category: "ai",
       method: "POST",
       runtime: "nodejs",
       maxDuration: 120,
       route: "/api/v1/ai/gptfree",
+      authorization: "supabase-rpc",
+      capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
+      upstream: "GPTFree",
     }),
   });
 
 export function getManagedService(slug: string): ManagedServiceDefinition | null {
   if (!Object.prototype.hasOwnProperty.call(SERVICE_REGISTRY, slug)) return null;
   return SERVICE_REGISTRY[slug as ManagedServiceSlug];
+}
+
+export function listManagedServices(): readonly ManagedServiceDefinition[] {
+  return Object.freeze(Object.values(SERVICE_REGISTRY));
 }
 
 function managerError(message: string, status: number, requestId: string) {
