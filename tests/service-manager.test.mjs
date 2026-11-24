@@ -30,3 +30,11 @@ test("manager responses are not cacheable and never expose handler source", () =
   assert.match(manager, /new Response\(response\.body/);
   assert.doesNotMatch(manager, /sourceCode|scriptPath|handler\.toString/);
 });
+
+test("GPTFree maps service state, permission and quota failures to correct HTTP statuses", () => {
+  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
+  assert.match(gptfree, /reason === "service_unavailable"[\s\S]*?\? 503/);
+  assert.match(gptfree, /reason === "account_suspended"[\s\S]*?\? 403/);
+  assert.match(gptfree, /reason === "insufficient_scope"[\s\S]*?\? 403/);
+  assert.match(gptfree, /reason === "rate_limited"[\s\S]*?\? 429/);
+});

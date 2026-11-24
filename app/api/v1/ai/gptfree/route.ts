@@ -87,10 +87,19 @@ async function authorize(request: NextRequest, token: string | null) {
     });
     if (rpcError) throw rpcError;
     const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-    if (!result?.authorized) return { ok: false as const, response: error(
-      result?.reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : result?.reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة." : result?.reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية استخدام هذه الخدمة." : "مفتاح API غير صالح أو ملغى أو منتهي.",
-      result?.reason === "rate_limited" ? 429 : result?.reason === "account_suspended" || result?.reason === "insufficient_scope" ? 403 : result?.reason === "maintenance" ? 503 : 401
-    ) };
+    if (!result?.authorized) {
+      const reason = result?.reason;
+      const status = reason === "rate_limited" ? 429
+        : reason === "account_suspended" || reason === "insufficient_scope" ? 403
+        : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
+      const message = reason === "rate_limited" ? "تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح."
+        : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
+        : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
+        : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة."
+        : reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية استخدام هذه الخدمة."
+        : "مفتاح API غير صالح أو ملغى أو منتهي.";
+      return { ok: false as const, response: error(message, status) };
+    }
     return { ok: true as const, usageId: Number(result.usage_id) || null };
   }
   const { data, error: rpcError } = await db.rpc("bmg_authorize_demo_request", {
@@ -99,10 +108,14 @@ async function authorize(request: NextRequest, token: string | null) {
   });
   if (rpcError) throw rpcError;
   const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-  if (!result?.authorized) return { ok: false as const, response: error(
-    result?.reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية." : result?.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : "الخدمة غير متاحة حاليًا.",
-    result?.reason === "rate_limited" ? 429 : 503
-  ) };
+  if (!result?.authorized) {
+    const reason = result?.reason;
+    const status = reason === "rate_limited" ? 429 : 503;
+    const message = reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية."
+      : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
+      : "الخدمة غير متاحة حاليًا.";
+    return { ok: false as const, response: error(message, status) };
+  }
   return { ok: true as const, usageId: Number(result.usage_id) || null };
 }
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
