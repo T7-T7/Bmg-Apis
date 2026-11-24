@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 import { askGemini } from "@/lib/server/gemini";
+import { executeService } from "@/lib/server/service-manager";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MAX_PROMPT_CHARS = 30_000;
@@ -45,7 +46,7 @@ export async function POST(request:NextRequest){
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
  let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,match?.[1]??null);if(!access.ok)return access.response;usageId=access.usageId??null;
- const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
+ const response=await executeService("aql-gemini",()=>askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined}));
  await completeUsage(usageId,200,startedAt);
  return NextResponse.json({...response,access:match?"api_key":"demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
  }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]",error instanceof Error?error.message:error);return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
