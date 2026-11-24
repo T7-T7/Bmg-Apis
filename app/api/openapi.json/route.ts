@@ -36,6 +36,30 @@ const specification = {
         }
       }
     },
+    "/api/v1/ai/star-x": {
+      post: {
+        tags: ["AI"], operationId: "runStarXImageTool",
+        summary: "تشغيل أدوات Star X للصور",
+        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية.",
+        security: [{ NoxApiKey: [] }],
+        requestBody: { required: true, content: { "application/json": { schema: {
+          type: "object", additionalProperties: false, required: ["action"],
+          properties: {
+            action: { type: "string", enum: ["edit-scene", "generate-image", "change-background", "improve-lighting"] },
+            imageUrl: { type: "string", format: "uri", description: "HTTPS image URL; required except for generate-image." },
+            prompt: { type: "string", maxLength: 4000, description: "English prompt only." }
+          }
+        }, example: { action: "generate-image", prompt: "A cinematic photograph of a modern glass house beside a lake at sunset" } } } },
+        responses: {
+          "200": { description: "Generated image binary (image/*)." },
+          "400": { description: "Invalid request or unsupported prompt language." },
+          "401": { description: "Invalid API key." },
+          "429": { description: "Rate limit exceeded." },
+          "502": { description: "Provider execution failed." },
+          "503": { description: "Service unavailable." }
+        }
+      }
+    },
     "/api/v1/ai/gemini": {
       post: {
         tags: ["AI"],
