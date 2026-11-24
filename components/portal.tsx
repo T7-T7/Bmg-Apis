@@ -10,6 +10,7 @@ import AdminConsole from "@/components/admin-console";
 import NotificationsCenter from "@/components/notifications-center";
 import UsageCenter from "@/components/usage-center";
 import { HomeEnhancements, ModelsCatalog, ModelDetails, ModelTestWorkspace, DocsWorkspace, ApiReferencePage, PlaygroundWorkspace, DashboardOverview, ApiKeysWorkspace, CreateApiKeyWorkspace, SettingsWorkspace, UpgradeWorkspace, StatusWorkspace, SupportWorkspace, CookieConsent, FeedbackWidget } from "@/components/approved-pages";
+import { StarXDetails, StarXTest } from "@/components/star-x-pages";
 
 type ApiService = { slug:string; name:string; description:string; category:string; endpoint_path:string; http_method:"GET"|"POST"; status:"active"|"maintenance"|"disabled" };
 type ApiKey = { id:string; label:string; key_prefix:string; created_at:string; last_used_at:string|null; expires_at:string|null; revoked_at:string|null };
@@ -19,6 +20,7 @@ let authSnapshotUser:User|null=null;
 const SERVICES:ApiService[]=[
  {slug:"aql-gemini",name:"Gemini",description:"توليد النصوص والمحادثات باستخدام Gemini مع تعليمات مخصصة واستمرار الجلسات.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gemini",http_method:"POST",status:"active"},
  {slug:"gptfree",name:"GPTFree",description:"توليد الردود النصية مع سجل محادثة مستمر عبر GPTFree.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gptfree",http_method:"POST",status:"active"},
+ {slug:"star-x",name:"Star X",description:"تعديل المشهد وتوليد الصور واستبدال الخلفية وتحسين الإضاءة.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/star-x",http_method:"POST",status:"active"},
 
 ];
 const NAV=[{href:"/",label:"الرئيسية",icon:"house"},{href:"/models",label:"النماذج",icon:"brain-circuit"},{href:"/playground",label:"الألعاب والاختبارات",icon:"flask"},{href:"/docs",label:"المستندات والتوثيق",icon:"book-open"},{href:"/status",label:"الحالة",icon:"activity"},{href:"/upgrade",label:"الترقية",icon:"spark"},{href:"/support",label:"تواصل معنا",icon:"user"}];
@@ -156,6 +158,8 @@ export default function Portal(){
  {pathname==="/dashboard/usage"&&<UsageCenter/>}
  {pathname==="/"&&<HomeEnhancements user={user} analytics={analytics} keys={keys} analyticsLoading={analyticsLoading}/>}
  {pathname==="/models"&&<ModelsCatalog/>}
+ {pathname==="/models/star-x"&&<StarXDetails/>}
+ {pathname==="/models/star-x/test"&&<StarXTest/>}
  {pathname.startsWith("/models/")&&pathname.split("/")[3]==="test"&&<ModelTestWorkspace slug={pathname.split("/")[2]||""}/>}
  {pathname.startsWith("/models/")&&pathname.split("/")[3]!=="test"&&<ModelDetails slug={pathname.split("/")[2]||""}/>}
  {pathname==="/apis"&&<><PageHeading eyebrow="API CATALOG" title="كتالوج الواجهات" desc="تصفح الخدمات النشطة وتفاصيل نقاط النهاية وطرق المصادقة."/><div className="catalog-controls"><label className="catalog-search"><Icon name="search"/><input value={catalogQuery} onChange={e=>setCatalogQuery(e.target.value)} placeholder="ابحث عن واجهة أو وظيفة…"/></label><select value={catalogCategory} onChange={e=>setCatalogCategory(e.target.value)} aria-label="تصنيف الواجهات"><option value="all">كل التصنيفات</option><option value="ذكاء اصطناعي">ذكاء اصطناعي</option></select></div><div className="catalog-toolbar"><span>{filteredServices.length} من {SERVICES.length} واجهات منشورة</span><span className="filter-pill"><i/> Active services</span></div>{filteredServices.length?<div className="service-grid">{filteredServices.map(s=><ServiceCard key={s.slug} service={s}/>)}</div>:<div className="panel empty-state"><b>لا توجد نتائج مطابقة</b><p>جرّب تغيير عبارة البحث أو التصنيف.</p></div>}</>}
