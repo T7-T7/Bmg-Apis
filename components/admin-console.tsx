@@ -205,7 +205,7 @@ export default function AdminConsole(){
   const content=format==="json"?JSON.stringify({platform:"NOX APIS",exportedAt:new Date().toISOString(),dataset:exportDataset,total:rows.length,items:rows},null,2):[
    Object.keys(rows[0]).map(csvCell).join(","),
    ...rows.map(row=>Object.keys(rows[0]).map(key=>csvCell(row[key])).join(","))
-  ].join("\\n");
+  ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-apis-"+selected.name+"-"+new Date().toISOString().slice(0,10)+"."+format;link.click();URL.revokeObjectURL(url);
   void writeAudit("export.create","export",exportDataset,{format,rows:rows.length});
@@ -214,7 +214,7 @@ export default function AdminConsole(){
   const content=format==="json"?JSON.stringify(auditRows,null,2):[
    "createdAt,actorName,actorEmail,action,entityType,entityId,details",
    ...auditRows.map(x=>[x.createdAt,x.actorName||"",x.actorEmail||"",x.action,x.entityType,x.entityId||"",JSON.stringify(x.details||{})].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))
-  ].join("\\n");
+  ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-api-audit-page-"+auditRowsPage+"."+format;link.click();URL.revokeObjectURL(url);
  };
@@ -222,7 +222,7 @@ export default function AdminConsole(){
   const content=format==="json"?JSON.stringify({total:requestLogsTotal,hours:requestLogsHours,items:requestLogs},null,2):[
    "createdAt,user,email,keyLabel,service,method,status,latencyMs,weight",
    ...requestLogs.map(x=>[x.createdAt,x.displayName||"",x.email||"",x.keyLabel||"",x.service,x.method,x.status??"",x.latency??"",x.weight].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))
-  ].join("\\n");
+  ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-api-request-logs-"+requestLogsHours+"h."+format;link.click();URL.revokeObjectURL(url);
  };
@@ -232,7 +232,7 @@ export default function AdminConsole(){
   const content=format==="json"?JSON.stringify(analytics,null,2):[
    "date,requests,weightedUsage,errors,avgLatency",
    ...(analyticsDays===1?analytics.hourly.map(x=>[x.hour,x.requests,x.weightedUsage,"",""].join(",")):analytics.daily.map(x=>[x.date,x.requests,x.weightedUsage,x.errors,x.avgLatency??""].join(",")))
-  ].join("\\n");
+  ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="bmg-analytics-"+analyticsDays+"d."+format;link.click();URL.revokeObjectURL(url);
  };
