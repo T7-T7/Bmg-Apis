@@ -7,7 +7,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 test("server service manifest contains known immutable server-side services", () => {
   const manager = read("../lib/server/service-manager.ts");
   assert.match(manager, /"aql-gemini"/);
-  assert.match(manager, /gptfree/);
+  assert.match(manager, /gptfree/);\n  assert.match(manager, /"star-x"/);
   assert.match(manager, /Object\.freeze/);
   assert.match(manager, /getManagedService/);
   assert.match(manager, /listManagedServices/);
@@ -18,16 +18,16 @@ test("server service manifest contains known immutable server-side services", ()
 test("registered services have unique routes and bounded runtime metadata", () => {
   const manager = read("../lib/server/service-manager.ts");
   const routes = [...manager.matchAll(/route: "(\/api\/v1\/ai\/[^"]+)"/g)].map((match) => match[1]);
-  assert.equal(routes.length, 2);
+  assert.equal(routes.length, 3);
   assert.equal(new Set(routes).size, routes.length);
   assert.match(manager, /maxDuration: 60/);
-  assert.match(manager, /maxDuration: 120/);
+  assert.match(manager, /maxDuration: 120/);\n  assert.match(manager, /maxDuration: 180/);
   assert.match(manager, /capabilities: Object\.freeze/);
 });
 
 test("registered API routes execute through the central service manager", () => {
   const gemini = read("../app/api/v1/ai/gemini/route.ts");
-  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
+  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");\n  const starx = read("../app/api/v1/ai/star-x/route.ts");
   assert.match(gemini, /executeManagedService\("aql-gemini", request/);
   assert.match(gptfree, /executeManagedService\("gptfree", request/);
   assert.match(gemini, /p_service_slug:\s*"aql-gemini"/);
