@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
-import { executeManagedService } from "@/lib/server/service-manager";
+import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 
 export const runtime = "nodejs";
@@ -162,10 +162,7 @@ async function handlePost(request: NextRequest) {
   }
 }
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: {
-    "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Max-Age": "86400"
-  }});
+  return managedServiceOptions();
 }
 export async function POST(request: NextRequest) {
   return executeManagedService("star-x", request, () => handlePost(request));
