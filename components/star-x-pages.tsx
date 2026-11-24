@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const LOGO = "https://i.ibb.co/5f7T0n3/cutout-1.png";
 const ENDPOINT = "/api/v1/ai/star-x";
 const ACTIONS = [
   { value: "edit-scene", label: "تعديل المشهد", description: "تعديل مشهد صورة موجودة باستخدام وصف نصي." },
@@ -23,7 +22,6 @@ export function StarXDetails() {
     </header>
     <section className="ex-card" style={{ display: "grid", gap: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-        <img src={LOGO} alt="Star X" width={76} height={76} style={{ objectFit: "contain", borderRadius: 14 }} />
         <div><h2 style={{ margin: 0 }}>Star X</h2><p style={{ margin: "6px 0" }}>معالجة الصور</p><span className="ex-status">POST · Active</span></div>
       </div>
       <p>توفر Star X أربع وظائف للصور: تعديل المشهد، توليد صورة، استبدال الخلفية، وتحسين الإضاءة باستخدام أداة الظلال المتاحة لدى المزود.</p>
@@ -124,7 +122,7 @@ export function StarXTest() {
     </header>
     <div className="ex-playground-grid ex-model-test">
       <section className="ex-card" style={{ display: "grid", gap: 14 }}>
-        <div className="ex-test-model-head"><img src={LOGO} alt="" width={42} height={42} /><b>Star X</b><small>Image AI</small></div>
+        <div className="ex-test-model-head"><b>Star X</b><small>Image AI</small></div>
         <label>الوظيفة
           <select value={action} onChange={(event) => { setAction(event.target.value as Action); setError(""); }}>
             {ACTIONS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
