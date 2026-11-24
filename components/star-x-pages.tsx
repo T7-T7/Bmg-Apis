@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const LOGO = "https://starx.bmg-inc.web.id/1795458731193.jpg";
+const LOGO = "https://i.ibb.co/5f7T0n3/cutout-1.png";
 const ENDPOINT = "/api/v1/ai/star-x";
 const ACTIONS = [
   { value: "edit-scene", label: "تعديل المشهد", description: "تعديل مشهد صورة موجودة باستخدام وصف نصي." },
