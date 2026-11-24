@@ -9,7 +9,20 @@ import FounderGlobe from "./founder-globe";
 
 type KeyRow = { id:string; label:string; key_prefix:string; created_at:string; last_used_at:string|null; expires_at:string|null; revoked_at:string|null };
 type AnalyticsData = { limits?:{plan:string;requestsPerMinute:number;maxApiKeys:number;dailyWeightedLimit:number;monthlyWeightedLimit:number;dailyWeightedUsage:number;monthlyWeightedUsage:number;dailyPercentage:number;monthlyPercentage:number}; totals?:{requests:number;weightedUsage?:number;errors?:number;successRate:number|null;avgLatency:number|null;measuredRequests?:number}; daily?:{date:string;count:number;weightedUsage?:number}[]; services?:{slug:string;count:number;weightedUsage?:number}[]; recent?:{id:number|string;service:string;method:string;status:number|null;latency:number|null;createdAt?:string}[] };
-const MODELS = [
+type ModelInfo = {
+ slug: string;
+ name: string;
+ provider: string;
+ logo?: string;
+ type?: string;
+ description: string;
+ endpoint: string;
+ capabilities: string[];
+ status: string;
+ context: string;
+ price: string;
+};
+const MODELS: ModelInfo[] = [
   {slug:"gemini",name:"Gemini",provider:"Gemini",logo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTm4gheCqenUoTJzI7NNSdnbb5FDDyngC0jpX0-ZFQAOaPUdlHfssfUt54&s",type:"محادثة نصية",description:"واجهة محادثة نصية تعتمد على محرك Gemini مع دعم التعليمات والجلسات.",endpoint:"/api/v1/ai/gemini",capabilities:["نص","محادثات","تعليمات","جلسات"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
   {slug:"gptfree",name:"GPTFree",provider:"GPTFree",logo:"https://gptfree.com/new/logo.svg",description:"توليد الردود النصية مع إمكانية إرسال سجل محادثة.",endpoint:"/api/v1/ai/gptfree",capabilities:["نص","سجل محادثة"],status:"نشط",context:"غير موثق في بيانات المنصة",price:"غير محدد في بيانات المنصة"},
   {slug:"star-x",name:"Star X",provider:"Star X",logo:"https://starx.bmg-inc.web.id/1795458731193.jpg",type:"معالجة وتوليد الصور",description:"تعديل المشهد وتوليد الصور واستبدال الخلفية وتحسين الإضاءة.",endpoint:"/api/v1/ai/star-x",capabilities:["تعديل المشهد","توليد الصور","استبدال الخلفية","تحسين الإضاءة"],status:"نشط",context:"معالجة الصور",price:"حسب حدود الخدمة"}
