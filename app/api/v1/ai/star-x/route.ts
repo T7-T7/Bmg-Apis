@@ -103,7 +103,7 @@ function validImageUrl(value: unknown): value is string {
 }
 async function handlePost(request: NextRequest) {
   const auth = request.headers.get("authorization") ?? "";
-  const match = auth.match(/^Bearer\\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
+  const match = auth.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
   if (auth && !match) return fail("صيغة Authorization غير صحيحة.", 401);
   let body: unknown;
   try { body = await readBody(request); }
@@ -123,7 +123,7 @@ async function handlePost(request: NextRequest) {
       (typeof data.prompt !== "string" || !data.prompt.trim() || data.prompt.length > MAX_PROMPT)) {
     return fail("الحقل prompt مطلوب، وبحد أقصى 4000 حرف.", 400);
   }
-  if (typeof data.prompt === "string" && /[\\u0600-\\u06FF]/.test(data.prompt)) {
+  if (typeof data.prompt === "string" && /[\u0600-\u06FF]/.test(data.prompt)) {
     return fail("Star X يقبل التعليمات باللغة الإنجليزية فقط. اكتب prompt باللغة الإنجليزية.", 400);
   }
 
