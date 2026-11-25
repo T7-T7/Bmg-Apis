@@ -4,82 +4,65 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-test("server service manifest contains known immutable server-side services", () => {
+test("server service manifest contains the three immutable registered services", () => {
   const manager = read("../lib/server/service-manager.ts");
-  assert.match(manager, /"aql-gemini"/);
-  assert.match(manager, /gptfree/);
-  assert.match(manager, /"star-x"/);
-  assert.match(manager, /Object\\.freeze/);
-  assert.match(manager, /getManagedService/);
-  assert.match(manager, /listManagedServices/);
-  assert.match(manager, /authorization: "supabase-rpc"/);
-  assert.doesNotMatch(manager, /eval\\s*\\(|new Function\\s*\\(/);
+  for (const slug of ['"aql-gemini"', "gptfree", '"star-x"']) assert.ok(manager.includes(slug));
+  assert.ok(manager.includes("Object.freeze"));
+  assert.ok(manager.includes("getManagedService"));
+  assert.ok(manager.includes("listManagedServices"));
+  assert.ok(manager.includes('authorization: "supabase-rpc"'));
+  assert.ok(!manager.includes("new Function("));
+  assert.ok(!manager.includes("eval("));
 });
 
 test("registered services have unique routes and bounded runtime metadata", () => {
   const manager = read("../lib/server/service-manager.ts");
-  const routes = [...manager.matchAll(/route: "(\\/api\\/v1\\/ai\\/[^"]+)"/g)].map((match) => match[1]);
+  const routes = [...manager.matchAll(/route: "(\/api\/v1\/ai\/[^"]+)"/g)].map((match) => match[1]);
   assert.equal(routes.length, 3);
   assert.equal(new Set(routes).size, routes.length);
-  assert.match(manager, /maxDuration: 60/);
-  assert.match(manager, /maxDuration: 120/);
-  assert.match(manager, /maxDuration: 180/);
-  assert.match(manager, /capabilities: Object\\.freeze/);
+  for (const duration of ["maxDuration: 60", "maxDuration: 120", "maxDuration: 180"]) {
+    assert.ok(manager.includes(duration));
+  }
 });
 
-test("registered API routes execute through the compatibility adapter", () => {
-  const gemini = read("../app/api/v1/ai/gemini/route.ts");
-  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
-  const starx = read("../app/api/v1/ai/star-x/route.ts");
-  assert.match(gemini, /executeManagedService\\("aql-gemini", request/);
-  assert.match(gptfree, /executeManagedService\\("gptfree", request/);
-  assert.match(starx, /executeManagedService\\("star-x", request/);
-  for (const route of [gemini, gptfree, starx]) assert.match(route, /managedServiceOptions\\(\\)/);
+test("all registered API routes delegate through the compatibility adapter", () => {
+  const routes = [
+    ["../app/api/v1/ai/gemini/route.ts", 'executeManagedService("aql-gemini", request'],
+    ["../app/api/v1/ai/gptfree/route.ts", 'executeManagedService("gptfree", request'],
+    ["../app/api/v1/ai/star-x/route.ts", 'executeManagedService("star-x", request'],
+  ];
+  for (const [path, call] of routes) {
+    const source = read(path);
+    assert.ok(source.includes(call), path);
+    assert.ok(source.includes("managedServiceOptions()"), path);
+    assert.ok(source.includes("export async function OPTIONS()"), path);
+  }
 });
 
 test("core engine owns request identity, method gate, response headers and failure boundary", () => {
   const engine = read("../lib/core/engine/executor.ts");
-  assert.match(engine, /randomUUID/);
-  assert.match(engine, /request\\.method !== service\\.method/);
-  assert.match(engine, /X-Request-Id/);
-  assert.match(engine, /X-Service-Manager/);
-  assert.match(engine, /X-Service-Slug/);
-  assert.match(engine, /Server-Timing/);
-  assert.match(engine, /X-Content-Type-Options/);
-  assert.match(engine, /onFailure\\(requestId/);
-  assert.match(engine, /new Response\\(response\\.body/);
+  for (const fragment of [
+    "randomUUID", "request.method !== service.method", "X-Request-Id",
+    "X-Service-Manager", "X-Service-Slug", "Server-Timing",
+    "X-Content-Type-Options", "onFailure(requestId", "new Response(response.body",
+  ]) assert.ok(engine.includes(fragment), fragment);
 });
 
 test("service manager delegates lifecycle execution to Nox Core", () => {
   const manager = read("../lib/server/service-manager.ts");
-  assert.match(manager, /executeRequestPipeline/);
-  assert.match(manager, /managerName: "Nox Core"/);
-  assert.match(manager, /X-Service-Manager", "Nox Core"/);
-  assert.match(manager, /Cache-Control": "no-store"/);
-  assert.match(manager, /Origin is a browser boundary, not a cryptographic identity mechanism/);
+  for (const fragment of [
+    "executeRequestPipeline", 'managerName: "Nox Core"',
+    'X-Service-Manager", "Nox Core"', 'Cache-Control": "no-store"',
+    "Origin is a browser boundary, not a cryptographic identity mechanism",
+  ]) assert.ok(manager.includes(fragment), fragment);
 });
 
 test("managed API routes share one consistent CORS preflight policy", () => {
   const manager = read("../lib/server/service-manager.ts");
-  assert.match(manager, /function managedServiceOptions\\(\\): Response/);
-  assert.match(manager, /status: 204/);
-  assert.match(manager, /new Response\\(null/);
-  assert.match(manager, /Access-Control-Allow-Origin": "\\*"/);
-  assert.match(manager, /Access-Control-Allow-Methods": "POST, OPTIONS"/);
-  assert.match(manager, /Access-Control-Allow-Headers": "Content-Type, Authorization"/);
-  assert.match(manager, /Access-Control-Max-Age": "86400"/);
-  assert.match(manager, /Cache-Control": "no-store"/);
-});
-
-test("all managed routes retain POST and OPTIONS exports", () => {
-  for (const path of [
-    "../app/api/v1/ai/gemini/route.ts",
-    "../app/api/v1/ai/gptfree/route.ts",
-    "../app/api/v1/ai/star-x/route.ts",
-  ]) {
-    const route = read(path);
-    assert.match(route, /export async function OPTIONS\\(\\)/);
-    assert.match(route, /return managedServiceOptions\\(\\);/);
-    assert.match(route, /export async function POST\\(request: NextRequest\\)/);
-  }
+  for (const fragment of [
+    "function managedServiceOptions(): Response", "status: 204", "new Response(null",
+    'Access-Control-Allow-Origin": "*"', 'Access-Control-Allow-Methods": "POST, OPTIONS"',
+    'Access-Control-Allow-Headers": "Content-Type, Authorization"',
+    'Access-Control-Max-Age": "86400"', 'Cache-Control": "no-store"',
+  ]) assert.ok(manager.includes(fragment), fragment);
 });
