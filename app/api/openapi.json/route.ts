@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 const specification = {
   openapi: "3.1.0",
   info: {
-    title: "NOX APIS — NEXUS OF XPERIENCE",
+    title: "NEXUS OF XPERIENCE (Nox)",
     version: "1.0.0",
-    description: "الواجهة المنشورة حاليًا من منصة NOX APIS — NEXUS OF XPERIENCE. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط. صفحات الاختبار داخل الموقع تعمل دون API Key؛ لا تضف حقلًا للمفتاح في واجهة الاختبار.",
-    contact: { name: "NOX APIS", url: "https://nox.bmg-inc.web.id/docs" },
+    termsOfService: "https://nox.bmg-inc.web.id/docs",
+    description: "الواجهة المنشورة حاليًا من منصة NEXUS OF XPERIENCE (Nox). يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط. صفحات الاختبار داخل الموقع تعمل دون API Key؛ لا تضف حقلًا للمفتاح في واجهة الاختبار.",
+    contact: { name: "Nox", url: "https://nox.bmg-inc.web.id/docs" },
   },
   servers: [{ url: "https://nox.bmg-inc.web.id", description: "Production" }],
   tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
@@ -118,8 +119,8 @@ const specification = {
       NoxApiKey: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "NOX APIS API Key",
-        description: "إلزامي لكل طلبات API الخارجية. الاستثناء الوحيد طلبات الاختبار من صفحات موقع NOX APIS الرسمية؛ لا تعرض صفحات الاختبار حقل API Key. أرسل المفتاح الخارجي في Authorization: Bearer YOUR_NOX_API_KEY."
+        bearerFormat: "Nox API Key",
+        description: "إلزامي لكل طلبات API الخارجية. الاستثناء الوحيد طلبات الاختبار من صفحات موقع Nox الرسمية؛ لا تعرض صفحات الاختبار حقل API Key. أرسل المفتاح الخارجي في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
   }
