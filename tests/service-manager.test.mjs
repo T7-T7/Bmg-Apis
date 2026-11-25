@@ -46,7 +46,7 @@ test("registered API routes execute through the central service manager", () => 
 
 test("manager responses are not cacheable and never expose handler source", () => {
   const manager = read("../lib/server/service-manager.ts");
-  assert.match(manager, /Cache-Control", "no-store"/);
+  assert.match(manager, /Cache-Control": "no-store"/);
   assert.match(manager, /X-Request-Id/);
   assert.match(manager, /X-Service-Slug/);
   assert.match(manager, /new Response\(response\.body/);
@@ -58,11 +58,11 @@ test("managed API routes share one consistent CORS preflight policy", () => {
   assert.match(manager, /function managedServiceOptions\(\): Response/);
   assert.match(manager, /status: 204/);
   assert.match(manager, /new Response\(null/);
-  assert.match(manager, /Access-Control-Allow-Origin", "\*"/);
-  assert.match(manager, /Access-Control-Allow-Methods", "POST, OPTIONS"/);
-  assert.match(manager, /Access-Control-Allow-Headers", "Content-Type, Authorization"/);
-  assert.match(manager, /Access-Control-Max-Age", "86400"/);
-  assert.match(manager, /Cache-Control", "no-store"/);
+  assert.match(manager, /Access-Control-Allow-Origin": "\*"/);
+  assert.match(manager, /Access-Control-Allow-Methods": "POST, OPTIONS"/);
+  assert.match(manager, /Access-Control-Allow-Headers": "Content-Type, Authorization"/);
+  assert.match(manager, /Access-Control-Max-Age": "86400"/);
+  assert.match(manager, /Cache-Control": "no-store"/);
 });
 
 test("every managed API route exports OPTIONS and delegates preflight to the shared policy", () => {
