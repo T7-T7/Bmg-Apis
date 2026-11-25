@@ -88,6 +88,22 @@ test("service dependency mutations use active protected Nox commands", () => {
   assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
 });
 
+test("incident lifecycle uses protected atomic Nox commands", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  for (const command of ["incident.create","incident.update","incident.status_change"]) assert.ok(registry.includes('"'+command+'": active('), command);
+  for (const rpc of ["bmg_admin_create_incident","bmg_admin_change_incident_status","bmg_admin_add_incident_update"]) assert.ok(runtime.includes('supabase.rpc("'+rpc+'"'), rpc);
+  assert.ok(runtime.includes('enumValue(input.severity, ["minor", "major", "critical"]'));
+  assert.ok(runtime.includes('enumValue(input.status, ["investigating", "identified", "monitoring", "resolved"]'));
+  assert.ok(ui.includes('runAdminCommand("incident.create"'));
+  assert.ok(ui.includes('runAdminCommand("incident.status_change"'));
+  assert.ok(ui.includes('runAdminCommand("incident.update"'));
+  assert.ok(!ui.includes('supabase.from("incidents").insert'));
+  assert.ok(!ui.includes('supabase.from("incidents").update'));
+  assert.ok(!ui.includes('supabase.from("incident_updates").insert'));
+});
+
 test("maintenance configuration and toggles use protected atomic Nox commands", () => {
   const registry = read("../lib/core/commands/command-registry.ts");
   const runtime = read("../lib/core/commands/admin-command-runtime.ts");
@@ -118,5 +134,19 @@ test("maintenance configuration migration is invoker-secured and serializes the 
   assert.ok(migration.includes("insert into public.maintenance_windows"));
   assert.ok(migration.includes("insert into public.audit_logs"));
   assert.ok(migration.includes("grant execute on function public.bmg_admin_configure_maintenance"));
+  assert.ok(!migration.includes("service_role"));
+});
+
+test("incident command migration is invoker-secured and writes timeline and audit atomically", () => {
+  const migration = read("../supabase/migrations/20261125201000_nox_incident_commands.sql");
+  for (const name of ["bmg_admin_create_incident","bmg_admin_change_incident_status","bmg_admin_add_incident_update"]) {
+    assert.ok(migration.includes("function public."+name), name);
+  }
+  assert.equal((migration.match(/security invoker/g)||[]).length,3);
+  assert.ok(migration.includes("auth.uid()"));
+  assert.ok(migration.includes("v_actor_role not in ('admin','owner')"));
+  assert.ok(migration.includes("insert into public.incident_updates"));
+  assert.ok(migration.includes("insert into public.audit_logs"));
+  assert.ok(migration.includes("grant execute on function public.bmg_admin_create_incident"));
   assert.ok(!migration.includes("service_role"));
 });

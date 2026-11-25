@@ -490,6 +490,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_add_incident_update: {
+        Args: { p_incident_id: string; p_message: string }
+        Returns: Json
+      }
+      bmg_admin_change_incident_status: {
+        Args: { p_incident_id: string; p_message: string; p_status: string }
+        Returns: Json
+      }
+      bmg_admin_create_incident: {
+        Args: { p_affected_services: string[]; p_description: string; p_severity: string; p_status: string; p_title: string }
+        Returns: Json
+      }
       bmg_admin_configure_maintenance: {
         Args: {
           p_enabled: boolean

@@ -192,6 +192,60 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const createIncident: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const title = requiredString(input.title, "title");
+    const description = typeof input.description === "string" ? input.description : "";
+    if (title.length > 200 || description.length > 10000) throw new Error("بيانات الحادث تتجاوز الحد المسموح.");
+    const severity = enumValue(input.severity, ["minor", "major", "critical"] as const, "severity");
+    const status = enumValue(input.status, ["investigating", "identified", "monitoring", "resolved"] as const, "status");
+    if (!Array.isArray(input.affected_services) || input.affected_services.length > 50 ||
+        input.affected_services.some((item) => typeof item !== "string" || !item.trim() || item.length > 120)) {
+      throw new Error("قائمة الخدمات المتأثرة غير صالحة.");
+    }
+    const affectedServices = [...new Set(input.affected_services.map((item) => (item as string).trim()))];
+    const { data, error } = await supabase.rpc("bmg_admin_create_incident", {
+      p_title: title, p_description: description, p_severity: severity,
+      p_status: status, p_affected_services: affectedServices,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم يتم تسجيل الحادث.");
+    }
+    return data;
+  };
+
+  const changeIncident: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const incidentId = uuid(input.incident_id, "incident_id");
+    const status = enumValue(input.status, ["investigating", "identified", "monitoring", "resolved"] as const, "status");
+    const message = requiredString(input.message, "message");
+    if (message.length > 5000) throw new Error("تحديث الحادث يتجاوز 5000 حرف.");
+    const { data, error } = await supabase.rpc("bmg_admin_change_incident_status", {
+      p_incident_id: incidentId, p_status: status, p_message: message,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم يتم تحديث حالة الحادث.");
+    }
+    return data;
+  };
+
+  const addIncidentUpdate: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const incidentId = uuid(input.incident_id, "incident_id");
+    const message = requiredString(input.message, "message");
+    if (message.length > 5000) throw new Error("تحديث الحادث يتجاوز 5000 حرف.");
+    const { data, error } = await supabase.rpc("bmg_admin_add_incident_update", {
+      p_incident_id: incidentId, p_message: message,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم تتم إضافة تحديث الحادث.");
+    }
+    return data;
+  };
+
   const configureMaintenance: AdminCommandHandler = async (value) => {
     const input = objectInput(value);
     const serviceId = input.service_id === null || input.service_id === "" || input.service_id === undefined
@@ -244,7 +298,8 @@ export async function createAdminCommandRuntime(): Promise<{
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency, configureMaintenance, setMaintenanceEnabled,
+      saveDependency, deleteDependency, createIncident, changeIncident, addIncidentUpdate,
+      configureMaintenance, setMaintenanceEnabled,
     }),
   };
 }

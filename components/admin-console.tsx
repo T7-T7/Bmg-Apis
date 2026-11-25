@@ -369,11 +369,7 @@ export default function AdminConsole(){
   if(!supabase||!user||!incidentForm.title.trim())return;
   setBusy(true);setError("");
   try{
-   const {data,error}=await supabase.from("incidents").insert({...incidentForm,created_by:user.id}).select("id").single();
-   if(error)throw error;
-   const {error:updateError}=await supabase.from("incident_updates").insert({incident_id:data.id,status:incidentForm.status,message:incidentForm.description.trim()||"تم تسجيل الحادث.",created_by:user.id});
-   if(updateError)throw updateError;
-   await writeAudit("incident.create","incident",data.id,{severity:incidentForm.severity,affected_services:incidentForm.affected_services});
+   await runAdminCommand("incident.create",incidentForm as unknown as Record<string,unknown>);
    setIncidentForm({title:"",description:"",severity:"minor",status:"investigating",affected_services:[]});setNotice("تم تسجيل الحادث.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تسجيل الحادث.");}
   finally{setBusy(false);}
@@ -382,13 +378,10 @@ export default function AdminConsole(){
   if(!supabase)return;
   setBusy(true);
   try{
-   const {error}=await supabase.from("incidents").update({status,resolved_at:status==="resolved"?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",i.id);
-   if(error)throw error;
    const message=incidentUpdateNotes[i.id]?.trim()||("تم تحديث حالة الحادث إلى: "+label(status));
-   const {error:updateError}=await supabase.from("incident_updates").insert({incident_id:i.id,status,message,created_by:user?.id});
-   if(updateError)throw updateError;
+   await runAdminCommand("incident.status_change",{incident_id:i.id,status,message});
    setIncidentUpdateNotes(v=>({...v,[i.id]:""}));
-   await writeAudit("incident.status_change","incident",i.id,{status});setNotice("تم تحديث حالة الحادث وإضافة تحديث للسجل.");await load();
+   setNotice("تم تحديث حالة الحادث وإضافة تحديث للسجل.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث الحادث.");}
   finally{setBusy(false);}
  };
@@ -398,9 +391,7 @@ export default function AdminConsole(){
   if(!message){setError("اكتب التحديث أولاً.");return;}
   setBusy(true);setError("");
   try{
-   const {error}=await supabase.from("incident_updates").insert({incident_id:i.id,message,created_by:user.id});
-   if(error)throw error;
-   await writeAudit("incident.update","incident",i.id,{message});
+   await runAdminCommand("incident.update",{incident_id:i.id,message});
    setIncidentUpdateNotes(v=>({...v,[i.id]:""}));setNotice("تم إضافة تحديث الحادث.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر إضافة تحديث الحادث.");}
   finally{setBusy(false);}
