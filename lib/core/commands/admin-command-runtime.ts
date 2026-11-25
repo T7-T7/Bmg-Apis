@@ -151,11 +151,53 @@ export async function createAdminCommandRuntime(): Promise<{
     return { serviceId, slug: data.slug, archived: data.archived_at !== null };
   };
 
+  const saveDependency: AdminCommandHandler = async (value, context) => {
+    const input = objectInput(value);
+    if (context.actor.role !== "admin") throw new Error("إدارة اعتماديات الخدمات متاحة لحسابات الإدارة المصرح لها من قاعدة البيانات.");
+    const serviceId = uuid(input.service_id, "service_id");
+    const dependsOnServiceId = uuid(input.depends_on_service_id, "depends_on_service_id");
+    if (serviceId === dependsOnServiceId) throw new Error("لا يمكن للخدمة الاعتماد على نفسها.");
+    const dependencyType = enumValue(input.dependency_type, ["required", "optional"] as const, "dependency_type");
+    const description = typeof input.description === "string" ? input.description.trim() : "";
+    if (description.length > 1000) throw new Error("وصف الاعتمادية يتجاوز 1000 حرف.");
+    const { data, error } = await supabase.from("api_service_dependencies").insert({
+      service_id: serviceId, depends_on_service_id: dependsOnServiceId,
+      dependency_type: dependencyType, description, created_by: context.actor.id,
+    }).select("id,service_id,depends_on_service_id,dependency_type").single();
+    if (error) throw new Error(error.message);
+    const { error: auditError } = await supabase.from("audit_logs").insert({
+      actor_id: context.actor.id, action: "service_dependency.create",
+      entity_type: "api_service_dependency", entity_id: data.id,
+      details: { service_id: data.service_id, depends_on_service_id: data.depends_on_service_id, dependency_type: data.dependency_type },
+    });
+    if (auditError) throw new Error(auditError.message);
+    return data;
+  };
+
+  const deleteDependency: AdminCommandHandler = async (value, context) => {
+    const input = objectInput(value);
+    if (context.actor.role !== "admin") throw new Error("إدارة اعتماديات الخدمات متاحة لحسابات الإدارة المصرح لها من قاعدة البيانات.");
+    const dependencyId = uuid(input.id, "id");
+    const { data, error } = await supabase.from("api_service_dependencies")
+      .delete().eq("id", dependencyId)
+      .select("id,service_id,depends_on_service_id").maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("الاعتمادية غير موجودة أو لا تملك صلاحية حذفها.");
+    const { error: auditError } = await supabase.from("audit_logs").insert({
+      actor_id: context.actor.id, action: "service_dependency.delete",
+      entity_type: "api_service_dependency", entity_id: data.id,
+      details: { service_id: data.service_id, depends_on_service_id: data.depends_on_service_id },
+    });
+    if (auditError) throw new Error(auditError.message);
+    return { deleted: true, id: data.id };
+  };
+
   return {
     authorize,
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
+      saveDependency, deleteDependency,
     }),
   };
 }

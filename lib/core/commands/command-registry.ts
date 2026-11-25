@@ -21,8 +21,8 @@ export const ADMIN_COMMANDS = Object.freeze({
   "incident.create": planned("admin", "createIncident"),
   "incident.update": planned("admin", "addIncidentUpdate"),
   "incident.status_change": planned("admin", "changeIncident"),
-  "service_dependency.create": planned("admin", "saveDependency"),
-  "service_dependency.delete": planned("admin", "deleteDependency"),
+  "service_dependency.create": active("admin", "saveDependency"),
+  "service_dependency.delete": active("admin", "deleteDependency"),
   "maintenance.configure": planned("admin", "saveMaintenance"),
   "maintenance.toggle": planned("admin", "markMaintenance"),
 } satisfies Record<string, CommandDefinition>);

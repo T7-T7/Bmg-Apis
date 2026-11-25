@@ -70,3 +70,20 @@ test("service archive and restore use protected Nox commands", () => {
   assert.ok(ui.includes('runAdminCommand(archived?"service.archive":"service.restore"'));
   assert.ok(!ui.includes('.from("api_services").update({archived_at'));
 });
+
+test("service dependency mutations use active protected Nox commands", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"service_dependency.create": active("admin", "saveDependency")'));
+  assert.ok(registry.includes('"service_dependency.delete": active("admin", "deleteDependency")'));
+  assert.ok(runtime.includes('.from("api_service_dependencies").insert'));
+  assert.ok(runtime.includes('.from("api_service_dependencies")'));
+  assert.ok(runtime.includes('context.actor.role !== "admin"'));
+  assert.ok(runtime.includes('enumValue(input.dependency_type, ["required", "optional"]'));
+  assert.ok(runtime.includes('action: "service_dependency.create"'));
+  assert.ok(ui.includes('runAdminCommand("service_dependency.create"'));
+  assert.ok(ui.includes('runAdminCommand("service_dependency.delete"'));
+  assert.ok(!ui.includes('.from("api_service_dependencies").insert'));
+  assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
+});

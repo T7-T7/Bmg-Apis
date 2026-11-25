@@ -406,26 +406,20 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  };
  const saveDependency=async()=>{
-  if(!supabase||!user)return;
   if(!dependencyForm.service_id||!dependencyForm.depends_on_service_id){setError("اختر الخدمتين أولاً.");return;}
-  if(dependencyForm.service_id===dependencyForm.depends_on_service_id){setError("لا يمكن للخدمة الاعتماد على نفسها.");return;}
   setBusy(true);setError("");setNotice("");
   try{
-   const {data,error}=await supabase.from("api_service_dependencies").insert({...dependencyForm,created_by:user.id}).select("id").single();
-   if(error)throw error;
-   await writeAudit("service_dependency.create","api_service_dependency",data.id,{service_id:dependencyForm.service_id,depends_on_service_id:dependencyForm.depends_on_service_id,dependency_type:dependencyForm.dependency_type});
+   await runAdminCommand("service_dependency.create",dependencyForm as unknown as Record<string,unknown>);
    setDependencyForm({service_id:"",depends_on_service_id:"",dependency_type:"required",description:""});
    setNotice("تمت إضافة الاعتمادية.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر إضافة الاعتمادية. تحقق من عدم وجود دورة اعتماد.");}
   finally{setBusy(false);}
  };
  const deleteDependency=async(d:ServiceDependency)=>{
-  if(!supabase||!confirm("حذف علاقة الاعتماد بين الخدمتين؟"))return;
+  if(!confirm("حذف علاقة الاعتماد بين الخدمتين؟"))return;
   setBusy(true);setError("");
   try{
-   const {error}=await supabase.from("api_service_dependencies").delete().eq("id",d.id);
-   if(error)throw error;
-   await writeAudit("service_dependency.delete","api_service_dependency",d.id,{service_id:d.service_id,depends_on_service_id:d.depends_on_service_id});
+   await runAdminCommand("service_dependency.delete",{id:d.id});
    setNotice("تم حذف الاعتمادية.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر حذف الاعتمادية.");}
   finally{setBusy(false);}
