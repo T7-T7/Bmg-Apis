@@ -1,4 +1,4 @@
-name: BMG APIs CI
+name: Nox Core CI
 
 on:
   push:
