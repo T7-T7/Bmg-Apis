@@ -63,7 +63,7 @@ export async function createAdminCommandRuntime(): Promise<{
     const accountStatus = enumValue(input.accountStatus, ["active", "suspended"] as const, "accountStatus");
     const { data, error } = await supabase.rpc("bmg_admin_update_profile", {
       p_user_id: userId, p_role: role, p_plan: plan,
-      p_plan_expires_at: planExpiresAt, p_account_status: accountStatus,
+      p_plan_expires_at: planExpiresAt as string, p_account_status: accountStatus,
     });
     if (error) throw new Error(error.message);
     if (data !== true) throw new Error("لم يتم تحديث الحساب.");
@@ -80,7 +80,7 @@ export async function createAdminCommandRuntime(): Promise<{
     if (!scopes.includes("api:use")) scopes.unshift("api:use");
     if (scopes.length > 32) throw new Error("عدد صلاحيات المفتاح يتجاوز الحد المسموح.");
     const { data, error } = await supabase.rpc("bmg_admin_update_api_key", {
-      p_id: id, p_label: label, p_expires_at: expiresAt, p_scopes: scopes,
+      p_id: id, p_label: label, p_expires_at: expiresAt as string, p_scopes: scopes,
     });
     if (error) throw new Error(error.message);
     if (data !== true) throw new Error("المفتاح غير موجود أو لا يمكن تحديثه.");
