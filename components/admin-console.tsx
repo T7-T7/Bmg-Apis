@@ -328,16 +328,14 @@ export default function AdminConsole(){
   if(!supabase)return;
   setBusy(true);setError("");
   try{
-   const {error}=await supabase.from("api_plan_limits").upsert({...plan,updated_by:user?.id,updated_at:new Date().toISOString()},{onConflict:"plan"});
-   if(error)throw error;
-   await writeAudit("plan_limits.update","api_plan_limits",plan.plan,plan as unknown as Record<string,unknown>);
+   await runAdminCommand("plan_limits.update",plan as unknown as Record<string,unknown>);
    setNotice("تم حفظ حدود المستوى.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر حفظ حدود المستوى.");}
   finally{setBusy(false);}
  };
  const saveAdminLimit=async(value:AdminLimit)=>{
   if(!supabase)return;setBusy(true);setError("");
-  try{const {error}=await supabase.from("api_admin_limits").upsert({...value,id:true,updated_by:user?.id,updated_at:new Date().toISOString()},{onConflict:"id"});if(error)throw error;await writeAudit("admin_limits.update","api_admin_limits","true",value as unknown as Record<string,unknown>);setNotice("تم حفظ الحدود المستقلة للإدارة.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر حفظ حدود الإدارة.")}finally{setBusy(false)}
+  try{await runAdminCommand("admin_limits.update",value as unknown as Record<string,unknown>);setNotice("تم حفظ الحدود المستقلة للإدارة.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر حفظ حدود الإدارة.")}finally{setBusy(false)}
  };
  const saveAdminKey=async()=>{
   if(!supabase)return;const scopes=Array.from(new Set(keyForm.scopes.split(",").map(x=>x.trim()).filter(Boolean)));

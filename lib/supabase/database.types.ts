@@ -490,6 +490,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_update_limits: {
+        Args: { p_daily_weighted_limit: number; p_max_api_keys: number; p_monthly_weighted_limit: number; p_requests_per_minute: number }
+        Returns: Json
+      }
+      bmg_admin_update_plan_limits: {
+        Args: { p_daily_weighted_limit: number; p_max_api_keys: number; p_monthly_weighted_limit: number; p_plan: string; p_requests_per_minute: number }
+        Returns: Json
+      }
       bmg_admin_add_incident_update: {
         Args: { p_incident_id: string; p_message: string }
         Returns: Json

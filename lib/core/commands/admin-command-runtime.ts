@@ -23,6 +23,10 @@ function optionalIsoDate(value: unknown, field: string): string | null {
   if (typeof value !== "string" || !Number.isFinite(Date.parse(value))) throw new Error(`قيمة ${field} يجب أن تكون تاريخاً صالحاً أو null.`);
   return new Date(value).toISOString();
 }
+function positiveSafeInteger(value: unknown, field: string): number {
+  if (!Number.isSafeInteger(value) || Number(value) <= 0) throw new Error(`قيمة ${field} يجب أن تكون عدداً صحيحاً موجباً.`);
+  return Number(value);
+}
 function enumValue<T extends string>(value: unknown, values: readonly T[], field: string): T {
   if (typeof value !== "string" || !values.includes(value as T)) throw new Error(`قيمة ${field} غير مسموح بها.`);
   return value as T;
@@ -192,6 +196,41 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const updatePlanLimits: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const plan = enumValue(input.plan, ["basic", "pro", "premium"] as const, "plan");
+    const requestsPerMinute = positiveSafeInteger(input.requests_per_minute, "requests_per_minute");
+    const maxApiKeys = positiveSafeInteger(input.max_api_keys, "max_api_keys");
+    const dailyWeightedLimit = positiveSafeInteger(input.daily_weighted_limit, "daily_weighted_limit");
+    const monthlyWeightedLimit = positiveSafeInteger(input.monthly_weighted_limit, "monthly_weighted_limit");
+    const { data, error } = await supabase.rpc("bmg_admin_update_plan_limits", {
+      p_plan: plan, p_requests_per_minute: requestsPerMinute, p_max_api_keys: maxApiKeys,
+      p_daily_weighted_limit: dailyWeightedLimit, p_monthly_weighted_limit: monthlyWeightedLimit,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || (data as Record<string, unknown>).plan !== plan) {
+      throw new Error("لم يتم حفظ حدود المستوى.");
+    }
+    return data;
+  };
+
+  const updateAdminLimits: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const requestsPerMinute = positiveSafeInteger(input.requests_per_minute, "requests_per_minute");
+    const maxApiKeys = positiveSafeInteger(input.max_api_keys, "max_api_keys");
+    const dailyWeightedLimit = positiveSafeInteger(input.daily_weighted_limit, "daily_weighted_limit");
+    const monthlyWeightedLimit = positiveSafeInteger(input.monthly_weighted_limit, "monthly_weighted_limit");
+    const { data, error } = await supabase.rpc("bmg_admin_update_limits", {
+      p_requests_per_minute: requestsPerMinute, p_max_api_keys: maxApiKeys,
+      p_daily_weighted_limit: dailyWeightedLimit, p_monthly_weighted_limit: monthlyWeightedLimit,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || (data as Record<string, unknown>).id !== true) {
+      throw new Error("لم يتم حفظ حدود الإدارة.");
+    }
+    return data;
+  };
+
   const createIncident: AdminCommandHandler = async (value) => {
     const input = objectInput(value);
     const title = requiredString(input.title, "title");
@@ -298,7 +337,8 @@ export async function createAdminCommandRuntime(): Promise<{
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency, createIncident, changeIncident, addIncidentUpdate,
+      saveDependency, deleteDependency, updatePlanLimits, updateAdminLimits,
+      createIncident, changeIncident, addIncidentUpdate,
       configureMaintenance, setMaintenanceEnabled,
     }),
   };
