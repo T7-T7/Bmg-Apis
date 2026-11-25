@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { executeRequestPipeline } from "@/lib/core/engine/executor";
 
 export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x";
 
@@ -68,8 +68,7 @@ export function listManagedServices(): readonly ManagedServiceDefinition[] {
 
 /**
  * The no-key demo path is reserved for browser requests originating from the
- * official website. API clients outside the site must provide a live key.
- * Origin is a browser boundary, not a cryptographic identity mechanism.
+ * official website. Origin is a browser boundary, not a cryptographic identity mechanism.
  */
 export function isWebsiteTestRequest(request: Request): boolean {
   const origin = request.headers.get("origin");
@@ -101,8 +100,8 @@ function managerError(
   const headers = new Headers({
     "Cache-Control": "no-store",
     "X-Request-Id": requestId,
-    "X-Service-Manager": "Bmg-Apis",
-    "Server-Timing": `service-manager;dur=${Math.max(0, durationMs)}`,
+    "X-Service-Manager": "Nox Core",
+    "Server-Timing": `service-execution;dur=${Math.max(0, durationMs)}`,
     "X-Content-Type-Options": "nosniff",
   });
   if (serviceSlug) headers.set("X-Service-Slug", serviceSlug);
@@ -118,42 +117,30 @@ function managerError(
   );
 }
 
-/** One server-side execution boundary for every registered API service. */
+/** Compatibility adapter: routes keep their public contract while core owns execution. */
 export async function executeManagedService(
   slug: ManagedServiceSlug,
   request: Request,
   handler: () => Promise<Response>,
 ): Promise<Response> {
-  const requestId = randomUUID();
   const service = getManagedService(slug);
+  if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, crypto.randomUUID());
 
-  if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, requestId);
-  if (request.method !== service.method) {
-    return managerError("طريقة الطلب غير مدعومة لهذه الخدمة.", 405, requestId, service.slug);
-  }
-
-  const startedAt = Date.now();
-  try {
-    const response = await handler();
-    const headers = new Headers(response.headers);
-    headers.set("Cache-Control", "no-store");
-    headers.set("X-Request-Id", requestId);
-    headers.set("X-Service-Manager", "Bmg-Apis");
-    headers.set("X-Service-Slug", service.slug);
-    headers.set("Server-Timing", `service-manager;dur=${Date.now() - startedAt}`);
-    headers.set("X-Content-Type-Options", "nosniff");
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
-  } catch (cause) {
-    console.error("[Bmg Service Manager]", {
-      service: service.slug,
-      requestId,
-      durationMs: Date.now() - startedAt,
-      errorName: cause instanceof Error ? cause.name : "UnknownError",
-    });
-    return managerError("تعذر تنفيذ الخدمة حاليًا.", 500, requestId, service.slug, Date.now() - startedAt);
-  }
+  return executeRequestPipeline({
+    service,
+    request,
+    handler: async () => handler(),
+    managerName: "Nox Core",
+    onMethodNotAllowed: (requestId) =>
+      managerError("طريقة الطلب غير مدعومة لهذه الخدمة.", 405, requestId, service.slug),
+    onFailure: (requestId, durationMs, cause) => {
+      console.error("[Nox Core]", {
+        service: service.slug,
+        requestId,
+        durationMs,
+        errorName: cause instanceof Error ? cause.name : "UnknownError",
+      });
+      return managerError("تعذر تنفيذ الخدمة حاليًا.", 500, requestId, service.slug, durationMs);
+    },
+  });
 }
