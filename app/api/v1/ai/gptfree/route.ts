@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
-import { createHmac } from "node:crypto";
+import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -65,20 +66,27 @@ function error(message: string, status: number) {
   if (status === 429 || status === 503 || status === 504) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function completeUsage(id:number|null,status:number,startedAt:number){if(!id)return;try{await supabase().rpc("bmg_complete_api_request",{p_usage_id:id,p_status_code:status,p_latency_ms:Math.max(0,Date.now()-startedAt),p_server_secret:process.env.BMG_DEMO_RPC_SECRET})}catch(cause){console.error("[Nox usage completion]",cause instanceof Error?cause.message:cause)}}
+async function completeUsage(id: number | null, status: number, startedAt: number) {
+  return completeUsageTracking({
+    usageId: id,
+    complete: async () => {
+      const { error } = await supabase().rpc("bmg_complete_api_request", {
+        p_usage_id: id as number, p_status_code: status,
+        p_latency_ms: Math.max(0, Date.now() - startedAt),
+        p_server_secret: process.env.BMG_DEMO_RPC_SECRET
+      });
+      if (error) throw error;
+    },
+    onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
+  });
+}
 function supabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error("Supabase is not configured.");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
-function clientHash(request: NextRequest) {
-  const secret = process.env.GEMINI_SESSION_SECRET;
-  if (!secret || secret.length < 32) throw new Error("Session secret is not configured.");
-  const ip = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()
-    || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  return createHmac("sha256", secret).update(ip).digest("hex");
-}
+function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "Session secret is not configured."); }
 async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: error("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
   const db = supabase();
@@ -183,8 +191,8 @@ export async function OPTIONS() {
 }
 async function handlePost(request: NextRequest) {
   const authorization = request.headers.get("authorization") ?? "";
-  const match = authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
-  if (authorization && !match) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
+  const apiKey = parseApiKeyAuthorization(authorization);
+  if (!apiKey.valid) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
   let body: unknown;
   try {
     body = await readJsonBody(request);
@@ -202,7 +210,7 @@ async function handlePost(request: NextRequest) {
     typeof (item as Record<string, unknown>).content !== "string")) return error("صيغة history غير صحيحة.", 400);
   let usageId:number|null=null;const startedAt=Date.now();
   try {
-    const access = await authorize(request, match?.[1] ?? null);
+    const access = await authorize(request, apiKey.token);
     if (!access.ok) return access.response;
     usageId=access.usageId??null;
     const upstream = await requestAgent({ message: data.message, images: [], history });
@@ -226,7 +234,7 @@ async function handlePost(request: NextRequest) {
     if (upstreamError){await completeUsage(usageId,502,startedAt);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
     if (!responseText.trim()){await completeUsage(usageId,502,startedAt);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
     await completeUsage(usageId,200,startedAt);
-    return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: match ? "api_key" : "demo" }, {
+    return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: apiKey.token ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
