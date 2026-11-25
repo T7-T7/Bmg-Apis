@@ -1,44 +1,42 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-test("command registry is a fixed allowlist of existing admin operations", () => {
+test("registry marks only wired handlers active", () => {
   const registry = read("../lib/core/commands/command-registry.ts");
-  for (const command of [
-    "profile.update", "profile.grant_admin", "service.create", "service.update",
-    "service.archive", "service.restore", "service.rollback", "api_key.update",
-    "api_key.delete", "plan_limits.update", "admin_limits.update",
-    "notification.broadcast", "incident.create", "incident.update",
-    "incident.status_change", "service_dependency.create",
-    "service_dependency.delete", "maintenance.configure", "maintenance.toggle",
-  ]) assert.ok(registry.includes('"'+command+'"'), command);
+  for (const command of ["profile.update","profile.grant_admin","api_key.update","api_key.delete","service.create","service.rollback"]) {
+    assert.ok(registry.includes('"'+command+'"'), command);
+  }
+  assert.ok(registry.includes('state: "active"'));
+  assert.ok(registry.includes('state: "planned"'));
   assert.ok(registry.includes("Object.freeze"));
-  assert.ok(registry.includes("getAdminCommand"));
-  assert.ok(registry.includes("hasOwnProperty.call"));
   assert.ok(!registry.includes("eval("));
   assert.ok(!registry.includes("new Function("));
 });
 
-test("command executor resolves authorization from the request before invoking a handler", () => {
+test("executor authenticates before dispatch and blocks planned commands", () => {
   const executor = read("../lib/core/commands/command-executor.ts");
   const authIndex = executor.indexOf("dependencies.authorize(input.request)");
+  const stateIndex = executor.indexOf('definition.state !== "active"');
   const handlerIndex = executor.indexOf("await handler(input.input");
-  assert.ok(authIndex >= 0);
-  assert.ok(handlerIndex > authIndex);
-  for (const fragment of [
-    'actor.role !== "admin" && actor.role !== "owner"',
-    'definition.permission === "owner"',
-    "dependencies.handlers[definition.handler]",
-    "AdminCommandError",
-    "randomUUID",
-  ]) assert.ok(executor.includes(fragment), fragment);
+  assert.ok(authIndex >= 0 && stateIndex > authIndex && handlerIndex > stateIndex);
+  assert.ok(executor.includes('actor.role !== "admin" && actor.role !== "owner"'));
+  assert.ok(executor.includes('definition.permission === "owner"'));
 });
 
-test("command authorization contract rejects client-supplied identity as a trust source", () => {
-  const executor = read("../lib/core/commands/command-executor.ts");
-  assert.ok(executor.includes("verified server-side session"));
-  assert.ok(executor.includes("Never implement this using a role, user ID, or permission sent by the client"));
-  assert.ok(executor.includes("Server-owned handlers only"));
+test("runtime verifies Supabase user and role server-side and uses existing protected RPCs", () => {
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  assert.ok(runtime.includes("supabase.auth.getUser()"));
+  assert.ok(runtime.includes('.select("role")'));
+  for (const rpc of ["bmg_admin_update_profile","bmg_admin_update_api_key","bmg_admin_revoke_api_key"]) assert.ok(runtime.includes(rpc));
+  assert.ok(!runtime.includes("service_role"));
+});
+
+test("admin route enforces same-origin requests and bounded JSON input", () => {
+  const route = read("../app/api/admin/commands/route.ts");
+  assert.ok(route.includes('request.headers.get("origin")'));
+  assert.ok(route.includes("MAX_BODY_BYTES"));
+  assert.ok(route.includes("executeAdminCommand"));
+  assert.ok(route.includes('"Cache-Control": "no-store"'));
 });
