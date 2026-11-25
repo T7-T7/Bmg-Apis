@@ -167,7 +167,7 @@ test("incident command migration is invoker-secured and writes timeline and audi
 });
 
 test("limit command migration is invoker-secured and includes audit writes", () => {
-  const migration = read("../supabase/migrations/20261125210000_nox_limit_commands.sql");
+  const migration = read("../supabase/migrations/20261125200206_nox_limit_commands.sql");
   for (const name of ["bmg_admin_update_plan_limits","bmg_admin_update_limits"]) {
     assert.ok(migration.includes("function public."+name), name);
   }
