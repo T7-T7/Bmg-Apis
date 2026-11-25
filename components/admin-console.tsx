@@ -241,13 +241,18 @@ export default function AdminConsole(){
   const {error}=await supabase.from("audit_logs").insert({actor_id:user.id,action,entity_type:entityType,entity_id:entityId,details:details as Json});
   if(error)throw error;
  };
+ const runAdminCommand=async<T=unknown>(command:string,input:Record<string,unknown>):Promise<T>=>{
+  const response=await fetch("/api/admin/commands",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({command,input})});
+  const payload=await response.json().catch(()=>null) as {success?:boolean;result?:T;error?:string}|null;
+  if(!response.ok||!payload?.success)throw new Error(payload?.error||"تعذر تنفيذ الأمر الإداري.");
+  return payload.result as T;
+ };
  const updateProfile=async(p:Profile,field:"role"|"plan"|"account_status",value:string)=>{
   if(!supabase)return;
   const next={role:field==="role"?value:p.role,plan:field==="plan"?value:p.plan,account_status:field==="account_status"?value:p.account_status};
   setBusy(true);setError("");setNotice("");
   try{
-   const {error}=await supabase.rpc("bmg_admin_update_profile",{p_user_id:p.id,p_role:next.role,p_plan:next.plan,p_plan_expires_at:p.plan_expires_at as string,p_account_status:next.account_status});
-   if(error)throw error;
+   await runAdminCommand(next.role==="admin"?"profile.grant_admin":"profile.update",{userId:p.id,role:next.role,plan:next.plan,planExpiresAt:p.plan_expires_at??null,accountStatus:next.account_status});
    setNotice("تم تحديث حساب المستخدم وتسجيل العملية في سجل التدقيق.");
    await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث الحساب.");}
@@ -258,8 +263,7 @@ export default function AdminConsole(){
   const expiresAt=value?new Date(value+"T23:59:59").toISOString():null;
   setBusy(true);setError("");setNotice("");
   try{
-   const {error}=await supabase.rpc("bmg_admin_update_profile",{p_user_id:p.id,p_role:p.role as string,p_plan:p.plan,p_plan_expires_at:expiresAt as string,p_account_status:p.account_status});
-   if(error)throw error;
+   await runAdminCommand("profile.update",{userId:p.id,role:p.role,plan:p.plan,planExpiresAt:expiresAt,accountStatus:p.account_status});
    setNotice("تم تحديث تاريخ انتهاء المستوى وتطبيق مهلة السماح.");
    await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث تاريخ الانتهاء.");}
@@ -331,12 +335,12 @@ export default function AdminConsole(){
   if(!supabase)return;const scopes=Array.from(new Set(keyForm.scopes.split(",").map(x=>x.trim()).filter(Boolean)));
   if(!scopes.includes("api:use"))scopes.unshift("api:use");
   setBusy(true);setError("");
-  try{const {error}=await supabase.rpc("bmg_admin_update_api_key",{p_id:keyForm.id,p_label:keyForm.label,p_expires_at:(keyForm.expiresAt?new Date(keyForm.expiresAt+"T23:59:59").toISOString():null) as string,p_scopes:scopes});if(error)throw error;setNotice("تم تحديث المفتاح وتسجيل العملية.");setKeyForm({id:"",label:"",expiresAt:"",scopes:"api:use"});await load()}catch(e){setError(e instanceof Error?e.message:"تعذر تحديث المفتاح.")}finally{setBusy(false)}
+  try{await runAdminCommand("api_key.update",{id:keyForm.id,label:keyForm.label,expiresAt:keyForm.expiresAt?new Date(keyForm.expiresAt+"T23:59:59").toISOString():null,scopes});setNotice("تم تحديث المفتاح وتسجيل العملية.");setKeyForm({id:"",label:"",expiresAt:"",scopes:"api:use"});await load()}catch(e){setError(e instanceof Error?e.message:"تعذر تحديث المفتاح.")}finally{setBusy(false)}
  };
  const deleteAdminKey=async(key:AdminKey)=>{
   if(!supabase||!confirm("حذف مفتاح "+key.label+" نهائيًا؟ ستُحذف سجلات الطلبات المرتبطة به ولن يمكن استعادته."))return;
   setBusy(true);setError("");
-  try{const {data,error}=await supabase.rpc("bmg_admin_delete_api_key",{p_id:key.id});if(error)throw error;if(!data)throw new Error("المفتاح غير موجود أو حُذف بالفعل.");setNotice("تم حذف المفتاح نهائيًا.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر حذف المفتاح نهائيًا.")}finally{setBusy(false)}
+  try{await runAdminCommand("api_key.delete",{id:key.id});setNotice("تم حذف المفتاح نهائيًا.");await load()}catch(e){setError(e instanceof Error?e.message:"تعذر حذف المفتاح نهائيًا.")}finally{setBusy(false)}
  };
  const sendNotification=async()=>{
   if(!supabase)return;
