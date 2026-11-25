@@ -80,17 +80,30 @@ export function managedServiceOptions(): Response {
   });
 }
 
-function managerError(message: string, status: number, requestId: string) {
+function managerError(
+  message: string,
+  status: number,
+  requestId: string,
+  serviceSlug?: ManagedServiceSlug,
+  durationMs = 0,
+) {
+  const headers = new Headers({
+    "Cache-Control": "no-store",
+    "X-Request-Id": requestId,
+    "X-Service-Manager": "Bmg-Apis",
+    "Server-Timing": `service-manager;dur=${Math.max(0, durationMs)}`,
+    "X-Content-Type-Options": "nosniff",
+  });
+  if (serviceSlug) headers.set("X-Service-Slug", serviceSlug);
+
   return Response.json(
-    { success: false, error: message, code: status === 404 ? "SERVICE_NOT_FOUND" : "SERVICE_MANAGER_ERROR", requestId },
     {
-      status,
-      headers: {
-        "Cache-Control": "no-store",
-        "X-Request-Id": requestId,
-        "X-Service-Manager": "Bmg-Apis",
-      },
+      success: false,
+      error: message,
+      code: status === 404 ? "SERVICE_NOT_FOUND" : status === 405 ? "METHOD_NOT_ALLOWED" : "SERVICE_MANAGER_ERROR",
+      requestId,
     },
+    { status, headers },
   );
 }
 
@@ -105,7 +118,7 @@ export async function executeManagedService(
 
   if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, requestId);
   if (request.method !== service.method) {
-    return managerError("طريقة الطلب غير مدعومة لهذه الخدمة.", 405, requestId);
+    return managerError("طريقة الطلب غير مدعومة لهذه الخدمة.", 405, requestId, service.slug);
   }
 
   const startedAt = Date.now();
@@ -117,6 +130,7 @@ export async function executeManagedService(
     headers.set("X-Service-Manager", "Bmg-Apis");
     headers.set("X-Service-Slug", service.slug);
     headers.set("Server-Timing", `service-manager;dur=${Date.now() - startedAt}`);
+    headers.set("X-Content-Type-Options", "nosniff");
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -127,8 +141,8 @@ export async function executeManagedService(
       service: service.slug,
       requestId,
       durationMs: Date.now() - startedAt,
-      error: cause instanceof Error ? cause.message : "Unknown service failure",
+      errorName: cause instanceof Error ? cause.name : "UnknownError",
     });
-    return managerError("تعذر تنفيذ الخدمة حاليًا.", 500, requestId);
+    return managerError("تعذر تنفيذ الخدمة حاليًا.", 500, requestId, service.slug, Date.now() - startedAt);
   }
 }
