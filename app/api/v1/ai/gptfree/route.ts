@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
+import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 
@@ -80,6 +80,7 @@ function clientHash(request: NextRequest) {
   return createHmac("sha256", secret).update(ip).digest("hex");
 }
 async function authorize(request: NextRequest, token: string | null) {
+  if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: error("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
   const db = supabase();
   if (token) {
     const { data, error: rpcError } = await db.rpc("bmg_authorize_api_request", {
