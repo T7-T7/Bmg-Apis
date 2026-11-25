@@ -277,18 +277,9 @@ export default function AdminConsole(){
   try{
    const payload={slug:f.slug.trim(),name:f.name.trim(),description:f.description.trim(),category:f.category.trim(),endpoint_path:f.endpoint_path.trim(),http_method:f.http_method,docs_markdown:f.docs_markdown,status:f.status,source_type:f.source_type,weight:Number(f.weight)||1};
    if(f.id){
-    const current=services.find(s=>s.id===f.id);if(!current)throw new Error("الخدمة غير موجودة.");
-    const nextVersion=(current.current_version||1)+1;
-    const {error:versionError}=await supabase.from("api_service_versions").insert({service_id:f.id,version:nextVersion,snapshot:payload,change_note:"تعديل من لوحة الإدارة",created_by:user.id});
-    if(versionError)throw versionError;
-    const {error}=await supabase.from("api_services").update({...payload,current_version:nextVersion,updated_at:new Date().toISOString()}).eq("id",f.id);
-    if(error)throw error;
-    await writeAudit("service.version_publish","api_service",f.id,{version:nextVersion,slug:f.slug});
+    await runAdminCommand("service.update",{serviceId:f.id,...payload});
    }else{
-    const {data,error}=await supabase.from("api_services").insert(payload).select("id").single();
-    if(error)throw error;
-    await supabase.from("api_service_versions").insert({service_id:data.id,version:1,snapshot:payload,change_note:"الإصدار الأول",created_by:user.id});
-    await writeAudit("service.create","api_service",data.id,{slug:f.slug});
+    await runAdminCommand("service.create",payload);
    }
    setShowServiceForm(false);setServiceForm(blankService);setNotice("تم حفظ الخدمة وإنشاء سجل إصدار.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر حفظ الخدمة.");}

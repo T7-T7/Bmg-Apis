@@ -7,8 +7,8 @@ const planned = (permission: AdminCommandRole, handler: string): CommandDefiniti
 export const ADMIN_COMMANDS = Object.freeze({
   "profile.update": active("admin", "updateProfile"),
   "profile.grant_admin": active("owner", "updateProfile"),
-  "service.create": planned("admin", "saveService"),
-  "service.update": planned("admin", "saveService"),
+  "service.create": active("admin", "createService"),
+  "service.update": active("admin", "updateService"),
   "service.archive": active("admin", "setServiceArchived"),
   "service.restore": active("admin", "setServiceArchived"),
   "service.versions.list": active("admin", "listServiceVersions"),

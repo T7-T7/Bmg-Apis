@@ -490,6 +490,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_create_api_service: {
+        Args: {
+          p_category: string; p_description: string; p_docs_markdown: string; p_endpoint_path: string
+          p_http_method: string; p_name: string; p_slug: string; p_source_type: string; p_status: string; p_weight: number
+        }
+        Returns: Json
+      }
+      bmg_admin_update_api_service: {
+        Args: {
+          p_category: string; p_description: string; p_docs_markdown: string; p_endpoint_path: string
+          p_http_method: string; p_name: string; p_service_id: string; p_slug: string; p_source_type: string; p_status: string; p_weight: number
+        }
+        Returns: Json
+      }
       bmg_admin_update_limits: {
         Args: { p_daily_weighted_limit: number; p_max_api_keys: number; p_monthly_weighted_limit: number; p_requests_per_minute: number }
         Returns: Json

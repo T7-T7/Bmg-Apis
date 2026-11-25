@@ -196,6 +196,60 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const parseServiceInput = (value: unknown) => {
+    const input = objectInput(value);
+    const slug = requiredString(input.slug, "slug");
+    const name = requiredString(input.name, "name");
+    const description = typeof input.description === "string" ? input.description : "";
+    const category = requiredString(input.category, "category");
+    const endpointPath = requiredString(input.endpoint_path, "endpoint_path");
+    const docsMarkdown = typeof input.docs_markdown === "string" ? input.docs_markdown : "";
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) throw new Error("معرّف الخدمة غير صالح.");
+    if (name.length > 120 || description.length > 10000 || category.length > 80 ||
+        !endpointPath.startsWith("/") || endpointPath.length > 500 || docsMarkdown.length > 50000) {
+      throw new Error("بيانات الخدمة تتجاوز الحدود المسموحة أو أن المسار غير صالح.");
+    }
+    const httpMethod = enumValue(input.http_method, ["GET", "POST", "PUT", "PATCH", "DELETE"] as const, "http_method");
+    const status = enumValue(input.status, ["active", "maintenance", "disabled"] as const, "status");
+    const sourceType = enumValue(input.source_type, ["official", "community"] as const, "source_type");
+    const weight = positiveSafeInteger(input.weight, "weight");
+    if (weight > 100) throw new Error("وزن الخدمة يجب ألا يتجاوز 100.");
+    return { slug, name, description, category, endpoint_path: endpointPath, http_method: httpMethod,
+      docs_markdown: docsMarkdown, status, source_type: sourceType, weight };
+  };
+
+  const createService: AdminCommandHandler = async (value) => {
+    const payload = parseServiceInput(value);
+    const { data, error } = await supabase.rpc("bmg_admin_create_api_service", {
+      p_slug: payload.slug, p_name: payload.name, p_description: payload.description,
+      p_category: payload.category, p_endpoint_path: payload.endpoint_path, p_http_method: payload.http_method,
+      p_docs_markdown: payload.docs_markdown, p_status: payload.status, p_source_type: payload.source_type,
+      p_weight: payload.weight,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم يتم إنشاء الخدمة.");
+    }
+    return data;
+  };
+
+  const updateService: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const serviceId = uuid(input.serviceId, "serviceId");
+    const payload = parseServiceInput(input);
+    const { data, error } = await supabase.rpc("bmg_admin_update_api_service", {
+      p_service_id: serviceId, p_slug: payload.slug, p_name: payload.name, p_description: payload.description,
+      p_category: payload.category, p_endpoint_path: payload.endpoint_path, p_http_method: payload.http_method,
+      p_docs_markdown: payload.docs_markdown, p_status: payload.status, p_source_type: payload.source_type,
+      p_weight: payload.weight,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم يتم تحديث الخدمة.");
+    }
+    return data;
+  };
+
   const updatePlanLimits: AdminCommandHandler = async (value) => {
     const input = objectInput(value);
     const plan = enumValue(input.plan, ["basic", "pro", "premium"] as const, "plan");
@@ -337,7 +391,7 @@ export async function createAdminCommandRuntime(): Promise<{
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency, updatePlanLimits, updateAdminLimits,
+      saveDependency, deleteDependency, createService, updateService, updatePlanLimits, updateAdminLimits,
       createIncident, changeIncident, addIncidentUpdate,
       configureMaintenance, setMaintenanceEnabled,
     }),

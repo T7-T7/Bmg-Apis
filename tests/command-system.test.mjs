@@ -88,6 +88,22 @@ test("service dependency mutations use active protected Nox commands", () => {
   assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
 });
 
+test("service create and update use atomic versioned Nox commands", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"service.create": active("admin", "createService")'));
+  assert.ok(registry.includes('"service.update": active("admin", "updateService")'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_create_api_service"'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_update_api_service"'));
+  assert.ok(runtime.includes("parseServiceInput"));
+  assert.ok(ui.includes('runAdminCommand("service.create"'));
+  assert.ok(ui.includes('runAdminCommand("service.update"'));
+  assert.ok(!ui.includes('.from("api_services").insert'));
+  assert.ok(!ui.includes('.from("api_services").update'));
+  assert.ok(!ui.includes('.from("api_service_versions").insert'));
+});
+
 test("plan and admin limit changes use protected atomic Nox commands", () => {
   const registry = read("../lib/core/commands/command-registry.ts");
   const runtime = read("../lib/core/commands/admin-command-runtime.ts");
@@ -177,5 +193,19 @@ test("limit command migration is invoker-secured and includes audit writes", () 
   assert.ok(migration.includes("insert into public.audit_logs"));
   assert.ok(migration.includes("on conflict (plan) do update"));
   assert.ok(migration.includes("on conflict (id) do update"));
+  assert.ok(!migration.includes("service_role"));
+});
+
+test("service create and update migration writes version history and audit atomically", () => {
+  const migration = read("../supabase/migrations/20261125203000_nox_service_commands.sql");
+  for (const name of ["bmg_admin_create_api_service","bmg_admin_update_api_service"]) {
+    assert.ok(migration.includes("function public."+name), name);
+  }
+  assert.equal((migration.match(/security invoker/g)||[]).length,2);
+  assert.ok(migration.includes("auth.uid()"));
+  assert.ok(migration.includes("private.bmg_is_admin()"));
+  assert.ok(migration.includes("insert into public.api_service_versions"));
+  assert.ok(migration.includes("insert into public.audit_logs"));
+  assert.ok(migration.includes("for update"));
   assert.ok(!migration.includes("service_role"));
 });
