@@ -121,5 +121,5 @@ test("OpenAPI declares API keys mandatory for external API clients", () => {
   assert.equal((openapi.match(/security: \[\{ NoxApiKey: \[\] \}\]/g) || []).length, 3);
   assert.doesNotMatch(openapi, /security: \[\{\}, \{ NoxApiKey: \[\] \}\]/);
   assert.match(openapi, /الطلبات الخارجية تتطلب API Key/);
-  assert.match(openapi, /صفحات الاختبار داخل الموقع لا تحتاج API Key/);
+  assert.match(openapi, /صفحات الاختبار داخل الموقع تعمل دون API Key/);
 });
