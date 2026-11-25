@@ -1,11 +1,23 @@
-export type HealthPayload={success:boolean;service:string;status:"online";timestamp:string;checks:{application:"ok"}};
+export type HealthPayload = {
+  success: boolean;
+  service: string;
+  shortName: "Nox";
+  owner: "Bmg, Inc.";
+  copyright: "© 2026 Bmg, Inc.";
+  status: "online";
+  timestamp: string;
+  checks: { application: "ok" };
+};
 
-export function getHealthPayload():HealthPayload{
+export function getHealthPayload(): HealthPayload {
   return {
-    success:true,
-    service:"NOX APIS — NEXUS OF XPERIENCE",
-    status:"online",
-    timestamp:new Date().toISOString(),
-    checks:{application:"ok"}
+    success: true,
+    service: "NEXUS OF XPERIENCE",
+    shortName: "Nox",
+    owner: "Bmg, Inc.",
+    copyright: "© 2026 Bmg, Inc.",
+    status: "online",
+    timestamp: new Date().toISOString(),
+    checks: { application: "ok" },
   };
 }
