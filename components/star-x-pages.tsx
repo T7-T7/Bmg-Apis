@@ -46,7 +46,6 @@ export function StarXTest() {
   const [action, setAction] = useState<Action>("generate-image");
   const [prompt, setPrompt] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [resultUrl, setResultUrl] = useState("");
@@ -81,7 +80,6 @@ export function StarXTest() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(apiKey.trim() ? { Authorization: "Bearer " + apiKey.trim() } : {}),
         },
         body: JSON.stringify({
           action,
@@ -135,10 +133,7 @@ export function StarXTest() {
         {needsPrompt && <label>وصف باللغة الإنجليزية
           <textarea rows={5} value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Describe the changes you want..." dir="ltr" />
         </label>}
-        <label>مفتاح API (اختياري للتجربة المحدودة)
-          <input type="password" autoComplete="off" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="nox_live_..." dir="ltr" />
-        </label>
-        <p className="ex-muted">لا تشارك مفتاحك مع أي شخص. اترك الحقل فارغًا لاستخدام وضع Demo إذا كان متاحًا لحسابك.</p>
+        <p className="ex-muted">هذا الاختبار يعمل من الموقع الرسمي دون إدخال مفتاح API. يلزم مفتاح صالح عند استخدام نقطة الاتصال من تطبيق أو عميل خارجي.</p>
         {error && <p className="ex-error" role="alert">{error}</p>}
         <button className="ex-primary ex-run-test" disabled={busy} onClick={run}>{busy ? "جارٍ تنفيذ الطلب…" : "تشغيل Star X"}</button>
       </section>
