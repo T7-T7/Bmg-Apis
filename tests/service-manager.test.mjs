@@ -102,3 +102,23 @@ test("all AI routes delegate usage completion to the shared core manager", () =>
     assert.ok(route.includes('rpc("bmg_complete_api_request"'), path);
   }
 });
+
+
+test("shared request manager enforces byte limits while preserving route-specific limits", () => {
+  const manager = read("../lib/core/managers/request-manager.ts");
+  for (const fragment of [
+    "PayloadTooLargeError", "readJsonRequestBody", "content-length",
+    "request.body?.getReader()", "total > maxBytes", "TextDecoder", "JSON.parse",
+  ]) assert.ok(manager.includes(fragment), fragment);
+  const routes = [
+    ["../app/api/v1/ai/gemini/route.ts", "MAX_BODY_BYTES"],
+    ["../app/api/v1/ai/gptfree/route.ts", "MAX_BODY"],
+    ["../app/api/v1/ai/star-x/route.ts", "MAX_BODY"],
+  ];
+  for (const [path, limit] of routes) {
+    const route = read(path);
+    assert.ok(route.includes("readJsonRequestBody(request, " + limit + ")"), path);
+    assert.ok(route.includes("instanceof PayloadTooLargeError"), path);
+    assert.ok(!route.includes("request.body?.getReader()"), path);
+  }
+});
