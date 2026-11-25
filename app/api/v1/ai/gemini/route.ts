@@ -4,19 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 import { askGemini } from "@/lib/server/gemini";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
+import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MAX_PROMPT_CHARS = 30_000;
 const MAX_BODY_BYTES = 1_048_576;
-class PayloadTooLargeError extends Error {}
-async function readJsonBody(request: NextRequest): Promise<unknown> {
- const length=Number(request.headers.get("content-length")??0);
- if(Number.isFinite(length)&&length>MAX_BODY_BYTES)throw new PayloadTooLargeError();
- const reader=request.body?.getReader();if(!reader)throw new SyntaxError("Request body is empty.");
- const chunks:Uint8Array[]=[];let total=0;
- try{while(true){const{done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BODY_BYTES){await reader.cancel();throw new PayloadTooLargeError()}chunks.push(value)}}finally{reader.releaseLock()}
- const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}return JSON.parse(new TextDecoder().decode(bytes));
-}
 function jsonError(message:string,status:number){
  const code=status===400?"INVALID_REQUEST":status===401?"UNAUTHORIZED":status===413?"PAYLOAD_TOO_LARGE":status===429?"RATE_LIMITED":status===503?"SERVICE_UNAVAILABLE":status===403?"FORBIDDEN":"UPSTREAM_ERROR";
  const headers:Record<string,string>={"Access-Control-Allow-Origin":"*","Cache-Control":"no-store"};
@@ -55,7 +47,7 @@ async function handlePost(request: NextRequest) {
  const authorization=request.headers.get("authorization")??"";
   const apiKey = parseApiKeyAuthorization(authorization);
  if (!apiKey.valid) return jsonError("صيغة ترويسة Authorization غير صحيحة.", 401);
- let body:unknown;try{body=await readJsonBody(request)}catch(cause){if(cause instanceof PayloadTooLargeError)return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (1 MB).",413);if(cause instanceof SyntaxError)return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.",400);return jsonError("تعذر قراءة جسم الطلب.",400)}
+ let body:unknown;try{body=await readJsonRequestBody(request, MAX_BODY_BYTES)}catch(cause){if(cause instanceof PayloadTooLargeError)return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (1 MB).",413);if(cause instanceof SyntaxError)return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.",400);return jsonError("تعذر قراءة جسم الطلب.",400)}
  if(!body||typeof body!=="object"||Array.isArray(body))return jsonError("يجب أن يكون جسم الطلب كائن JSON.",400);
  const data=body as Record<string,unknown>;
  if(typeof data.prompt!=="string"||!data.prompt.trim())return jsonError("الحقل prompt مطلوب ويجب أن يحتوي على نص.",400);
