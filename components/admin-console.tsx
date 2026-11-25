@@ -344,13 +344,11 @@ export default function AdminConsole(){
   if(!notification.title.trim()){setError("عنوان الإشعار مطلوب.");return;}
   setBusy(true);setError("");
   try{
-   const targets=notification.user_id==="all"?profiles.map(p=>p.id):[notification.user_id];
-   if(!targets.length)throw new Error("لا يوجد مستخدمون لإرسال الإشعار إليهم.");
-   const rows=targets.map(user_id=>({user_id,title:notification.title.trim(),body:notification.body.trim(),type:notification.type}));
-   const {error}=await supabase.from("user_notifications").insert(rows);
-   if(error)throw error;
-   await writeAudit("notification.broadcast","user_notification",null,{recipient_count:targets.length,type:notification.type});
-   setNotification({user_id:"all",title:"",body:"",type:"info"});setNotice("تم إرسال الإشعار داخل لوحة التحكم.");await load();
+   const result=await runAdminCommand<{recipient_count:number}>("notification.broadcast",{
+    user_id:notification.user_id==="all"?null:notification.user_id,
+    title:notification.title.trim(),body:notification.body.trim(),type:notification.type
+   });
+   setNotification({user_id:"all",title:"",body:"",type:"info"});setNotice("تم إرسال الإشعار إلى "+result.recipient_count+" مستخدم.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر إرسال الإشعار.");}
   finally{setBusy(false);}
  };

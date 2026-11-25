@@ -196,6 +196,25 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const broadcastNotification: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const userId = input.user_id === null || input.user_id === "" || input.user_id === "all" || input.user_id === undefined
+      ? null : uuid(input.user_id, "user_id");
+    const title = requiredString(input.title, "title");
+    const body = typeof input.body === "string" ? input.body : "";
+    if (title.length > 200 || body.length > 5000) throw new Error("بيانات الإشعار تتجاوز الحدود المسموحة.");
+    const type = enumValue(input.type, ["info", "warning", "critical"] as const, "type");
+    const { data, error } = await supabase.rpc("bmg_admin_broadcast_notification", {
+      p_user_id: userId, p_title: title, p_body: body, p_type: type,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) ||
+        !Number.isSafeInteger((data as Record<string, unknown>).recipient_count)) {
+      throw new Error("لم يتم إرسال الإشعار.");
+    }
+    return data;
+  };
+
   const parseServiceInput = (value: unknown) => {
     const input = objectInput(value);
     const slug = requiredString(input.slug, "slug");
@@ -391,7 +410,7 @@ export async function createAdminCommandRuntime(): Promise<{
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency, createService, updateService, updatePlanLimits, updateAdminLimits,
+      saveDependency, deleteDependency, broadcastNotification, createService, updateService, updatePlanLimits, updateAdminLimits,
       createIncident, changeIncident, addIncidentUpdate,
       configureMaintenance, setMaintenanceEnabled,
     }),

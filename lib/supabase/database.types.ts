@@ -490,6 +490,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_broadcast_notification: {
+        Args: { p_body: string; p_title: string; p_type: string; p_user_id: string | null }
+        Returns: Json
+      }
       bmg_admin_create_api_service: {
         Args: {
           p_category: string; p_description: string; p_docs_markdown: string; p_endpoint_path: string

@@ -17,7 +17,7 @@ export const ADMIN_COMMANDS = Object.freeze({
   "api_key.delete": active("admin", "deleteAdminKey"),
   "plan_limits.update": active("admin", "updatePlanLimits"),
   "admin_limits.update": active("admin", "updateAdminLimits"),
-  "notification.broadcast": planned("admin", "sendNotification"),
+  "notification.broadcast": active("admin", "broadcastNotification"),
   "incident.create": active("admin", "createIncident"),
   "incident.update": active("admin", "addIncidentUpdate"),
   "incident.status_change": active("admin", "changeIncident"),

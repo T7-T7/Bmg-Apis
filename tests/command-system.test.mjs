@@ -88,6 +88,17 @@ test("service dependency mutations use active protected Nox commands", () => {
   assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
 });
 
+test("notification broadcast uses an atomic protected Nox command", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"notification.broadcast": active("admin", "broadcastNotification")'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_broadcast_notification"'));
+  assert.ok(runtime.includes('enumValue(input.type, ["info", "warning", "critical"]'));
+  assert.ok(ui.includes('runAdminCommand<{recipient_count:number}>("notification.broadcast"'));
+  assert.ok(!ui.includes('.from("user_notifications").insert'));
+});
+
 test("service create and update use atomic versioned Nox commands", () => {
   const registry = read("../lib/core/commands/command-registry.ts");
   const runtime = read("../lib/core/commands/admin-command-runtime.ts");
@@ -207,5 +218,16 @@ test("service create and update migration writes version history and audit atomi
   assert.ok(migration.includes("insert into public.api_service_versions"));
   assert.ok(migration.includes("insert into public.audit_logs"));
   assert.ok(migration.includes("for update"));
+  assert.ok(!migration.includes("service_role"));
+});
+
+test("notification broadcast migration checks role and writes audit atomically", () => {
+  const migration = read("../supabase/migrations/20261125210000_nox_notification_broadcast.sql");
+  assert.ok(migration.includes("function public.bmg_admin_broadcast_notification"));
+  assert.ok(migration.includes("security invoker"));
+  assert.ok(migration.includes("private.bmg_is_admin()"));
+  assert.ok(migration.includes("insert into public.user_notifications"));
+  assert.ok(migration.includes("insert into public.audit_logs"));
+  assert.ok(migration.includes("get diagnostics v_recipient_count = row_count"));
   assert.ok(!migration.includes("service_role"));
 });
