@@ -138,7 +138,7 @@ test("maintenance configuration migration is invoker-secured and serializes the 
 });
 
 test("incident command migration is invoker-secured and writes timeline and audit atomically", () => {
-  const migration = read("../supabase/migrations/20261125201000_nox_incident_commands.sql");
+  const migration = read("../supabase/migrations/20261125195839_nox_incident_commands.sql");
   for (const name of ["bmg_admin_create_incident","bmg_admin_change_incident_status","bmg_admin_add_incident_update"]) {
     assert.ok(migration.includes("function public."+name), name);
   }
