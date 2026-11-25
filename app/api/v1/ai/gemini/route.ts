@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
+import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
 import { askGemini } from "@/lib/server/gemini";
@@ -26,6 +26,7 @@ async function completeUsage(id:number|null,status:number,startedAt:number){if(!
 function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key)throw new Error("Supabase environment variables are missing.");return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}
 function clientHash(request:NextRequest){const secret=process.env.GEMINI_SESSION_SECRET;if(!secret||secret.length<32)throw new Error("GEMINI_SESSION_SECRET is not configured.");const ip=request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()||request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";return createHmac("sha256",secret).update(ip).digest("hex")}
 async function authorize(request:NextRequest,token:string|null){
+  if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: jsonError("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
  const supabase=getSupabase();
  if(token){const{data,error}=await supabase.rpc("bmg_authorize_api_request",{p_key:token,p_service_slug:"aql-gemini",p_method:"POST",p_server_secret:process.env.BMG_DEMO_RPC_SECRET});if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number;message?:string}|null;if(!result?.authorized){if(result?.reason==="rate_limited")return{ok:false,response:jsonError("تجاوزت حد 30 طلبًا في الدقيقة لهذا المفتاح.",429)};if(result?.reason==="maintenance")return{ok:false,response:jsonError(result.message||"الخدمة تحت الصيانة مؤقتًا.",503)};if(result?.reason==="account_suspended")return{ok:false,response:jsonError("تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة.",403)};if(result?.reason==="insufficient_scope")return{ok:false,response:jsonError("مفتاح API لا يملك صلاحية استخدام هذه الخدمة.",403)};return{ok:false,response:jsonError(result?.reason==="service_unavailable"?"الخدمة غير متاحة حاليًا.":"مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.",result?.reason==="service_unavailable"?503:401)}}return{ok:true,usageId:Number(result.usage_id)||null}}
  const{data,error}=await supabase.rpc("bmg_authorize_demo_request",{p_client_hash:clientHash(request),p_service_slug:"aql-gemini",p_method:"POST",p_server_secret:process.env.BMG_DEMO_RPC_SECRET});
