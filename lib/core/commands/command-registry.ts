@@ -8,7 +8,6 @@ export const ADMIN_COMMANDS = Object.freeze({
   "profile.update": active("admin", "updateProfile"),
   "profile.grant_admin": active("owner", "updateProfile"),
   "service.create": planned("admin", "saveService"),
-  "service.archive": active("admin", "setServiceArchived"),
   "service.update": planned("admin", "saveService"),
   "service.archive": active("admin", "setServiceArchived"),
   "service.restore": active("admin", "setServiceArchived"),
