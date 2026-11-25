@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createHmac } from "node:crypto";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
+import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -37,13 +38,7 @@ function db() {
   if (!url || !key) throw new Error("Supabase environment variables are missing.");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
-function clientHash(request: NextRequest) {
-  const secret = process.env.GEMINI_SESSION_SECRET;
-  if (!secret || secret.length < 32) throw new Error("GEMINI_SESSION_SECRET is not configured.");
-  const ip = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()
-    || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  return createHmac("sha256", secret).update(ip).digest("hex");
-}
+function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "GEMINI_SESSION_SECRET is not configured."); }
 function fail(message: string, status: number) {
   const code = status === 400 ? "INVALID_REQUEST" : status === 401 ? "UNAUTHORIZED"
     : status === 403 ? "FORBIDDEN" : status === 413 ? "PAYLOAD_TOO_LARGE"
@@ -90,13 +85,18 @@ async function authorize(request: NextRequest, token: string | null) {
   return { ok: true as const, usageId: Number(result.usage_id) || null };
 }
 async function completeUsage(id: number | null, status: number, startedAt: number) {
-  if (!id) return;
-  try {
-    await db().rpc("bmg_complete_api_request", {
-      p_usage_id: id, p_status_code: status, p_latency_ms: Math.max(0, Date.now() - startedAt),
-      p_server_secret: process.env.BMG_DEMO_RPC_SECRET
-    });
-  } catch (error) { console.error("[Star X usage completion]", error instanceof Error ? error.message : error); }
+  return completeUsageTracking({
+    usageId: id,
+    complete: async () => {
+      const { error } = await db().rpc("bmg_complete_api_request", {
+        p_usage_id: id as number, p_status_code: status,
+        p_latency_ms: Math.max(0, Date.now() - startedAt),
+        p_server_secret: process.env.BMG_DEMO_RPC_SECRET
+      });
+      if (error) throw error;
+    },
+    onError: (cause) => console.error("[Star X usage completion]", cause instanceof Error ? cause.message : cause)
+  });
 }
 function validImageUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 4096) return false;
@@ -104,8 +104,8 @@ function validImageUrl(value: unknown): value is string {
 }
 async function handlePost(request: NextRequest) {
   const auth = request.headers.get("authorization") ?? "";
-  const match = auth.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
-  if (auth && !match) return fail("صيغة Authorization غير صحيحة.", 401);
+  const apiKey = parseApiKeyAuthorization(auth);
+  if (!apiKey.valid) return fail("صيغة Authorization غير صحيحة.", 401);
   let body: unknown;
   try { body = await readBody(request); }
   catch (cause) {
@@ -131,7 +131,7 @@ async function handlePost(request: NextRequest) {
   const startedAt = Date.now();
   let usageId: number | null = null;
   try {
-    const access = await authorize(request, match?.[1] ?? null);
+    const access = await authorize(request, apiKey.token);
     if (!access.ok) return access.response;
     usageId = access.usageId;
     const options = { timeoutMs: 150000 };
