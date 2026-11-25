@@ -109,7 +109,7 @@ test("maintenance configuration and toggles use protected atomic Nox commands", 
 });
 
 test("maintenance configuration migration is invoker-secured and serializes the full write", () => {
-  const migration = read("../supabase/migrations/20261125190000_nox_maintenance_configuration_command.sql");
+  const migration = read("../supabase/migrations/20261125195025_nox_maintenance_configuration_command.sql");
   assert.ok(migration.includes("security invoker"));
   assert.ok(migration.includes("auth.uid()"));
   assert.ok(migration.includes("v_actor_role not in ('admin', 'owner')"));
