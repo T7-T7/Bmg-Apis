@@ -24,7 +24,7 @@ export const ADMIN_COMMANDS = Object.freeze({
   "service_dependency.create": active("admin", "saveDependency"),
   "service_dependency.delete": active("admin", "deleteDependency"),
   "maintenance.configure": planned("admin", "saveMaintenance"),
-  "maintenance.toggle": planned("admin", "markMaintenance"),
+  "maintenance.toggle": active("admin", "setMaintenanceEnabled"),
 } satisfies Record<string, CommandDefinition>);
 
 export type AdminCommandName = keyof typeof ADMIN_COMMANDS;

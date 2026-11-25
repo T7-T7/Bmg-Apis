@@ -441,9 +441,12 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  };
  const markMaintenance=async(m:Maintenance)=>{
-  if(!supabase)return;
-  const {error}=await supabase.from("maintenance_windows").update({enabled:!m.enabled,updated_at:new Date().toISOString(),updated_by:user?.id}).eq("id",m.id);
-  if(error)setError(error.message);else{await writeAudit("maintenance.toggle","maintenance_window",m.id,{enabled:!m.enabled});setNotice("تم تحديث وضع الصيانة.");await load();}
+  setBusy(true);setError("");
+  try{
+   await runAdminCommand("maintenance.toggle",{id:m.id,enabled:!m.enabled});
+   setNotice("تم تحديث وضع الصيانة.");await load();
+  }catch(e){setError(e instanceof Error?e.message:"تعذر تحديث وضع الصيانة.");}
+  finally{setBusy(false);}
  };
 
  if(!ready)return <main className={styles.loading}>جارٍ التحقق من صلاحيات الإدارة…</main>;

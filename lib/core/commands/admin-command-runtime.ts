@@ -192,12 +192,34 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const setMaintenanceEnabled: AdminCommandHandler = async (value, context) => {
+    const input = objectInput(value);
+    const maintenanceId = uuid(input.id, "id");
+    if (typeof input.enabled !== "boolean") throw new Error("حالة الصيانة يجب أن تكون true أو false.");
+    const { data, error } = await supabase.from("maintenance_windows")
+      .update({ enabled: input.enabled, updated_at: new Date().toISOString(), updated_by: context.actor.id })
+      .eq("id", maintenanceId)
+      .select("id,service_id,enabled")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("نافذة الصيانة غير موجودة أو لا تملك صلاحية تعديلها.");
+    const { error: auditError } = await supabase.from("audit_logs").insert({
+      actor_id: context.actor.id,
+      action: "maintenance.toggle",
+      entity_type: "maintenance_window",
+      entity_id: data.id,
+      details: { service_id: data.service_id, enabled: data.enabled },
+    });
+    if (auditError) throw new Error(auditError.message);
+    return data;
+  };
+
   return {
     authorize,
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency,
+      saveDependency, deleteDependency, setMaintenanceEnabled,
     }),
   };
 }

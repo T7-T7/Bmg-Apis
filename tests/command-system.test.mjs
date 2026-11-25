@@ -87,3 +87,16 @@ test("service dependency mutations use active protected Nox commands", () => {
   assert.ok(!ui.includes('.from("api_service_dependencies").insert'));
   assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
 });
+
+test("maintenance toggles use the protected Nox command while configuration remains planned", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"maintenance.toggle": active("admin", "setMaintenanceEnabled")'));
+  assert.ok(registry.includes('"maintenance.configure": planned("admin", "saveMaintenance")'));
+  assert.ok(runtime.includes('.from("maintenance_windows")'));
+  assert.ok(runtime.includes('action: "maintenance.toggle"'));
+  assert.ok(runtime.includes('typeof input.enabled !== "boolean"'));
+  assert.ok(ui.includes('runAdminCommand("maintenance.toggle"'));
+  assert.ok(!ui.includes('.from("maintenance_windows").update({enabled:!m.enabled'));
+});
