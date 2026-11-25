@@ -98,3 +98,28 @@ test("GPTFree maps service state, permission and quota failures to correct HTTP 
   assert.match(gptfree, /reason === "insufficient_scope"[\s\S]*?\? 403/);
   assert.match(gptfree, /reason === "rate_limited"[\s\S]*?\? 429/);
 });
+
+
+test("no-key demo authorization is restricted to the official website Origin", () => {
+  const manager = read("../lib/server/service-manager.ts");
+  assert.match(manager, /function isWebsiteTestRequest\(request: Request\): boolean/);
+  assert.match(manager, /process\.env\.NOX_SITE_ORIGIN \|\| "https:\/\/nox\.bmg-inc\.web\.id"/);
+  assert.match(manager, /return origin === configuredOrigin/);
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.match(route, /!token && !isWebsiteTestRequest\(request\)/);
+    assert.match(route, /يلزم إرسال API Key صالح للطلبات الخارجية/);
+  }
+});
+
+test("OpenAPI declares API keys mandatory for external API clients", () => {
+  const openapi = read("../app/api/openapi.json/route.ts");
+  assert.equal((openapi.match(/security: \[\{ NoxApiKey: \[\] \}\]/g) || []).length, 3);
+  assert.doesNotMatch(openapi, /security: \[\{\}, \{ NoxApiKey: \[\] \}\]/);
+  assert.match(openapi, /الطلبات الخارجية تتطلب API Key/);
+  assert.match(openapi, /صفحات الاختبار داخل الموقع لا تحتاج API Key/);
+});
