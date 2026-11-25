@@ -17,21 +17,21 @@ Official API reference: https://nox.bmg-inc.web.id
 
 ### Request body
 
-```json
+\`\`\`json
 {
   "prompt": "اشرح الفرق بين let و const",
   "instruction": "أجب باللغة العربية"
 }
-```
+\`\`\`
 
 ### cURL
 
-```bash
+\`\`\`bash
 curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
   -H "Authorization: Bearer YOUR_NOX_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt":"Explain let vs const","instruction":"Answer in Arabic"}'
-```
+\`\`\`
 
 ## GPTFree text generation
 
@@ -44,12 +44,12 @@ curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
 
 ### Request body
 
-```json
+\`\`\`json
 {
   "message": "اشرح REST API",
   "history": []
 }
-```
+\`\`\`
 
 ## Star X image tools
 
@@ -65,12 +65,12 @@ curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
 
 ### Request body
 
-```json
+\`\`\`json
 {
   "action": "generate-image",
   "prompt": "A cinematic photograph of a modern glass house beside a lake at sunset"
 }
-```
+\`\`\`
 
 ## Authentication policy
 
