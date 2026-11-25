@@ -137,3 +137,10 @@ test("public developer documentation matches the three active services and canon
     assert.doesNotMatch(source, /bmg-apis-b2-902b\\.vercel\\.app/);
   }
 });
+
+test("official Star X test page does not request or send an API key", () => {
+  const page = read("../components/star-x-pages.tsx");
+  const testPage = page.slice(page.indexOf("export function StarXTest()"));
+  assert.doesNotMatch(testPage, /apiKey|Authorization:\s*["']Bearer|مفتاح API/);
+  assert.match(testPage, /يعمل من الموقع الرسمي دون إدخال مفتاح API/);
+});
