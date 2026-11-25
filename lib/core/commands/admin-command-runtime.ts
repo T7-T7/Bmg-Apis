@@ -124,11 +124,38 @@ export async function createAdminCommandRuntime(): Promise<{
     return { version: Number(data), serviceId };
   };
 
+  const setServiceArchived: AdminCommandHandler = async (value, context) => {
+    const input = objectInput(value);
+    const serviceId = uuid(input.serviceId, "serviceId");
+    if (typeof input.archived !== "boolean") throw new Error("حالة الأرشفة يجب أن تكون true أو false.");
+    if (context.actor.role !== "admin") {
+      throw new Error("تغيير حالة الخدمات متاح لحسابات الإدارة المصرح لها من قاعدة البيانات.");
+    }
+    const archivedAt = input.archived ? new Date().toISOString() : null;
+    const { data, error } = await supabase
+      .from("api_services")
+      .update({ archived_at: archivedAt, updated_at: new Date().toISOString() })
+      .eq("id", serviceId)
+      .select("id,slug,archived_at")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("الخدمة غير موجودة أو لا تملك صلاحية تعديلها.");
+    const { error: auditError } = await supabase.from("audit_logs").insert({
+      actor_id: context.actor.id,
+      action: input.archived ? "service.archive" : "service.restore",
+      entity_type: "api_service",
+      entity_id: serviceId,
+      details: { slug: data.slug, archived_at: data.archived_at },
+    });
+    if (auditError) throw new Error(auditError.message);
+    return { serviceId, slug: data.slug, archived: data.archived_at !== null };
+  };
+
   return {
     authorize,
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
-      listServiceVersions, rollbackServiceVersion,
+      listServiceVersions, rollbackServiceVersion, setServiceArchived,
     }),
   };
 }

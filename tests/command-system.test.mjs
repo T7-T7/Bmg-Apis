@@ -56,3 +56,17 @@ test("service version reads and rollback are active only through protected comma
   assert.ok(!ui.includes('supabase.rpc("bmg_admin_rollback_api_service"'));
   assert.ok(!ui.includes('supabase.rpc("bmg_admin_get_service_versions"'));
 });
+
+
+test("service archive and restore use protected Nox commands", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"service.archive": active("admin", "setServiceArchived")'));
+  assert.ok(registry.includes('"service.restore": active("admin", "setServiceArchived")'));
+  assert.ok(runtime.includes('.from("api_services")'));
+  assert.ok(runtime.includes('.from("audit_logs").insert'));
+  assert.ok(runtime.includes('context.actor.role !== "admin"'));
+  assert.ok(ui.includes('runAdminCommand(archived?"service.archive":"service.restore"'));
+  assert.ok(!ui.includes('.from("api_services").update({archived_at'));
+});

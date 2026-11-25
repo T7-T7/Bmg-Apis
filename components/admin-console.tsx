@@ -314,14 +314,12 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  };
  const archiveService=async(s:Service)=>{
-  if(!supabase||!confirm(s.archived_at?"استعادة الخدمة إلى الكتالوج النشط؟":"أرشفة الخدمة وإيقاف ظهورها للمستخدمين؟"))return;
-  setBusy(true);
+  const archived=!s.archived_at;
+  if(!confirm(archived?"أرشفة الخدمة وإيقاف ظهورها للمستخدمين؟":"استعادة الخدمة إلى الكتالوج النشط؟"))return;
+  setBusy(true);setError("");setNotice("");
   try{
-   const archived_at=s.archived_at?null:new Date().toISOString();
-   const {error}=await supabase.from("api_services").update({archived_at,updated_at:new Date().toISOString()}).eq("id",s.id);
-   if(error)throw error;
-   await writeAudit(archived_at?"service.archive":"service.restore","api_service",s.id,{slug:s.slug});
-   setNotice(archived_at?"تمت أرشفة الخدمة.":"تمت استعادة الخدمة.");await load();
+   await runAdminCommand(archived?"service.archive":"service.restore",{serviceId:s.id,archived});
+   setNotice(archived?"تمت أرشفة الخدمة.":"تمت استعادة الخدمة.");await load();
   }catch(e){setError(e instanceof Error?e.message:"تعذر تغيير حالة الأرشفة.");}
   finally{setBusy(false);}
  };
