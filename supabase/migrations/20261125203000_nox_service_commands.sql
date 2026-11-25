@@ -30,9 +30,9 @@ begin
   if p_source_type is null or p_source_type not in ('official','community') then raise exception 'مصدر الخدمة غير صالح.'; end if;
   if p_weight is null or p_weight not between 1 and 100 then raise exception 'وزن الخدمة يجب أن يكون بين 1 و100.'; end if;
 
-  insert into public.api_services(slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,owner_id,current_version,updated_at)
+  insert into public.api_services(slug,name,description,category,endpoint_path,http_method,docs_markdown,status,source_type,weight,current_version,updated_at)
   values(p_slug,trim(p_name),coalesce(p_description,''),trim(p_category),p_endpoint_path,p_http_method,
-    coalesce(p_docs_markdown,''),p_status,p_source_type,p_weight,v_actor_id,1,now())
+    coalesce(p_docs_markdown,''),p_status,p_source_type,p_weight,1,now())
   returning * into v_service;
 
   v_snapshot:=jsonb_build_object(
