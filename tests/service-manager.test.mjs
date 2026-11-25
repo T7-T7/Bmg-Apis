@@ -65,3 +65,40 @@ test("managed API routes share one consistent CORS preflight policy", () => {
     'Access-Control-Max-Age": "86400"', 'Cache-Control": "no-store"',
   ]) assert.ok(manager.includes(fragment), fragment);
 });
+
+
+test("shared auth manager preserves supported bearer formats and demo fingerprint boundary", () => {
+  const auth = read("../lib/core/managers/auth-manager.ts");
+  assert.ok(auth.includes("parseApiKeyAuthorization"));
+  assert.ok(auth.includes("nox_live_"));
+  assert.ok(auth.includes("bmg_live_"));
+  assert.ok(auth.includes("createDemoClientHash"));
+  assert.ok(auth.includes("createHmac"));
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("parseApiKeyAuthorization"), path);
+    assert.ok(route.includes("createDemoClientHash"), path);
+    assert.ok(!route.includes("createHmac"), path);
+    assert.ok(!route.includes(".match(/^Bearer"), path);
+  }
+});
+
+test("all AI routes delegate usage completion to the shared core manager", () => {
+  const usage = read("../lib/core/managers/usage-manager.ts");
+  assert.ok(usage.includes("completeUsageTracking"));
+  assert.ok(usage.includes("if (!usageId) return"));
+  assert.ok(usage.includes("onError(cause)"));
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("completeUsageTracking"), path);
+    assert.ok(route.includes('rpc("bmg_complete_api_request"'), path);
+  }
+});
