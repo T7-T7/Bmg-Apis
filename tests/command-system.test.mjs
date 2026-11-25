@@ -88,15 +88,35 @@ test("service dependency mutations use active protected Nox commands", () => {
   assert.ok(!ui.includes('.from("api_service_dependencies").delete'));
 });
 
-test("maintenance toggles use the protected Nox command while configuration remains planned", () => {
+test("maintenance configuration and toggles use protected atomic Nox commands", () => {
   const registry = read("../lib/core/commands/command-registry.ts");
   const runtime = read("../lib/core/commands/admin-command-runtime.ts");
   const ui = read("../components/admin-console.tsx");
   assert.ok(registry.includes('"maintenance.toggle": active("admin", "setMaintenanceEnabled")'));
-  assert.ok(registry.includes('"maintenance.configure": planned("admin", "saveMaintenance")'));
+  assert.ok(registry.includes('"maintenance.configure": active("admin", "configureMaintenance")'));
   assert.ok(runtime.includes('.from("maintenance_windows")'));
   assert.ok(runtime.includes('action: "maintenance.toggle"'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_configure_maintenance"'));
+  assert.ok(runtime.includes('p_service_id: serviceId'));
+  assert.ok(runtime.includes('p_starts_at: startsAt'));
+  assert.ok(runtime.includes('p_ends_at: endsAt'));
   assert.ok(runtime.includes('typeof input.enabled !== "boolean"'));
   assert.ok(ui.includes('runAdminCommand("maintenance.toggle"'));
+  assert.ok(ui.includes('runAdminCommand("maintenance.configure",payload)'));
   assert.ok(!ui.includes('.from("maintenance_windows").update({enabled:!m.enabled'));
+  assert.ok(!ui.includes('.from("maintenance_windows").insert(payload)'));
+  assert.ok(!ui.includes('writeAudit("maintenance.configure"'));
+});
+
+test("maintenance configuration migration is invoker-secured and serializes the full write", () => {
+  const migration = read("../supabase/migrations/20261125190000_nox_maintenance_configuration_command.sql");
+  assert.ok(migration.includes("security invoker"));
+  assert.ok(migration.includes("auth.uid()"));
+  assert.ok(migration.includes("v_actor_role not in ('admin', 'owner')"));
+  assert.ok(migration.includes("pg_advisory_xact_lock"));
+  assert.ok(migration.includes("update public.maintenance_windows"));
+  assert.ok(migration.includes("insert into public.maintenance_windows"));
+  assert.ok(migration.includes("insert into public.audit_logs"));
+  assert.ok(migration.includes("grant execute on function public.bmg_admin_configure_maintenance"));
+  assert.ok(!migration.includes("service_role"));
 });

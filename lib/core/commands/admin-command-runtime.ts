@@ -192,6 +192,31 @@ export async function createAdminCommandRuntime(): Promise<{
     return { deleted: true, id: data.id };
   };
 
+  const configureMaintenance: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const serviceId = input.service_id === null || input.service_id === "" || input.service_id === undefined
+      ? null : uuid(input.service_id, "service_id");
+    if (typeof input.message !== "string") throw new Error("رسالة الصيانة يجب أن تكون نصاً.");
+    if (typeof input.enabled !== "boolean") throw new Error("حالة الصيانة يجب أن تكون true أو false.");
+    const startsAt = optionalIsoDate(input.starts_at, "starts_at");
+    const endsAt = optionalIsoDate(input.ends_at, "ends_at");
+    if (startsAt && endsAt && Date.parse(endsAt) <= Date.parse(startsAt)) {
+      throw new Error("وقت نهاية الصيانة يجب أن يكون بعد وقت البداية.");
+    }
+    const { data, error } = await supabase.rpc("bmg_admin_configure_maintenance", {
+      p_service_id: serviceId,
+      p_message: input.message,
+      p_enabled: input.enabled,
+      p_starts_at: startsAt,
+      p_ends_at: endsAt,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data) || typeof (data as Record<string, unknown>).id !== "string") {
+      throw new Error("لم يتم حفظ إعداد الصيانة.");
+    }
+    return data;
+  };
+
   const setMaintenanceEnabled: AdminCommandHandler = async (value, context) => {
     const input = objectInput(value);
     const maintenanceId = uuid(input.id, "id");
@@ -219,7 +244,7 @@ export async function createAdminCommandRuntime(): Promise<{
     handlers: Object.freeze({
       updateProfile, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
-      saveDependency, deleteDependency, setMaintenanceEnabled,
+      saveDependency, deleteDependency, configureMaintenance, setMaintenanceEnabled,
     }),
   };
 }

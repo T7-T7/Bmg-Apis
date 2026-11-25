@@ -490,6 +490,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_configure_maintenance: {
+        Args: {
+          p_enabled: boolean
+          p_ends_at: string | null
+          p_message: string
+          p_service_id: string | null
+          p_starts_at: string | null
+        }
+        Returns: Json
+      }
       bmg_admin_delete_api_key: { Args: { p_id: string }; Returns: boolean }
       bmg_admin_get_audit_logs: {
         Args: {
