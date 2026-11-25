@@ -56,6 +56,8 @@ test("manager responses are not cacheable and never expose handler source", () =
 test("managed API routes share one consistent CORS preflight policy", () => {
   const manager = read("../lib/server/service-manager.ts");
   assert.match(manager, /function managedServiceOptions\(\): Response/);
+  assert.match(manager, /status: 204/);
+  assert.match(manager, /new Response\(null/);
   assert.match(manager, /Access-Control-Allow-Origin": "\*"/);
   assert.match(manager, /Access-Control-Allow-Methods": "POST, OPTIONS"/);
   assert.match(manager, /Access-Control-Allow-Headers": "Content-Type, Authorization"/);
@@ -63,14 +65,19 @@ test("managed API routes share one consistent CORS preflight policy", () => {
   assert.match(manager, /Cache-Control": "no-store"/);
 });
 
-test("GPTFree maps service state, permission and quota failures to correct HTTP statuses", () => {
-  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
-  assert.match(gptfree, /reason === "service_unavailable"[\s\S]*?\? 503/);
-  assert.match(gptfree, /reason === "account_suspended"[\s\S]*?\? 403/);
-  assert.match(gptfree, /reason === "insufficient_scope"[\s\S]*?\? 403/);
-  assert.match(gptfree, /reason === "rate_limited"[\s\S]*?\? 429/);
-});
+test("every managed API route exports OPTIONS and delegates preflight to the shared policy", () => {
+  const routes = [
+    ["aql-gemini", read("../app/api/v1/ai/gemini/route.ts")],
+    ["gptfree", read("../app/api/v1/ai/gptfree/route.ts")],
+    ["star-x", read("../app/api/v1/ai/star-x/route.ts")],
+  ];
 
+  for (const [slug, source] of routes) {
+    assert.match(source, /export async function OPTIONS\(\)/, `${slug} must expose OPTIONS`);
+    assert.match(source, /return managedServiceOptions\(\);/, `${slug} must use shared preflight headers`);
+    assert.match(source, /export async function POST\(request: NextRequest\)/, `${slug} must expose POST`);
+  }
+});
 
 test("manager errors include the same trace headers without exposing exception details", () => {
   const manager = read("../lib/server/service-manager.ts");
@@ -82,4 +89,12 @@ test("manager errors include the same trace headers without exposing exception d
   assert.match(manager, /errorName: cause instanceof Error \? cause\.name/);
   assert.doesNotMatch(manager, /error: cause instanceof Error \? cause\.message/);
   assert.match(manager, /METHOD_NOT_ALLOWED/);
+});
+
+test("GPTFree maps service state, permission and quota failures to correct HTTP statuses", () => {
+  const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
+  assert.match(gptfree, /reason === "service_unavailable"[\s\S]*?\? 503/);
+  assert.match(gptfree, /reason === "account_suspended"[\s\S]*?\? 403/);
+  assert.match(gptfree, /reason === "insufficient_scope"[\s\S]*?\? 403/);
+  assert.match(gptfree, /reason === "rate_limited"[\s\S]*?\? 429/);
 });
