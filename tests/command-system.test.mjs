@@ -222,7 +222,7 @@ test("service create and update migration writes version history and audit atomi
 });
 
 test("notification broadcast migration checks role and writes audit atomically", () => {
-  const migration = read("../supabase/migrations/20261125210000_nox_notification_broadcast.sql");
+  const migration = read("../supabase/migrations/20261125200808_nox_notification_broadcast.sql");
   assert.ok(migration.includes("function public.bmg_admin_broadcast_notification"));
   assert.ok(migration.includes("security invoker"));
   assert.ok(migration.includes("private.bmg_is_admin()"));
