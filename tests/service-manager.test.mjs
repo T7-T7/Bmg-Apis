@@ -123,3 +123,17 @@ test("OpenAPI declares API keys mandatory for external API clients", () => {
   assert.match(openapi, /الطلبات الخارجية تتطلب API Key/);
   assert.match(openapi, /صفحات الاختبار داخل الموقع تعمل دون API Key/);
 });
+
+test("public developer documentation matches the three active services and canonical domain", () => {
+  const docs = read("../app/docs.md/route.ts");
+  const llms = read("../app/llms.txt/route.ts");
+  for (const source of [docs, llms]) {
+    assert.match(source, /nox\\.bmg-inc\\.web\\.id/);
+    assert.match(source, /api\\/v1\\/ai\\/gemini/);
+    assert.match(source, /api\\/v1\\/ai\\/gptfree/);
+    assert.match(source, /api\\/v1\\/ai\\/star-x/);
+    assert.doesNotMatch(source, /api\\/v1\\/currency\\/rate/);
+    assert.doesNotMatch(source, /starx\\.bmg-inc\\.web\\.id/);
+    assert.doesNotMatch(source, /bmg-apis-b2-902b\\.vercel\\.app/);
+  }
+});
