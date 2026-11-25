@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { executeRequestPipeline } from "@/lib/core/engine/executor";
 
 export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x";
@@ -124,7 +125,7 @@ export async function executeManagedService(
   handler: () => Promise<Response>,
 ): Promise<Response> {
   const service = getManagedService(slug);
-  if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, crypto.randomUUID());
+  if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, randomUUID());
 
   return executeRequestPipeline({
     service,
