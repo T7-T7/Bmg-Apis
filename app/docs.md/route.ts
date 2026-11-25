@@ -1,4 +1,101 @@
-const documentation = "# Nox Apis — توثيق المطورين\n\nOfficial API reference: https://bmg-apis-b2-902b.vercel.app\n\n## Active API: Star X image tools\n- Method: POST\n- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/star-x\n- Authentication: Authorization: Bearer YOUR_NOX_API_KEY\n- Content-Type: application/json\n- Actions: edit-scene, generate-image, change-background, improve-lighting.\n- imageUrl: HTTPS image URL, required except for generate-image.\n- prompt: English only, up to 4000 characters. The model does not understand Arabic.\n- Success response: binary image data (image/*), not JSON.\n- Logo: https://starx.bmg-inc.web.id/1795458731193.jpg\n- improve-lighting maps to the provider's aiShadows / tool:ai-shadows function; the source has no separate lighting function.\n\n## Active API: Gemini text generation\n- Method: POST\n- Endpoint: https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini\n- Content-Type: application/json\n- Authentication: Authorization: Bearer YOUR_NOX_API_KEY\n- Rate limit: 30 requests per minute per API key.\\n\\n### Request body\n- prompt: string, required, 1–30000 characters.\n- instruction: string, optional.\n- sessionId: string, optional. Pass the returned session ID to continue the conversation.\n\n### cURL\n```bash\ncurl -X POST \"https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini\" \\n  -H \"Authorization: Bearer YOUR_NOX_API_KEY\" \\n  -H \"Content-Type: application/json\" \\n  -d '{\"prompt\":\"Explain let vs const\",\"instruction\":\"Answer in Arabic\"}'\n```\n\n### JavaScript\n```js\nconst response = await fetch(\"https://bmg-apis-b2-902b.vercel.app/api/v1/ai/gemini\", {\n  method: \"POST\",\n  headers: {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer YOUR_NOX_API_KEY\"\n  },\n  body: JSON.stringify({\n    prompt: \"Explain let vs const\",\n    instruction: \"Answer in Arabic\"\n  })\n});\nconst data = await response.json();\nconsole.log(data.response);\nconsole.log(data.sessionId);\n```\n\n### Success response\n```json\n{\n  \"success\": true,\n  \"response\": \"Generated text\",\n  \"sessionId\": \"SESSION_ID\",\n  \"method\": \"gemini-web\",\n  \"conversationId\": \"c_...\",\n  \"responseId\": \"r_...\"\n}\n```\n\n### HTTP errors\n- 400: invalid request or missing required field.\n- 401: missing, invalid, or revoked API key.\n- 413: prompt exceeds 30,000 characters.\n- 429: rate limit exceeded.\n- 502: upstream model provider did not return a response.\n- 503: service or API-key authorization is temporarily unavailable.\n\n## Active API: Currency reference rate\n- Method: GET\n- Endpoint: https://bmg-apis-b2-902b.vercel.app/api/v1/currency/rate?base=USD&target=EUR\n- Authentication: Authorization: Bearer YOUR_NOX_API_KEY\n- Query parameters: base (default USD), target (default EUR), both ISO 4217 three-letter codes.\n- Source: Frankfurter daily reference rates; not live trading quotes.\n- Rate limit: 30 requests per minute per API key.\n\n## Machine-readable resources\n- OpenAPI JSON: https://bmg-apis-b2-902b.vercel.app/api/openapi.json\n- Markdown documentation: https://bmg-apis-b2-902b.vercel.app/docs.md\n- LLM index: https://bmg-apis-b2-902b.vercel.app/llms.txt\n\nThe two endpoints listed above are active. Other catalog entries remain previews unless explicitly marked available.\n";
+const documentation = `# NOX APIS — توثيق المطورين
+
+Official API reference: https://nox.bmg-inc.web.id
+
+تضم المنصة حاليًا ثلاث واجهات API تشغيلية للذكاء الاصطناعي. يتطلب الاستخدام الخارجي مفتاح API صالحًا في ترويسة Authorization. صفحات الاختبار الرسمية داخل الموقع تستخدم استثناء الاختبار ولا تعرض حقل API Key.
+
+## Gemini text generation
+
+- Method: POST
+- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gemini
+- Content-Type: application/json
+- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
+- Rate limit: 30 requests per minute per API key.
+- prompt: required string, 1–30000 characters.
+- instruction: optional string.
+- sessionId: optional string returned by a previous response to continue a conversation.
+
+### Request body
+
+```json
+{
+  "prompt": "اشرح الفرق بين let و const",
+  "instruction": "أجب باللغة العربية"
+}
+```
+
+### cURL
+
+```bash
+curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
+  -H "Authorization: Bearer YOUR_NOX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Explain let vs const","instruction":"Answer in Arabic"}'
+```
+
+## GPTFree text generation
+
+- Method: POST
+- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gptfree
+- Content-Type: application/json
+- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
+- message: required string, 1–30000 characters.
+- history: optional array, maximum 20 messages. Each item contains type (user, agent, or assistant) and content.
+
+### Request body
+
+```json
+{
+  "message": "اشرح REST API",
+  "history": []
+}
+```
+
+## Star X image tools
+
+- Method: POST
+- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/star-x
+- Content-Type: application/json
+- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
+- Actions: edit-scene, generate-image, change-background, improve-lighting.
+- imageUrl: HTTPS image URL, required except for generate-image.
+- prompt: English only, up to 4000 characters.
+- Success response: binary image data (image/*), not JSON.
+- improve-lighting uses the provider's aiShadows / tool:ai-shadows function; the source has no separate native lighting function.
+
+### Request body
+
+```json
+{
+  "action": "generate-image",
+  "prompt": "A cinematic photograph of a modern glass house beside a lake at sunset"
+}
+```
+
+## Authentication policy
+
+All external requests to the three API endpoints require a valid API key in the Authorization: Bearer header. The only no-key exception is the official website testing flow, which is checked using the configured website Origin. Website test pages must not display an API-key input.
+
+The Origin check is a browser-origin restriction, not cryptographic client authentication. Non-browser HTTP clients can forge an Origin header.
+
+## HTTP errors
+
+- 400: invalid request or missing required field.
+- 401: missing, invalid, or revoked API key.
+- 403: account or permission restriction.
+- 413: payload exceeds the endpoint limit.
+- 429: rate limit or quota exceeded.
+- 502: upstream provider did not return a valid response.
+- 503: service or API-key authorization is temporarily unavailable.
+
+## Machine-readable resources
+
+- OpenAPI JSON: https://nox.bmg-inc.web.id/api/openapi.json
+- Markdown documentation: https://nox.bmg-inc.web.id/docs.md
+- LLM index: https://nox.bmg-inc.web.id/llms.txt
+
+Only the three endpoints listed in this document are currently registered as active AI API services.
+`;
 
 export async function GET() {
   return new Response(documentation, {
