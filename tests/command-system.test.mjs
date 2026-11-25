@@ -197,7 +197,7 @@ test("limit command migration is invoker-secured and includes audit writes", () 
 });
 
 test("service create and update migration writes version history and audit atomically", () => {
-  const migration = read("../supabase/migrations/20261125203000_nox_service_commands.sql");
+  const migration = read("../supabase/migrations/20261125200533_nox_service_commands.sql");
   for (const name of ["bmg_admin_create_api_service","bmg_admin_update_api_service"]) {
     assert.ok(migration.includes("function public."+name), name);
   }
