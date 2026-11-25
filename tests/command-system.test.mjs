@@ -40,3 +40,19 @@ test("admin route enforces same-origin requests and bounded JSON input", () => {
   assert.ok(route.includes("executeAdminCommand"));
   assert.ok(route.includes('"Cache-Control": "no-store"'));
 });
+
+
+test("service version reads and rollback are active only through protected command handlers", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"service.versions.list": active("admin", "listServiceVersions")'));
+  assert.ok(registry.includes('"service.rollback": active("admin", "rollbackServiceVersion")'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_get_service_versions"'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_rollback_api_service"'));
+  assert.ok(runtime.includes("Number.isSafeInteger(input.version)"));
+  assert.ok(ui.includes('runAdminCommand<ServiceVersion[]>("service.versions.list"'));
+  assert.ok(ui.includes('runAdminCommand<{version:number}>("service.rollback"'));
+  assert.ok(!ui.includes('supabase.rpc("bmg_admin_rollback_api_service"'));
+  assert.ok(!ui.includes('supabase.rpc("bmg_admin_get_service_versions"'));
+});

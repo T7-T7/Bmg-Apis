@@ -295,13 +295,23 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  };
  const loadServiceVersions=async(service:Service)=>{
-  if(!supabase)return;setVersionService(service);setBusy(true);setError("");
-  try{const {data,error}=await supabase.rpc("bmg_admin_get_service_versions",{p_service_id:service.id});if(error)throw error;setServiceVersions((data||[]) as unknown as ServiceVersion[])}catch(e){setError(e instanceof Error?e.message:"تعذر تحميل إصدارات الخدمة.")}finally{setBusy(false)}
+  setVersionService(service);setBusy(true);setError("");
+  try{
+   const versions=await runAdminCommand<ServiceVersion[]>("service.versions.list",{serviceId:service.id});
+   setServiceVersions(versions||[]);
+  }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل إصدارات الخدمة.");}
+  finally{setBusy(false);}
  };
  const rollbackServiceVersion=async(version:ServiceVersion)=>{
-  if(!supabase||!versionService||!confirm("استرجاع محتوى الإصدار v"+version.version+"؟ سيتم إنشاء إصدار جديد ولن تُحذف الإصدارات السابقة."))return;
+  if(!versionService||!confirm("استرجاع محتوى الإصدار v"+version.version+"؟ سيتم إنشاء إصدار جديد ولن تُحذف الإصدارات السابقة."))return;
   setBusy(true);setError("");
-  try{const {data,error}=await supabase.rpc("bmg_admin_rollback_api_service",{p_service_id:versionService.id,p_version:version.version});if(error)throw error;setNotice("تم الاسترجاع وإنشاء الإصدار v"+data+".");await loadServiceVersions({...versionService,current_version:Number(data)});await load()}catch(e){setError(e instanceof Error?e.message:"تعذر استرجاع الإصدار.")}finally{setBusy(false)}
+  try{
+   const result=await runAdminCommand<{version:number}>("service.rollback",{serviceId:versionService.id,version:version.version});
+   setNotice("تم الاسترجاع وإنشاء الإصدار v"+result.version+".");
+   await loadServiceVersions({...versionService,current_version:result.version});
+   await load();
+  }catch(e){setError(e instanceof Error?e.message:"تعذر استرجاع الإصدار.");}
+  finally{setBusy(false);}
  };
  const archiveService=async(s:Service)=>{
   if(!supabase||!confirm(s.archived_at?"استعادة الخدمة إلى الكتالوج النشط؟":"أرشفة الخدمة وإيقاف ظهورها للمستخدمين؟"))return;

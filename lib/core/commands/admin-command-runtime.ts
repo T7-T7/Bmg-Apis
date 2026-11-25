@@ -96,5 +96,39 @@ export async function createAdminCommandRuntime(): Promise<{
     return { revoked: true, keyId: id };
   };
 
-  return { authorize, handlers: Object.freeze({ updateProfile, saveAdminKey, deleteAdminKey }) };
+  const listServiceVersions: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const serviceId = uuid(input.serviceId, "serviceId");
+    const { data, error } = await supabase.rpc("bmg_admin_get_service_versions", {
+      p_service_id: serviceId,
+    });
+    if (error) throw new Error(error.message);
+    if (!Array.isArray(data)) throw new Error("تعذر قراءة سجل إصدارات الخدمة.");
+    return data;
+  };
+
+  const rollbackServiceVersion: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const serviceId = uuid(input.serviceId, "serviceId");
+    if (!Number.isSafeInteger(input.version) || Number(input.version) < 1) {
+      throw new Error("رقم إصدار الخدمة غير صالح.");
+    }
+    const { data, error } = await supabase.rpc("bmg_admin_rollback_api_service", {
+      p_service_id: serviceId,
+      p_version: Number(input.version),
+    });
+    if (error) throw new Error(error.message);
+    if (!Number.isSafeInteger(data) || Number(data) < 1) {
+      throw new Error("لم يتم استرجاع إصدار الخدمة.");
+    }
+    return { version: Number(data), serviceId };
+  };
+
+  return {
+    authorize,
+    handlers: Object.freeze({
+      updateProfile, saveAdminKey, deleteAdminKey,
+      listServiceVersions, rollbackServiceVersion,
+    }),
+  };
 }
