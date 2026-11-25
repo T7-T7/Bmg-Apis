@@ -5,7 +5,7 @@ const specification = {
   info: {
     title: "NOX APIS — NEXUS OF XPERIENCE",
     version: "1.0.0",
-    description: "الواجهة المنشورة حاليًا من منصة NOX APIS — NEXUS OF XPERIENCE. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط.",
+    description: "الواجهة المنشورة حاليًا من منصة NOX APIS — NEXUS OF XPERIENCE. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط. صفحات الاختبار داخل الموقع تعمل دون API Key؛ لا تضف حقلًا للمفتاح في واجهة الاختبار.",
     contact: { name: "NOX APIS", url: "https://bmg-apis-b2-902b.vercel.app/docs" },
   },
   servers: [{ url: "https://bmg-apis-b2-902b.vercel.app", description: "Production" }],
@@ -15,8 +15,8 @@ const specification = {
       post: {
         tags: ["AI"], operationId: "generateGptFreeResponse",
         summary: "إنشاء رد باستخدام GPTFree",
-        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة.",
-        security: [{ NoxApiKey: [] }],
+        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
+        security: [{}, { NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["message"],
           properties: {
@@ -27,10 +27,8 @@ const specification = {
           }
         }, example: { message: "اشرح REST API", history: [] } } } },
         responses: {
-          "200": { description: "تم إنشاء الرد.", content: { "application/json": { schema: { type: "object", properties: {
-            success: { type: "boolean", const: true }, response: { type: "string" }, provider: { type: "string", const: "gptfree" }
-          } } } } },
-          "400": { description: "طلب غير صالح." }, "401": { description: "مفتاح API غير صالح." },
+          "200": { description: "تم إنشاء الرد." },
+          "400": { description: "طلب غير صالح." }, "401": { description: "مفتاح API المرسل غير صالح أو ملغى." },
           "429": { description: "تجاوز حد الاستخدام." }, "502": { description: "تعذر الحصول على رد من GPTFree." },
           "503": { description: "الخدمة غير متاحة." }
         }
@@ -40,8 +38,8 @@ const specification = {
       post: {
         tags: ["AI"], operationId: "runStarXImageTool",
         summary: "تشغيل أدوات Star X للصور",
-        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية.",
-        security: [{ NoxApiKey: [] }],
+        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
+        security: [{}, { NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["action"],
           properties: {
@@ -53,7 +51,7 @@ const specification = {
         responses: {
           "200": { description: "Generated image binary (image/*)." },
           "400": { description: "Invalid request or unsupported prompt language." },
-          "401": { description: "Invalid API key." },
+          "401": { description: "Invalid API key supplied in the request." },
           "429": { description: "Rate limit exceeded." },
           "502": { description: "Provider execution failed." },
           "503": { description: "Service unavailable." }
@@ -65,8 +63,8 @@ const specification = {
         tags: ["AI"],
         operationId: "generateGeminiResponse",
         summary: "إنشاء رد باستخدام Gemini",
-        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API.",
-        security: [{ NoxApiKey: [] }],
+        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
+        security: [{}, { NoxApiKey: [] }],
         requestBody: {
           required: true,
           content: {
@@ -106,9 +104,9 @@ const specification = {
             }
           },
           "400": { description: "طلب غير صالح أو حقل مطلوب مفقود." },
-          "401": { description: "مفتاح API مفقود أو غير صالح أو ملغى." },
+          "401": { description: "مفتاح API المرسل غير صالح أو ملغى." },
           "413": { description: "تجاوز prompt الحد الأقصى البالغ 30000 حرف." },
-          "429": { description: "تجاوز حد الطلبات: 30 طلبًا في الدقيقة لكل مفتاح." },
+          "429": { description: "تجاوز حد الطلبات." },
           "502": { description: "تعذر الحصول على رد من مزود النموذج." },
           "503": { description: "الخدمة أو التحقق من المفتاح غير متاح مؤقتًا." }
         }
@@ -121,7 +119,7 @@ const specification = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "NOX APIS API Key",
-        description: "أنشئ مفتاحًا من لوحة Nox Apis وأرسله في Authorization: Bearer YOUR_NOX_API_KEY."
+        description: "اختياري للتكاملات الخارجية فقط. صفحات الاختبار داخل موقع NOX APIS لا تحتاج هذا المفتاح، ويجب ألا تعرض حقلًا لإدخاله. عند استخدام مفتاح خارجي أرسله في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
   }
