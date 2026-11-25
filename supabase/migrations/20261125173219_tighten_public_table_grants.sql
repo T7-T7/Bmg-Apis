@@ -1,0 +1,3 @@
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM anon;
+GRANT SELECT ON TABLE public.api_services, public.incident_updates TO anon;
+REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public FROM authenticated;
