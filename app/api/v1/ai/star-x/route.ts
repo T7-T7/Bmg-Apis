@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
-import { executeManagedService, managedServiceOptions } from "@/lib/server/service-manager";
+import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 
 export const runtime = "nodejs";
@@ -53,6 +53,7 @@ function fail(message: string, status: number) {
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
 async function authorize(request: NextRequest, token: string | null) {
+  if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: fail("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
   const client = db();
   if (token) {
     const { data, error } = await client.rpc("bmg_authorize_api_request", {
