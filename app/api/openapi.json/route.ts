@@ -6,17 +6,17 @@ const specification = {
     title: "NOX APIS — NEXUS OF XPERIENCE",
     version: "1.0.0",
     description: "الواجهة المنشورة حاليًا من منصة NOX APIS — NEXUS OF XPERIENCE. يحتوي هذا الملف على المسارات التشغيلية الفعلية فقط. صفحات الاختبار داخل الموقع تعمل دون API Key؛ لا تضف حقلًا للمفتاح في واجهة الاختبار.",
-    contact: { name: "NOX APIS", url: "https://bmg-apis-b2-902b.vercel.app/docs" },
+    contact: { name: "NOX APIS", url: "https://nox.bmg-inc.web.id/docs" },
   },
-  servers: [{ url: "https://bmg-apis-b2-902b.vercel.app", description: "Production" }],
+  servers: [{ url: "https://nox.bmg-inc.web.id", description: "Production" }],
   tags: [{ name: "AI", description: "واجهات الذكاء الاصطناعي" }],
   paths: {
     "/api/v1/ai/gptfree": {
       post: {
         tags: ["AI"], operationId: "generateGptFreeResponse",
         summary: "إنشاء رد باستخدام GPTFree",
-        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
-        security: [{}, { NoxApiKey: [] }],
+        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        security: [{ NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["message"],
           properties: {
@@ -38,8 +38,8 @@ const specification = {
       post: {
         tags: ["AI"], operationId: "runStarXImageTool",
         summary: "تشغيل أدوات Star X للصور",
-        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
-        security: [{}, { NoxApiKey: [] }],
+        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        security: [{ NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["action"],
           properties: {
@@ -63,8 +63,8 @@ const specification = {
         tags: ["AI"],
         operationId: "generateGeminiResponse",
         summary: "إنشاء رد باستخدام Gemini",
-        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API. اختبار الخدمة من صفحات الموقع لا يحتاج API Key ولا يعرض حقلًا لإدخاله؛ يمكن استخدام Bearer API Key اختياريًا للتكاملات الخارجية.",
-        security: [{}, { NoxApiKey: [] }],
+        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        security: [{ NoxApiKey: [] }],
         requestBody: {
           required: true,
           content: {
@@ -119,7 +119,7 @@ const specification = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "NOX APIS API Key",
-        description: "اختياري للتكاملات الخارجية فقط. صفحات الاختبار داخل موقع NOX APIS لا تحتاج هذا المفتاح، ويجب ألا تعرض حقلًا لإدخاله. عند استخدام مفتاح خارجي أرسله في Authorization: Bearer YOUR_NOX_API_KEY."
+        description: "إلزامي لكل طلبات API الخارجية. الاستثناء الوحيد طلبات الاختبار من صفحات موقع NOX APIS الرسمية؛ لا تعرض صفحات الاختبار حقل API Key. أرسل المفتاح الخارجي في Authorization: Bearer YOUR_NOX_API_KEY."
       }
     }
   }
