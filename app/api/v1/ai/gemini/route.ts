@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
-import { createHmac } from "node:crypto";
 import { askGemini } from "@/lib/server/gemini";
+import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MAX_PROMPT_CHARS = 30_000;
@@ -22,9 +23,22 @@ function jsonError(message:string,status:number){
  if(status===429)headers["Retry-After"]="60";
  return NextResponse.json({success:false,error:message,code},{status,headers});
 }
-async function completeUsage(id:number|null,status:number,startedAt:number){if(!id)return;try{const db=getSupabase();await db.rpc("bmg_complete_api_request",{p_usage_id:id,p_status_code:status,p_latency_ms:Math.max(0,Date.now()-startedAt),p_server_secret:process.env.BMG_DEMO_RPC_SECRET})}catch(error){console.error("[Nox usage completion]",error instanceof Error?error.message:error)}}
+async function completeUsage(id: number | null, status: number, startedAt: number) {
+  return completeUsageTracking({
+    usageId: id,
+    complete: async () => {
+      const { error } = await getSupabase().rpc("bmg_complete_api_request", {
+        p_usage_id: id as number, p_status_code: status,
+        p_latency_ms: Math.max(0, Date.now() - startedAt),
+        p_server_secret: process.env.BMG_DEMO_RPC_SECRET
+      });
+      if (error) throw error;
+    },
+    onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
+  });
+}
 function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key)throw new Error("Supabase environment variables are missing.");return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}
-function clientHash(request:NextRequest){const secret=process.env.GEMINI_SESSION_SECRET;if(!secret||secret.length<32)throw new Error("GEMINI_SESSION_SECRET is not configured.");const ip=request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim()||request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";return createHmac("sha256",secret).update(ip).digest("hex")}
+function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "GEMINI_SESSION_SECRET is not configured."); }
 async function authorize(request:NextRequest,token:string|null){
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: jsonError("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
  const supabase=getSupabase();
@@ -39,8 +53,8 @@ export async function OPTIONS() {
 }
 async function handlePost(request: NextRequest) {
  const authorization=request.headers.get("authorization")??"";
- const match=authorization.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
- if(authorization&&!match)return jsonError("صيغة ترويسة Authorization غير صحيحة.",401);
+  const apiKey = parseApiKeyAuthorization(authorization);
+ if (!apiKey.valid) return jsonError("صيغة ترويسة Authorization غير صحيحة.", 401);
  let body:unknown;try{body=await readJsonBody(request)}catch(cause){if(cause instanceof PayloadTooLargeError)return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (1 MB).",413);if(cause instanceof SyntaxError)return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.",400);return jsonError("تعذر قراءة جسم الطلب.",400)}
  if(!body||typeof body!=="object"||Array.isArray(body))return jsonError("يجب أن يكون جسم الطلب كائن JSON.",400);
  const data=body as Record<string,unknown>;
@@ -48,10 +62,10 @@ async function handlePost(request: NextRequest) {
  if(data.prompt.length>MAX_PROMPT_CHARS)return jsonError("تجاوز النص الحد الأقصى المسموح وهو 30000 حرف.",413);
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
- let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,match?.[1]??null);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);usageId=access.usageId??null;
+ let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);usageId=access.usageId??null;
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
  await completeUsage(usageId,200,startedAt);
- return NextResponse.json({...response,access:match?"api_key":"demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
+ return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
  }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]",error instanceof Error?error.message:error);return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
 }
 
