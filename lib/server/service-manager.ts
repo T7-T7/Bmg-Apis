@@ -66,6 +66,17 @@ export function listManagedServices(): readonly ManagedServiceDefinition[] {
   return Object.freeze(Object.values(SERVICE_REGISTRY));
 }
 
+/**
+ * The no-key demo path is reserved for browser requests originating from the
+ * official website. API clients outside the site must provide a live key.
+ * Origin is a browser boundary, not a cryptographic identity mechanism.
+ */
+export function isWebsiteTestRequest(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  const configuredOrigin = process.env.NOX_SITE_ORIGIN || "https://nox.bmg-inc.web.id";
+  return origin === configuredOrigin;
+}
+
 /** Shared CORS preflight response for every managed API endpoint. */
 export function managedServiceOptions(): Response {
   return new Response(null, {
