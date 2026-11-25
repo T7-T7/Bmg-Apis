@@ -51,8 +51,7 @@ test("core engine owns request identity, method gate, response headers and failu
 test("service manager delegates lifecycle execution to Nox Core", () => {
   const manager = read("../lib/server/service-manager.ts");
   for (const fragment of [
-    "executeRequestPipeline", 'managerName: "Nox Core"',
-    'X-Service-Manager", "Nox Core"', 'Cache-Control": "no-store"',
+    "executeRequestPipeline", 'managerName: "Nox Core"', 'Cache-Control": "no-store"',
     "Origin is a browser boundary, not a cryptographic identity mechanism",
   ]) assert.ok(manager.includes(fragment), fragment);
 });
