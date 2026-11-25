@@ -90,7 +90,7 @@ export async function createAdminCommandRuntime(): Promise<{
   const deleteAdminKey: AdminCommandHandler = async (value) => {
     const input = objectInput(value);
     const id = uuid(input.id, "id");
-    const { data, error } = await supabase.rpc("bmg_admin_revoke_api_key", { p_id: id });
+    const { data, error } = await supabase.rpc("bmg_admin_delete_api_key", { p_id: id });
     if (error) throw new Error(error.message);
     if (data !== true) throw new Error("المفتاح غير موجود أو تم إلغاؤه مسبقاً.");
     return { revoked: true, keyId: id };
