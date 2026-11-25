@@ -3,6 +3,7 @@ import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } fr
 import { createClient } from "@supabase/supabase-js";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
+import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -11,42 +12,7 @@ const AGENT_URL = "https://us-central1-gptfree-2.cloudfunctions.net/agent_stream
 const MAX_BODY = 1_048_576;
 const MAX_HISTORY = 20;
 const MAX_MESSAGE = 30_000;
-class PayloadTooLargeError extends Error {}
 
-async function readJsonBody(request: NextRequest): Promise<unknown> {
-  const declaredLength = Number(request.headers.get("content-length") ?? 0);
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY) {
-    throw new PayloadTooLargeError();
-  }
-
-  const reader = request.body?.getReader();
-  if (!reader) throw new SyntaxError("Request body is empty.");
-
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_BODY) {
-        await reader.cancel();
-        throw new PayloadTooLargeError();
-      }
-      chunks.push(value);
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
 type AuthState = { idToken: string; refreshToken: string; expiresAt: number };
 let authState: AuthState | null = null;
 let authPromise: Promise<AuthState> | null = null;
@@ -195,7 +161,7 @@ async function handlePost(request: NextRequest) {
   if (!apiKey.valid) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
   let body: unknown;
   try {
-    body = await readJsonBody(request);
+    body = await readJsonRequestBody(request, MAX_BODY);
   } catch (cause) {
     if (cause instanceof PayloadTooLargeError) return error("حجم الطلب يتجاوز 1 MB.", 413);
     return error("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400);
