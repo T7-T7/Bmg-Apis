@@ -128,13 +128,13 @@ test("public developer documentation matches the three active services and canon
   const docs = read("../app/docs.md/route.ts");
   const llms = read("../app/llms.txt/route.ts");
   for (const source of [docs, llms]) {
-    assert.match(source, /nox\\.bmg-inc\\.web\\.id/);
-    assert.match(source, /api\\/v1\\/ai\\/gemini/);
-    assert.match(source, /api\\/v1\\/ai\\/gptfree/);
-    assert.match(source, /api\\/v1\\/ai\\/star-x/);
-    assert.doesNotMatch(source, /api\\/v1\\/currency\\/rate/);
-    assert.doesNotMatch(source, /starx\\.bmg-inc\\.web\\.id/);
-    assert.doesNotMatch(source, /bmg-apis-b2-902b\\.vercel\\.app/);
+    assert.ok(source.includes("nox.bmg-inc.web.id"));
+    assert.ok(source.includes("/api/v1/ai/gemini"));
+    assert.ok(source.includes("/api/v1/ai/gptfree"));
+    assert.ok(source.includes("/api/v1/ai/star-x"));
+    assert.ok(!source.includes("/api/v1/currency/rate"));
+    assert.ok(!source.includes("starx.bmg-inc.web.id"));
+    assert.ok(!source.includes("bmg-apis-b2-902b.vercel.app"));
   }
 });
 
