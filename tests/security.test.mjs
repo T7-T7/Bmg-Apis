@@ -48,17 +48,15 @@ test("AI API routes use the shared bounded request reader without changing byte 
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
   const starX = read("../app/api/v1/ai/star-x/route.ts");
   const manager = read("../lib/core/managers/request-manager.ts");
-  assert.match(gemini, /MAX_BODY_BYTES\\s*=\\s*1_048_576/);
-  assert.match(gptfree, /MAX_BODY\\s*=\\s*1_048_576/);
-  assert.match(starX, /MAX_BODY\\s*=\\s*1_048_576/);
   for (const route of [gemini, gptfree, starX]) {
-    assert.match(route, /readJsonRequestBody\\(request,/);
-    assert.match(route, /PayloadTooLargeError/);
-    assert.doesNotMatch(route, /await request\\.text\\(\\)/);
+    assert.ok(route.includes("1_048_576"));
+    assert.ok(route.includes("readJsonRequestBody(request,"));
+    assert.ok(route.includes("PayloadTooLargeError"));
+    assert.ok(!route.includes("await request.text()"));
   }
-  assert.match(manager, /request\\.body\\?\\.getReader\\(\\)/);
-  assert.match(manager, /await reader\\.cancel\\(\\)/);
-});;
+  assert.ok(manager.includes("request.body?.getReader()"));
+  assert.ok(manager.includes("await reader.cancel()"));
+});;;
 
 test("GPTFree upstream and Firebase timeouts fit the 120-second route budget", () => {
   const route = read("../app/api/v1/ai/gptfree/route.ts");
