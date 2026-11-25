@@ -29,7 +29,7 @@ test("runtime verifies Supabase user and role server-side and uses existing prot
   const runtime = read("../lib/core/commands/admin-command-runtime.ts");
   assert.ok(runtime.includes("supabase.auth.getUser()"));
   assert.ok(runtime.includes('.select("role")'));
-  for (const rpc of ["bmg_admin_update_profile","bmg_admin_update_api_key","bmg_admin_revoke_api_key"]) assert.ok(runtime.includes(rpc));
+  for (const rpc of ["bmg_admin_update_profile","bmg_admin_update_api_key","bmg_admin_delete_api_key"]) assert.ok(runtime.includes(rpc));
   assert.ok(!runtime.includes("service_role"));
 });
 
