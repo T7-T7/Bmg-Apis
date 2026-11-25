@@ -70,3 +70,16 @@ test("GPTFree maps service state, permission and quota failures to correct HTTP 
   assert.match(gptfree, /reason === "insufficient_scope"[\s\S]*?\? 403/);
   assert.match(gptfree, /reason === "rate_limited"[\s\S]*?\? 429/);
 });
+
+
+test("manager errors include the same trace headers without exposing exception details", () => {
+  const manager = read("../lib/server/service-manager.ts");
+  assert.match(manager, /function managerError\([\s\S]*?X-Request-Id/);
+  assert.match(manager, /X-Service-Manager/);
+  assert.match(manager, /X-Service-Slug/);
+  assert.match(manager, /Server-Timing/);
+  assert.match(manager, /X-Content-Type-Options", "nosniff"/);
+  assert.match(manager, /errorName: cause instanceof Error \? cause\.name/);
+  assert.doesNotMatch(manager, /error: cause instanceof Error \? cause\.message/);
+  assert.match(manager, /METHOD_NOT_ALLOWED/);
+});
