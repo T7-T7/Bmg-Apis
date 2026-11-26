@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
-import type { ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedServiceRequest } from "@/lib/core/managers/managed-access-manager";
-import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
 export const runtime = "nodejs";
@@ -34,20 +32,10 @@ function error(message: string, status: number) {
   if (status === 429 || status === 503 || status === 504) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
-  return completeManagedUsageTracking({
-    usageId: id,
-    statusCode: status,
-    startedAt,
-    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
-    rpc,
-    onError: (cause) => console.error("[Nox usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
-  });
-}
 function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "Session secret is not configured."); }
 async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: error("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
-  const { rpc, authorization: result } = await authorizeManagedServiceRequest({
+  const access = await authorizeManagedServiceRequest({
     token,
     serviceSlug: "gptfree",
     clientHash: () => clientHash(request),
@@ -73,7 +61,7 @@ async function authorize(request: NextRequest, token: string | null) {
       : "مفتاح API غير صالح أو ملغى أو منتهي.";
     return { ok: false as const, response: error(message, status) };
   }
-  return { ok: true as const, usageId: result.usageId, rpc };
+  return { ok: true as const, completeUsage: access.completeUsage };
 }
 
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
@@ -157,12 +145,11 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
   if (history.some(item => !item || typeof item !== "object" ||
     !["user", "agent", "assistant"].includes(String((item as Record<string, unknown>).type)) ||
     typeof (item as Record<string, unknown>).content !== "string")) return error("صيغة history غير صحيحة.", 400);
-  let usageId:number|null=null;const startedAt=Date.now();let rpc: ManagedSupabaseRpc | null = null;
+  const startedAt=Date.now();let finishUsage: ((statusCode: number) => Promise<void>) | null = null;
   try {
     const access = await authorize(request, apiKey.token);
     if (!access.ok) return access.response;
-    rpc = access.rpc;
-    usageId=access.usageId??null;
+    finishUsage = (statusCode) => access.completeUsage({ statusCode, startedAt, onError: (cause) => console.error("[Nox usage completion]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause }) });
     const upstream = await requestAgent({ message: data.message, images: [], history });
     const raw = await upstream.text();
     let responseText = "";
@@ -181,14 +168,14 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         }
       }
     }
-    if (upstreamError){await completeUsage(usageId,502,startedAt,context.requestId,rpc);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
-    if (!responseText.trim()){await completeUsage(usageId,502,startedAt,context.requestId,rpc);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
-    await completeUsage(usageId,200,startedAt,context.requestId,rpc);
+    if (upstreamError){await finishUsage(502);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
+    if (!responseText.trim()){await finishUsage(502);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
+    await finishUsage(200);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: apiKey.token ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
-    if (rpc) await completeUsage(usageId,502,startedAt,context.requestId,rpc);
+    if (rpc) await finishUsage(502);
     console.error("[Nox GPTFree API]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause });
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
