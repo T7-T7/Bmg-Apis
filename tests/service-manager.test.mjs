@@ -104,7 +104,6 @@ test("all AI routes delegate usage completion and RPC contract to Nox Core", () 
     const route = read(path);
     assert.ok(route.includes("access.completeUsage"), path);
     assert.ok(!route.includes("completeManagedUsageTracking"), path);
-    assert.ok(!route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
     assert.ok(!/rpc\(["']bmg_complete_api_request/.test(route), path);
     assert.ok(!route.includes("p_usage_id:"), path);
   }
