@@ -87,8 +87,9 @@ test("shared auth manager preserves supported bearer formats and demo fingerprin
   }
 });
 
-test("all AI routes delegate usage completion to the shared core manager", () => {
+test("all AI routes delegate usage completion and RPC contract to Nox Core", () => {
   const usage = read("../lib/core/managers/usage-manager.ts");
+  assert.ok(usage.includes("completeManagedUsageTracking"));
   assert.ok(usage.includes("completeUsageTracking"));
   assert.ok(usage.includes("if (!usageId) return"));
   assert.ok(usage.includes("onError(lastError)"));
@@ -98,8 +99,10 @@ test("all AI routes delegate usage completion to the shared core manager", () =>
     "../app/api/v1/ai/star-x/route.ts",
   ]) {
     const route = read(path);
-    assert.ok(route.includes("completeUsageTracking"), path);
-    assert.ok(route.includes('rpc("bmg_complete_api_request"'), path);
+    assert.ok(route.includes("completeManagedUsageTracking"), path);
+    assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
+    assert.ok(!/rpc\(["']bmg_complete_api_request/.test(route), path);
+    assert.ok(!route.includes("p_usage_id:"), path);
   }
 });
 
