@@ -191,7 +191,7 @@ test("usage completion failures carry the originating Nox request id", () => {
   ]) {
     const route = read(path);
     assert.match(route, /requestId:\s*context\.requestId/);
-    assert.ok(route.includes("error: cause instanceof Error ? cause.message : cause"), path);
+    assert.match(route, /error:\s*cause instanceof Error \? cause\.message : cause/);
     assert.ok(route.includes("context.requestId"), path);
   }
 });
