@@ -31,7 +31,7 @@ function isPublicAddress(address) {
     if (a === 100 && b >= 64 && b <= 127) return false;
     if (a === 169 && b === 254) return false;
     if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && (b === 168 || (b === 0 && c === 0) || (b === 0 && c === 2))) return false;
+    if (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2)) || (b === 88 && c === 99))) return false;
     if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false;
     if (a === 203 && b === 0 && c === 113) return false;
     if (a === 255) return false;
@@ -41,8 +41,11 @@ function isPublicAddress(address) {
     const value = address.toLowerCase().split('%')[0];
     if (value.startsWith('::') || value.startsWith('::ffff:')) return false;
     if (/^(fc|fd|fe[89ab]|ff)/.test(value)) return false;
-    if (value.startsWith('2001:db8:') || value.startsWith('2001:2:') || value.startsWith('2001:10:') || value.startsWith('2001:20:')) return false;
-    const first = Number.parseInt(value.split(':')[0] || '0', 16);
+    if (value.startsWith('2001:db8:') || value.startsWith('2001:2:') || value.startsWith('2001:10:') || value.startsWith('2001:20:') || value.startsWith('2002:')) return false;
+    const [firstPart, secondPart] = value.split(':');
+    const first = Number.parseInt(firstPart || '0', 16);
+    const second = Number.parseInt(secondPart || '0', 16);
+    if (first === 0x2001 && second <= 0x01ff) return false;
     return first >= 0x2000 && first <= 0x3fff;
   }
   return false;
