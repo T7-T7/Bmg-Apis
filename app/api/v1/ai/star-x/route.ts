@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createManagedSupabaseRpc, type ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
@@ -13,12 +13,6 @@ export const maxDuration = 180;
 const MAX_BODY = 4 * 1024 * 1024;
 const MAX_PROMPT = 4000;
 
-function db() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("Supabase environment variables are missing.");
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-}
 function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "GEMINI_SESSION_SECRET is not configured."); }
 function fail(message: string, status: number) {
   const code = status === 400 ? "INVALID_REQUEST" : status === 401 ? "UNAUTHORIZED"
@@ -28,14 +22,10 @@ function fail(message: string, status: number) {
   if (status === 429 || status === 503) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function authorize(request: NextRequest, token: string | null) {
+async function authorize(request: NextRequest, token: string | null, rpc: ManagedSupabaseRpc) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: fail("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
-  const client = db();
   const result = await authorizeManagedRequest({
-    rpc: async (procedure, args) => {
-      const { data, error } = await client.rpc(procedure, args);
-      return { data, error };
-    },
+    rpc,
     token,
     serviceSlug: "star-x",
     clientHash: () => clientHash(request),
@@ -61,16 +51,13 @@ async function authorize(request: NextRequest, token: string | null) {
   return { ok: true as const, usageId: result.usageId };
 }
 
-async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string) {
+async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
   return completeManagedUsageTracking({
     usageId: id,
     statusCode: status,
     startedAt,
     serverSecret: process.env.BMG_DEMO_RPC_SECRET,
-    rpc: async (procedure, args) => {
-      const { data, error } = await db().rpc(procedure, args);
-      return { data, error };
-    },
+    rpc,
     onError: (cause) => console.error("[Star X usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
   });
 }
@@ -106,8 +93,10 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
 
   const startedAt = Date.now();
   let usageId: number | null = null;
+  let rpc: ManagedSupabaseRpc | null = null;
   try {
-    const access = await authorize(request, apiKey.token);
+    rpc = createManagedSupabaseRpc();
+    const access = await authorize(request, apiKey.token, rpc);
     if (!access.ok) return access.response;
     usageId = access.usageId;
     const options = { timeoutMs: 150000 };
@@ -118,7 +107,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         : action === "change-background"
           ? await aiBackground(data.imageUrl as string, data.prompt as string, options)
           : await aiShadows(data.imageUrl as string, options);
-    await completeUsage(usageId, 200, startedAt, context.requestId);
+    await completeUsage(usageId, 200, startedAt, context.requestId, rpc);
     const buffer = result.buffer;
     return new Response(new Uint8Array(buffer), {
       status: 200,
@@ -133,7 +122,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       }
     });
   } catch (error) {
-    await completeUsage(usageId, 502, startedAt, context.requestId);
+    if (rpc) await completeUsage(usageId, 502, startedAt, context.requestId, rpc);
     console.error("[Star X API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });
     return fail("تعذر تنفيذ Star X حاليًا. حاول مرة أخرى لاحقًا.", 502);
   }
