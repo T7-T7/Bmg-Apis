@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
-import type { ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { askGemini } from "@/lib/server/gemini";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedServiceRequest } from "@/lib/core/managers/managed-access-manager";
-import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,20 +15,10 @@ function jsonError(message:string,status:number){
  if(status===429)headers["Retry-After"]="60";
  return NextResponse.json({success:false,error:message,code},{status,headers});
 }
-async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
-  return completeManagedUsageTracking({
-    usageId: id,
-    statusCode: status,
-    startedAt,
-    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
-    rpc,
-    onError: (cause) => console.error("[Nox usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
-  });
-}
 function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "GEMINI_SESSION_SECRET is not configured."); }
 async function authorize(request:NextRequest,token:string|null){
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: jsonError("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
- const { rpc, authorization: result } = await authorizeManagedServiceRequest({
+ const access = await authorizeManagedServiceRequest({
    token,
    serviceSlug: "aql-gemini",
    clientHash: () => clientHash(request),
@@ -44,7 +32,7 @@ async function authorize(request:NextRequest,token:string|null){
    if (token) return { ok: false as const, response: jsonError(result.reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا." : "مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.", result.reason === "service_unavailable" ? 503 : 401) };
    return { ok: false as const, response: jsonError(result.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : "الخدمة غير متاحة حاليًا.", 503) };
  }
- return { ok: true as const, usageId: result.usageId, rpc };
+ return { ok: true as const, completeUsage: (options: { statusCode: number; startedAt: number; onError: (cause: unknown) => void }) => access.completeUsage(options) };
 }
 
 export async function OPTIONS() {
@@ -61,11 +49,11 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
  if(data.prompt.length>MAX_PROMPT_CHARS)return jsonError("تجاوز النص الحد الأقصى المسموح وهو 30000 حرف.",413);
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
- let usageId:number|null=null;const startedAt=Date.now();let rpc: ManagedSupabaseRpc | null = null;try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);rpc=access.rpc;usageId=access.usageId??null;
+ const startedAt=Date.now();let finishUsage: ((statusCode: number) => Promise<void>) | null = null;try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);finishUsage=(statusCode)=>access.completeUsage({statusCode,startedAt,onError:(cause)=>console.error("[Nox usage completion]",{requestId:context.requestId,error:cause instanceof Error?cause.message:cause})});
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
- await completeUsage(usageId,200,startedAt,context.requestId,rpc);
+ await finishUsage(200);
  return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
- }catch(error){if(rpc)await completeUsage(usageId,502,startedAt,context.requestId,rpc);console.error("[Nox Gemini API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
+ }catch(error){if(finishUsage)await finishUsage(502);console.error("[Nox Gemini API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
 }
 
 export async function POST(request: NextRequest) {
