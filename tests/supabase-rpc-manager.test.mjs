@@ -22,7 +22,9 @@ test("Nox access manager creates and shares the request-scoped RPC transport", (
   const access = read("../lib/core/managers/managed-access-manager.ts");
   assert.ok(access.includes("createManagedSupabaseRpc()"));
   assert.ok(access.includes("authorizeManagedRequest({"));
-  assert.ok(access.includes("return Object.freeze({ rpc, authorization })"));
+  assert.ok(access.includes("completeManagedUsageTracking({"));
+  assert.ok(access.includes("usageId: authorization.usageId"));
+  assert.ok(access.includes("return Object.freeze({"));
 });
 
 test("each AI route obtains its shared RPC transport through Nox access manager", () => {
@@ -35,8 +37,9 @@ test("each AI route obtains its shared RPC transport through Nox access manager"
   for (const path of routes) {
     const route = read(path);
     assert.ok(route.includes("authorizeManagedServiceRequest"), path);
-    assert.ok(route.includes("completeManagedUsageTracking({"), path);
-    assert.ok(route.includes("rpc,"), path);
+    assert.ok(route.includes("access.completeUsage"), path);
+    assert.ok(!route.includes("completeManagedUsageTracking"), path);
+    assert.ok(!route.includes("rpc,"), path);
     assert.ok(!route.includes("createManagedSupabaseRpc("), path);
     assert.ok(!route.includes("authorizeManagedRequest("), path);
     assert.ok(!route.includes('@supabase/supabase-js'), path);
