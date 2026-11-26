@@ -91,7 +91,7 @@ test("all AI routes delegate usage completion to the shared core manager", () =>
   const usage = read("../lib/core/managers/usage-manager.ts");
   assert.ok(usage.includes("completeUsageTracking"));
   assert.ok(usage.includes("if (!usageId) return"));
-  assert.ok(usage.includes("onError(cause)"));
+  assert.ok(usage.includes("onError(lastError)"));
   for (const path of [
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
