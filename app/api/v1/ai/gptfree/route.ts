@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
+import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { createClient } from "@supabase/supabase-js";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
@@ -151,7 +152,7 @@ async function requestAgent(payload: { message: string; images: string[]; histor
 export async function OPTIONS() {
   return managedServiceOptions();
 }
-async function handlePost(request: NextRequest) {
+async function handlePost(request: NextRequest, context: ExecutionContext) {
   const authorization = request.headers.get("authorization") ?? "";
   const apiKey = parseApiKeyAuthorization(authorization);
   if (!apiKey.valid) return error("صيغة ترويسة Authorization غير صحيحة.", 401);
@@ -201,12 +202,12 @@ async function handlePost(request: NextRequest) {
     });
   } catch (cause) {
     await completeUsage(usageId,502,startedAt);
-    console.error("[Nox GPTFree API]", cause instanceof Error ? cause.message : cause);
+    console.error("[Nox GPTFree API]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause });
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
 }
 
 
 export async function POST(request: NextRequest) {
-  return executeManagedService("gptfree", request, () => handlePost(request));
+  return executeManagedService("gptfree", request, (context) => handlePost(request, context));
 }
