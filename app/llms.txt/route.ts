@@ -14,6 +14,7 @@ const content = `# NOX APIS
 - Method: POST
 - Request Content-Type: application/json
 - External authentication: Authorization: Bearer YOUR_NOX_API_KEY
+- Newly issued Nox keys use the format nox_ followed by 52 letters, digits, underscores, or hyphens; send the full key unchanged after Bearer.
 - External requests require a valid Nox API key.
 - Official website test pages are the only no-key exception; this exception is not for external applications.
 - Usage quotas and request rates depend on account, plan, key, and service. Do not assume a universal fixed rate.
