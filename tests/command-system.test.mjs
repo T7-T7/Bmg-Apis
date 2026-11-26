@@ -261,3 +261,16 @@ test("admin command route does not expose internal handler or database errors", 
   assert.ok(route.includes('console.error("[Nox Admin Command]"'));
   assert.ok(!route.includes("const message = error instanceof Error ? error.message"));
 });
+
+test("admin command route returns validation errors as 400 without exposing provider errors", () => {
+  const types = read("../lib/core/commands/command-types.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const route = read("../app/api/admin/commands/route.ts");
+  assert.ok(types.includes('readonly code = "INVALID_INPUT"'));
+  assert.ok(types.includes('readonly status = 400'));
+  assert.ok(runtime.includes("AdminCommandInputError"));
+  assert.ok(runtime.includes('throw new Error(error.message)'));
+  assert.ok(route.includes("error instanceof AdminCommandInputError"));
+  assert.ok(route.includes('code: error.code, error: error.message'));
+  assert.ok(route.includes('code: "INTERNAL_ERROR"'));
+});

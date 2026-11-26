@@ -36,3 +36,13 @@ export class AdminCommandError extends Error {
     this.status = status;
   }
 }
+
+export class AdminCommandInputError extends Error {
+  readonly code = "INVALID_INPUT" as const;
+  readonly status = 400 as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "AdminCommandInputError";
+  }
+}

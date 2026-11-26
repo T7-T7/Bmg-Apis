@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { executeAdminCommand } from "@/lib/core/commands/command-executor";
 import { createAdminCommandRuntime } from "@/lib/core/commands/admin-command-runtime";
-import { AdminCommandError } from "@/lib/core/commands/command-types";
+import { AdminCommandError, AdminCommandInputError } from "@/lib/core/commands/command-types";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
 export const runtime = "nodejs";
@@ -39,6 +39,11 @@ export async function POST(request: Request) {
       headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
     });
   } catch (error) {
+    if (error instanceof AdminCommandInputError) {
+      return NextResponse.json({ success: false, code: error.code, error: error.message }, {
+        status: error.status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+      });
+    }
     if (error instanceof AdminCommandError) {
       return NextResponse.json({ success: false, code: error.code, error: error.message }, {
         status: error.status, headers: { "Cache-Control": "no-store" },
