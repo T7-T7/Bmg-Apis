@@ -41,7 +41,7 @@ async function authorize(request: NextRequest, token: string | null) {
       const status = reason === "rate_limited" ? 429
         : reason === "account_suspended" || reason === "insufficient_scope" ? 403
         : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
-      const message = reason === "rate_limited" ? "تجاوزت حد الطلبات المسموح لهذا المفتاح."
+      const message = reason === "rate_limited" ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."
         : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
         : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
         : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا."
