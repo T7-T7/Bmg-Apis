@@ -40,3 +40,47 @@ export async function completeUsageTracking({
 
   onError(lastError);
 }
+
+
+type UsageCompletionRpc = (
+  procedure: string,
+  args: Record<string, unknown>,
+) => PromiseLike<Readonly<{ data: unknown; error: unknown }>>;
+
+export type ManagedUsageCompletion = Readonly<{
+  usageId: number | null;
+  statusCode: number;
+  startedAt: number;
+  serverSecret: string | undefined;
+  rpc: UsageCompletionRpc;
+  onError: (cause: unknown) => void;
+}>;
+
+/**
+ * Nox Core owns the completion RPC contract and retry policy.
+ * Service adapters provide only their database transport and keep their
+ * existing response/error behavior unchanged.
+ */
+export async function completeManagedUsageTracking({
+  usageId,
+  statusCode,
+  startedAt,
+  serverSecret,
+  rpc,
+  onError,
+}: ManagedUsageCompletion): Promise<void> {
+  return completeUsageTracking({
+    usageId,
+    complete: async () => {
+      const { data, error } = await rpc("bmg_complete_api_request", {
+        p_usage_id: usageId as number,
+        p_status_code: statusCode,
+        p_latency_ms: Math.max(0, Date.now() - startedAt),
+        p_server_secret: serverSecret,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onError,
+  });
+}
