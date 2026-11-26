@@ -43,19 +43,52 @@ test("server-only credentials are not referenced by browser application modules"
   }
 });
 
-test("AI API routes use the shared bounded request reader without changing byte limits", () => {
+test("AI API routes enforce explicit bounded JSON request sizes", () => {
   const gemini = read("../app/api/v1/ai/gemini/route.ts");
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
   const starX = read("../app/api/v1/ai/star-x/route.ts");
   const manager = read("../lib/core/managers/request-manager.ts");
-  for (const route of [gemini, gptfree, starX]) {
+  for (const route of [gemini, gptfree]) {
     assert.ok(route.includes("1_048_576"));
     assert.ok(route.includes("readJsonRequestBody(request,"));
     assert.ok(route.includes("PayloadTooLargeError"));
     assert.ok(!route.includes("await request.text()"));
   }
+  assert.match(starX, /const MAX_BODY = 4 \\* 1024 \\* 1024/);
+  assert.ok(starX.includes("حجم الطلب يتجاوز 4 MB."));
+  assert.ok(starX.includes("readJsonRequestBody(request, MAX_BODY)"));
+  assert.ok(starX.includes("PayloadTooLargeError"));
+  assert.ok(!starX.includes("await request.text()"));
   assert.ok(manager.includes("request.body?.getReader()"));
   assert.ok(manager.includes("await reader.cancel()"));
+});
+
+test("Star X image downloads pin validated public DNS results and enforce a 4 MB cap", () => {
+  const service = read("../services/photoroom.mjs");
+  assert.match(service, /MAX_IMAGE_BYTES = 4 \\* 1024 \\* 1024/);
+  assert.match(service, /lookup\\(hostname, \\{ all: true, verbatim: true \\}\\)/);
+  assert.match(service, /isPublicAddress/);
+  assert.match(service, /httpsRequest/);
+  assert.match(service, /redirects <= MAX_IMAGE_REDIRECTS/);
+  assert.match(service, /callback\\(null, address, family\\)/);
+  assert.match(service, /Authorization = authorization/);
+  assert.match(service, /target\\.hostname === 'photoroom\\.com'/);
+  assert.match(service, /readResponseTextBounded/);
+  assert.doesNotMatch(service, /fetch\\(input,/);
+  assert.doesNotMatch(service, /fetch\\(imageUrl,/);
+});
+
+test("API authorization enforces account-wide plan, minute and weighted quotas atomically", () => {
+  const sql = read("../supabase/migrations/20261126090000_enforce_account_plan_usage_limits.sql");
+  assert.match(sql, /nox_api_account:/);
+  assert.match(sql, /for update/i);
+  assert.match(sql, /api_admin_limits/i);
+  assert.match(sql, /api_plan_limits/i);
+  assert.match(sql, /v_recent_count>=v_requests_per_minute/i);
+  assert.match(sql, /api_usage_hourly/i);
+  assert.match(sql, /v_daily_usage\+v_usage_weight>v_daily_limit/i);
+  assert.match(sql, /v_monthly_usage\+v_usage_weight>v_monthly_limit/i);
+  assert.match(sql, /p_server_secret text/i);
 });;;
 
 test("GPTFree upstream and Firebase timeouts fit the 120-second route budget", () => {
