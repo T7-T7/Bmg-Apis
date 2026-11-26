@@ -24,7 +24,7 @@ test("API key authorization RPC requires the server secret and rejects the legac
   ]) {
     const route = read(path);
     assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
-    assert.ok(route.includes("authorizeManagedRequest"), path);
+    assert.ok(route.includes("authorizeManagedServiceRequest"), path);
     assert.ok(!route.includes("p_server_secret:"), path);
   }
 });
