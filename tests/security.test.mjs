@@ -393,7 +393,7 @@ test("API key creation uses the database's fixed NOX key format", () => {
 
 test("API key deletion RPCs resolve auth helpers with an empty search path", () => {
   const migration = read("../supabase/migrations/20261126190000_fix_api_key_delete_auth_resolution.sql");
-  assert.equal((migration.match(/set search_path = ''/g) || []).length, 2);
+  assert.equal((migration.match(/set search_path = ''/g) || []).length, 3);
   assert.equal((migration.match(/auth\.uid\(\)/g) || []).length, 2);
   assert.match(migration, /auth\.jwt\(\)/);
   assert.match(migration, /auth\.mfa_factors/);
