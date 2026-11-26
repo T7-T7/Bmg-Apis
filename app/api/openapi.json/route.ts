@@ -51,7 +51,9 @@ const specification = {
         }, example: { action: "generate-image", prompt: "A cinematic photograph of a modern glass house beside a lake at sunset" } } } },
         responses: {
           "200": { description: "Generated image binary (image/*).", content: { "image/*": { schema: { type: "string", format: "binary" } } } },
-          "400": { description: "Invalid request or unsupported prompt language." },\n          "403": { description: "Account restriction or insufficient service scope." },\n          "413": { description: "Request body exceeds the 4 MB limit." },
+          "400": { description: "Invalid request or unsupported prompt language." },
+          "403": { description: "Account restriction or insufficient service scope." },
+          "413": { description: "Request body exceeds the 4 MB limit." },
           "401": { description: "Invalid API key supplied in the request." },
           "429": { description: "Rate limit exceeded." },
           "502": { description: "Provider execution failed." },
