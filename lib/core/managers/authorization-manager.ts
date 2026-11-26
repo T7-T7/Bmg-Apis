@@ -52,11 +52,12 @@ export async function authorizeManagedRequest({
     data !== null && typeof data === "object"
       ? (data as Record<string, unknown>)
       : null;
+  const authorized = result?.authorized === true;
 
   return Object.freeze({
-    authorized: result?.authorized === true,
+    authorized,
     reason: typeof result?.reason === "string" ? result.reason : undefined,
-    usageId: Number(result?.usage_id) || null,
+    usageId: authorized ? Number(result?.usage_id) || null : null,
     message: typeof result?.message === "string" ? result.message : undefined,
   });
 }
