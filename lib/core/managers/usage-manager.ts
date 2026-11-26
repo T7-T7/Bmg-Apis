@@ -1,3 +1,5 @@
+import type { ManagedSupabaseRpc } from "./supabase-rpc-manager";
+
 export type UsageCompletion = Readonly<{
   usageId: number | null;
   complete: () => Promise<unknown>;
@@ -41,17 +43,12 @@ export async function completeUsageTracking({
   onError(lastError);
 }
 
-type UsageCompletionRpc = (
-  procedure: string,
-  args: Record<string, unknown>,
-) => PromiseLike<Readonly<{ data: unknown; error: unknown }>>;
-
 export type ManagedUsageCompletion = Readonly<{
   usageId: number | null;
   statusCode: number;
   startedAt: number;
   serverSecret: string | undefined;
-  rpc: UsageCompletionRpc;
+  rpc: ManagedSupabaseRpc;
   onError: (cause: unknown) => void;
 }>;
 
