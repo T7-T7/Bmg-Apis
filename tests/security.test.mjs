@@ -406,8 +406,8 @@ test("API key deletion RPCs resolve auth helpers with an empty search path", () 
 
 test("API key update RPC resolves auth helpers with a restricted search path", () => {
   const migration = read("../supabase/migrations/20261126200000_fix_api_key_update_auth_search_path.sql");
-  assert.match(migration, /auth\\.uid\\(\\)/);
-  assert.match(migration, /auth\\.jwt\\(\\)/);
+  assert.match(migration, /auth\.uid\(\)/);
+  assert.match(migration, /auth\.jwt\(\)/);
   assert.match(migration, /set search_path = ''/);
-  assert.match(migration, /grant execute on function public\\.bmg_update_api_key\\(uuid, text, timestamptz\\) to authenticated/i);
+  assert.match(migration, /grant execute on function public\.bmg_update_api_key\(uuid, text, timestamptz\) to authenticated/i);
 });
