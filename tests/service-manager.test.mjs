@@ -122,3 +122,35 @@ test("shared request manager enforces byte limits while preserving route-specifi
     assert.ok(!route.includes("request.body?.getReader()"), path);
   }
 });
+
+test("all three services delegate Supabase authorization RPC execution to Nox Core", () => {
+  const authorization = read("../lib/core/managers/authorization-manager.ts");
+  for (const fragment of [
+    "authorizeManagedRequest", "bmg_authorize_api_request",
+    "bmg_authorize_demo_request", "p_server_secret: serverSecret",
+    "p_service_slug: serviceSlug", "clientHash()",
+    "result?.authorized === true", "Number(result?.usage_id) || null",
+  ]) assert.ok(authorization.includes(fragment), fragment);
+
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("authorizeManagedRequest"), path);
+    assert.ok(route.includes("serviceSlug:"), path);
+    assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
+    assert.ok(!route.includes('rpc("bmg_authorize_api_request"'), path);
+    assert.ok(!route.includes('rpc("bmg_authorize_demo_request"'), path);
+  }
+});
+
+test("authorization refactor keeps public denial mapping in each service route", () => {
+  const expected = [
+    ["../app/api/v1/ai/gemini/route.ts", "تجاوزت حدود الاستخدام المسموح بها حسابك"],
+    ["../app/api/v1/ai/gptfree/route.ts", "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."],
+    ["../app/api/v1/ai/star-x/route.ts", "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."],
+  ];
+  for (const [path, message] of expected) assert.ok(read(path).includes(message), path);
+});
