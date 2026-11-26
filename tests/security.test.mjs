@@ -452,5 +452,5 @@ test("organization workspaces, project membership and invitation inbox use authe
   assert.match(inbox, /bmg_respond_to_organization_invitation/);
   assert.match(inbox, /قبول الدعوة/);
   const portal = read("../components/portal.tsx");
-  assert.match(portal, /dashboard\\/notifications/);
+  assert.ok(portal.includes("/dashboard/notifications"));
 });
