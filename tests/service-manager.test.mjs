@@ -128,12 +128,15 @@ test("shared request manager enforces byte limits while preserving route-specifi
 
 test("all three services delegate Supabase authorization RPC execution to Nox Core", () => {
   const authorization = read("../lib/core/managers/authorization-manager.ts");
+  const access = read("../lib/core/managers/managed-access-manager.ts");
   for (const fragment of [
     "authorizeManagedRequest", "bmg_authorize_api_request",
     "bmg_authorize_demo_request", "p_server_secret: serverSecret",
     "p_service_slug: serviceSlug", "clientHash()",
     "result?.authorized === true", "Number(result?.usage_id) || null",
   ]) assert.ok(authorization.includes(fragment), fragment);
+  assert.ok(access.includes("createManagedSupabaseRpc()"));
+  assert.ok(access.includes("authorizeManagedRequest({"));
 
   for (const path of [
     "../app/api/v1/ai/gemini/route.ts",
@@ -141,7 +144,7 @@ test("all three services delegate Supabase authorization RPC execution to Nox Co
     "../app/api/v1/ai/star-x/route.ts",
   ]) {
     const route = read(path);
-    assert.ok(route.includes("authorizeManagedRequest"), path);
+    assert.ok(route.includes("authorizeManagedServiceRequest"), path);
     assert.ok(route.includes("serviceSlug:"), path);
     assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
     assert.ok(!route.includes('rpc("bmg_authorize_api_request"'), path);
