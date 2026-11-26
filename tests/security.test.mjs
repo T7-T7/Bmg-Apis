@@ -240,3 +240,42 @@ test("usage completion rejects missing or negative database acknowledgements", (
   assert.match(manager, /result\.completed !== true/);
   assert.match(manager, /invalid_acknowledgement/);
 });
+
+
+test("Nox Core owns the usage completion RPC and retry lifecycle for all three services", () => {
+  const manager = read("../lib/core/managers/usage-manager.ts");
+  for (const fragment of [
+    "completeManagedUsageTracking", "bmg_complete_api_request",
+    "p_usage_id: usageId as number", "p_status_code: statusCode",
+    "p_latency_ms: Math.max(0, Date.now() - startedAt)",
+    "p_server_secret: serverSecret", "completeUsageTracking({",
+  ]) assert.ok(manager.includes(fragment), fragment);
+
+  const routes = [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ];
+  for (const path of routes) {
+    const route = read(path);
+    assert.ok(route.includes("completeManagedUsageTracking"), path);
+    assert.ok(route.includes('rpc("bmg_complete_api_request"') === false, path);
+    assert.ok(route.includes("p_server_secret") === false, path);
+    assert.ok(route.includes("statusCode: status"), path);
+    assert.ok(route.includes("startedAt,"), path);
+  }
+});
+
+test("usage completion retains service-specific status codes and timing boundaries", () => {
+  const routes = [
+    ["../app/api/v1/ai/gemini/route.ts", "completeUsage(usageId,502,startedAt)", "completeUsage(usageId,200,startedAt)"],
+    ["../app/api/v1/ai/gptfree/route.ts", "completeUsage(usageId,502,startedAt)", "completeUsage(usageId,200,startedAt)"],
+    ["../app/api/v1/ai/star-x/route.ts", "completeUsage(usageId, 502, startedAt)", "completeUsage(usageId, 200, startedAt)"],
+  ];
+  for (const [path, failure, success] of routes) {
+    const route = read(path);
+    assert.ok(route.includes(failure), path);
+    assert.ok(route.includes(success), path);
+    assert.ok(route.includes("const startedAt = Date.now()") || route.includes("const startedAt=Date.now()"), path);
+  }
+});
