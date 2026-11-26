@@ -243,6 +243,15 @@ test("usage completion retries transient failures and accepts idempotent RPC ack
 });
 
 
+test("usage completion database window covers Star X provider and route deadlines", () => {
+  const migration = read("../supabase/migrations/20261126180000_extend_usage_completion_latency_window.sql");
+  const route = read("../app/api/v1/ai/star-x/route.ts");
+  assert.match(migration, /p_latency_ms > 180000/);
+  assert.match(route, /maxDuration = 180/);
+  assert.match(route, /timeoutMs: 150000/);
+  assert.match(migration, /create or replace function public\.bmg_complete_api_request\(\s*p_usage_id bigint,\s*p_status_code integer,\s*p_latency_ms integer,\s*p_server_secret text/s);
+});
+
 test("usage completion rejects missing or negative database acknowledgements", () => {
   const manager = read("../lib/core/managers/usage-manager.ts");
   assert.match(manager, /result === null/);
