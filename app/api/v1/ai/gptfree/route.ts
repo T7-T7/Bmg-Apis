@@ -36,12 +36,13 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
   return completeUsageTracking({
     usageId: id,
     complete: async () => {
-      const { error } = await supabase().rpc("bmg_complete_api_request", {
+      const { data, error } = await supabase().rpc("bmg_complete_api_request", {
         p_usage_id: id as number, p_status_code: status,
         p_latency_ms: Math.max(0, Date.now() - startedAt),
         p_server_secret: process.env.BMG_DEMO_RPC_SECRET
       });
       if (error) throw error;
+      return data;
     },
     onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
   });
