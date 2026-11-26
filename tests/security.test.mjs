@@ -277,9 +277,9 @@ test("Nox Core owns the usage completion RPC and retry lifecycle for all three s
 
 test("usage completion retains service-specific status codes and timing boundaries", () => {
   const routes = [
-    ["../app/api/v1/ai/gemini/route.ts", "completeUsage(usageId,502,startedAt)", "completeUsage(usageId,200,startedAt)"],
-    ["../app/api/v1/ai/gptfree/route.ts", "completeUsage(usageId,502,startedAt)", "completeUsage(usageId,200,startedAt)"],
-    ["../app/api/v1/ai/star-x/route.ts", "completeUsage(usageId, 502, startedAt)", "completeUsage(usageId, 200, startedAt)"],
+    ["../app/api/v1/ai/gemini/route.ts", "completeUsage(usageId,502,startedAt,context.requestId)", "completeUsage(usageId,200,startedAt,context.requestId)"],
+    ["../app/api/v1/ai/gptfree/route.ts", "completeUsage(usageId,502,startedAt,context.requestId)", "completeUsage(usageId,200,startedAt,context.requestId)"],
+    ["../app/api/v1/ai/star-x/route.ts", "completeUsage(usageId, 502, startedAt, context.requestId)", "completeUsage(usageId, 200, startedAt, context.requestId)"],
   ];
   for (const [path, failure, success] of routes) {
     const route = read(path);
