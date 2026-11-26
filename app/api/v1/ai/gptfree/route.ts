@@ -3,7 +3,7 @@ import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } fr
 import { createClient } from "@supabase/supabase-js";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
-import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
+import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
 export const runtime = "nodejs";
@@ -34,16 +34,14 @@ function error(message: string, status: number) {
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
 async function completeUsage(id: number | null, status: number, startedAt: number) {
-  return completeUsageTracking({
+  return completeManagedUsageTracking({
     usageId: id,
-    complete: async () => {
-      const { data, error } = await supabase().rpc("bmg_complete_api_request", {
-        p_usage_id: id as number, p_status_code: status,
-        p_latency_ms: Math.max(0, Date.now() - startedAt),
-        p_server_secret: process.env.BMG_DEMO_RPC_SECRET
-      });
-      if (error) throw error;
-      return data;
+    statusCode: status,
+    startedAt,
+    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
+    rpc: async (procedure, args) => {
+      const { data, error } = await supabase().rpc(procedure, args);
+      return { data, error };
     },
     onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
   });
