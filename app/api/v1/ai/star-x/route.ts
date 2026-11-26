@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
@@ -29,40 +30,36 @@ function fail(message: string, status: number) {
 async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: fail("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
   const client = db();
-  if (token) {
-    const { data, error } = await client.rpc("bmg_authorize_api_request", {
-      p_key: token, p_service_slug: "star-x", p_method: "POST",
-      p_server_secret: process.env.BMG_DEMO_RPC_SECRET
-    });
-    if (error) throw error;
-    const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-    if (!result?.authorized) {
-      const reason = result?.reason;
-      const status = reason === "rate_limited" ? 429
-        : reason === "account_suspended" || reason === "insufficient_scope" ? 403
-        : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
-      const message = reason === "rate_limited" ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."
-        : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
-        : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
-        : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا."
-        : reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية هذه الخدمة."
-        : "مفتاح API غير صالح أو ملغى أو منتهي الصلاحية.";
-      return { ok: false as const, response: fail(message, status) };
-    }
-    return { ok: true as const, usageId: Number(result.usage_id) || null };
-  }
-  const { data, error } = await client.rpc("bmg_authorize_demo_request", {
-    p_client_hash: clientHash(request), p_service_slug: "star-x", p_method: "POST",
-    p_server_secret: process.env.BMG_DEMO_RPC_SECRET
+  const result = await authorizeManagedRequest({
+    rpc: async (procedure, args) => {
+      const { data, error } = await client.rpc(procedure, args);
+      return { data, error };
+    },
+    token,
+    serviceSlug: "star-x",
+    clientHash: () => clientHash(request),
+    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
   });
-  if (error) throw error;
-  const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-  if (!result?.authorized) {
-    const limited = result?.reason === "rate_limited";
-    return { ok: false as const, response: fail(limited ? "وصلت إلى حد التجربة المجانية." : result?.message || "الخدمة غير متاحة حاليًا.", limited ? 429 : 503) };
+  if (!result.authorized) {
+    if (!token) {
+      const limited = result.reason === "rate_limited";
+      return { ok: false as const, response: fail(limited ? "وصلت إلى حد التجربة المجانية." : result.message || "الخدمة غير متاحة حاليًا.", limited ? 429 : 503) };
+    }
+    const reason = result.reason;
+    const status = reason === "rate_limited" ? 429
+      : reason === "account_suspended" || reason === "insufficient_scope" ? 403
+      : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
+    const message = reason === "rate_limited" ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."
+      : reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.")
+      : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
+      : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا."
+      : reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية هذه الخدمة."
+      : "مفتاح API غير صالح أو ملغى أو منتهي الصلاحية.";
+    return { ok: false as const, response: fail(message, status) };
   }
-  return { ok: true as const, usageId: Number(result.usage_id) || null };
+  return { ok: true as const, usageId: result.usageId };
 }
+
 async function completeUsage(id: number | null, status: number, startedAt: number) {
   return completeUsageTracking({
     usageId: id,

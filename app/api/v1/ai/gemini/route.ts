@@ -3,6 +3,7 @@ import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } fr
 import { createClient } from "@supabase/supabase-js";
 import { askGemini } from "@/lib/server/gemini";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 export const runtime = "nodejs";
@@ -35,12 +36,27 @@ function clientHash(request: NextRequest) { return createDemoClientHash(request,
 async function authorize(request:NextRequest,token:string|null){
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: jsonError("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
  const supabase=getSupabase();
- if(token){const{data,error}=await supabase.rpc("bmg_authorize_api_request",{p_key:token,p_service_slug:"aql-gemini",p_method:"POST",p_server_secret:process.env.BMG_DEMO_RPC_SECRET});if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number;message?:string}|null;if(!result?.authorized){if(result?.reason==="rate_limited")return{ok:false,response:jsonError("تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك.",429)};if(result?.reason==="maintenance")return{ok:false,response:jsonError(result.message||"الخدمة تحت الصيانة مؤقتًا.",503)};if(result?.reason==="account_suspended")return{ok:false,response:jsonError("تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة.",403)};if(result?.reason==="insufficient_scope")return{ok:false,response:jsonError("مفتاح API لا يملك صلاحية استخدام هذه الخدمة.",403)};return{ok:false,response:jsonError(result?.reason==="service_unavailable"?"الخدمة غير متاحة حاليًا.":"مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.",result?.reason==="service_unavailable"?503:401)}}return{ok:true,usageId:Number(result.usage_id)||null}}
- const{data,error}=await supabase.rpc("bmg_authorize_demo_request",{p_client_hash:clientHash(request),p_service_slug:"aql-gemini",p_method:"POST",p_server_secret:process.env.BMG_DEMO_RPC_SECRET});
- if(error)throw error;const result=data as {authorized?:boolean;reason?:string;usage_id?:number;message?:string}|null;
- if(!result?.authorized)return{ok:false,response:jsonError(result?.reason==="rate_limited"?"وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.":result?.reason==="maintenance"?(result.message||"الخدمة تحت الصيانة مؤقتًا."):"الخدمة غير متاحة حاليًا.",result?.reason==="rate_limited"?429:503)};
- return{ok:true,usageId:Number(result.usage_id)||null};
+ const result = await authorizeManagedRequest({
+   rpc: async (procedure, args) => {
+     const { data, error } = await supabase.rpc(procedure, args);
+     return { data, error };
+   },
+   token,
+   serviceSlug: "aql-gemini",
+   clientHash: () => clientHash(request),
+   serverSecret: process.env.BMG_DEMO_RPC_SECRET,
+ });
+ if (!result.authorized) {
+   if (result.reason === "rate_limited") return { ok: false as const, response: jsonError(token ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك." : "وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.", 429) };
+   if (token && result.reason === "maintenance") return { ok: false as const, response: jsonError(result.message || "الخدمة تحت الصيانة مؤقتًا.", 503) };
+   if (token && result.reason === "account_suspended") return { ok: false as const, response: jsonError("تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة.", 403) };
+   if (token && result.reason === "insufficient_scope") return { ok: false as const, response: jsonError("مفتاح API لا يملك صلاحية استخدام هذه الخدمة.", 403) };
+   if (token) return { ok: false as const, response: jsonError(result.reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا." : "مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.", result.reason === "service_unavailable" ? 503 : 401) };
+   return { ok: false as const, response: jsonError(result.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : "الخدمة غير متاحة حاليًا.", 503) };
+ }
+ return { ok: true as const, usageId: result.usageId };
 }
+
 export async function OPTIONS() {
   return managedServiceOptions();
 }

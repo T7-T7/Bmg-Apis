@@ -236,7 +236,7 @@ test("usage completion retries transient failures and accepts idempotent RPC ack
 test("usage completion rejects missing or negative database acknowledgements", () => {
   const manager = read("../lib/core/managers/usage-manager.ts");
   assert.match(manager, /result === null/);
-  assert.match(manager, /!("completed" in result)/);
+  assert.match(manager, /!\("completed" in result\)/);
   assert.match(manager, /result\.completed !== true/);
   assert.match(manager, /invalid_acknowledgement/);
 });
