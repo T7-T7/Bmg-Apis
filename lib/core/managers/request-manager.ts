@@ -27,7 +27,11 @@ export async function readJsonRequestBody(request: Request, maxBytes: number): P
       if (done) break;
       total += value.byteLength;
       if (total > maxBytes) {
-        await reader.cancel();
+        try {
+          await reader.cancel();
+        } catch {
+          // Preserve the size-limit error if the underlying stream cannot cancel.
+        }
         throw new PayloadTooLargeError();
       }
       chunks.push(value);
@@ -42,5 +46,5 @@ export async function readJsonRequestBody(request: Request, maxBytes: number): P
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return JSON.parse(new TextDecoder().decode(bytes));
+  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }
