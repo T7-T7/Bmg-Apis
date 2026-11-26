@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
-import { createManagedSupabaseRpc, type ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
+import type { ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { askGemini } from "@/lib/server/gemini";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
-import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
+import { authorizeManagedServiceRequest } from "@/lib/core/managers/managed-access-manager";
 import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 export const runtime = "nodejs";
@@ -28,10 +28,9 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
   });
 }
 function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "GEMINI_SESSION_SECRET is not configured."); }
-async function authorize(request:NextRequest,token:string|null, rpc: ManagedSupabaseRpc){
+async function authorize(request:NextRequest,token:string|null){
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: jsonError("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
- const result = await authorizeManagedRequest({
-   rpc,
+ const { rpc, authorization: result } = await authorizeManagedServiceRequest({
    token,
    serviceSlug: "aql-gemini",
    clientHash: () => clientHash(request),
@@ -45,7 +44,7 @@ async function authorize(request:NextRequest,token:string|null, rpc: ManagedSupa
    if (token) return { ok: false as const, response: jsonError(result.reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا." : "مفتاح API غير صحيح أو ملغى أو منتهي الصلاحية.", result.reason === "service_unavailable" ? 503 : 401) };
    return { ok: false as const, response: jsonError(result.reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.") : "الخدمة غير متاحة حاليًا.", 503) };
  }
- return { ok: true as const, usageId: result.usageId };
+ return { ok: true as const, usageId: result.usageId, rpc };
 }
 
 export async function OPTIONS() {
@@ -62,7 +61,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
  if(data.prompt.length>MAX_PROMPT_CHARS)return jsonError("تجاوز النص الحد الأقصى المسموح وهو 30000 حرف.",413);
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
- let usageId:number|null=null;const startedAt=Date.now();let rpc: ManagedSupabaseRpc | null = null;try{rpc=createManagedSupabaseRpc();const access=await authorize(request,apiKey.token,rpc);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);usageId=access.usageId??null;
+ let usageId:number|null=null;const startedAt=Date.now();let rpc: ManagedSupabaseRpc | null = null;try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);rpc=access.rpc;usageId=access.usageId??null;
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
  await completeUsage(usageId,200,startedAt,context.requestId,rpc);
  return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
