@@ -157,3 +157,21 @@ test("authorization refactor keeps public denial mapping in each service route",
   ];
   for (const [path, message] of expected) assert.ok(read(path).includes(message), path);
 });
+
+
+test("Nox Core passes its execution context into each service route", () => {
+  const manager = read("../lib/server/service-manager.ts");
+  assert.ok(manager.includes("handler: (context: ExecutionContext) => Promise<Response>"));
+  assert.ok(manager.includes("handler,"));
+
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("context: ExecutionContext"), path);
+    assert.ok(route.includes("(context) => handlePost(request, context)"), path);
+    assert.ok(route.includes("requestId: context.requestId"), path);
+  }
+});
