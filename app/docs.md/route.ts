@@ -6,10 +6,10 @@ Official API reference: https://nox.bmg-inc.web.id
 
 ## 1. البدء والمصادقة
 
-- Base URL: `https://nox.bmg-inc.web.id`
-- Method: `POST`
-- Content-Type: `application/json`
-- External authentication: `Authorization: Bearer YOUR_NOX_API_KEY`
+- Base URL: \x60https://nox.bmg-inc.web.id\x60
+- Method: \x60POST\x60
+- Content-Type: \x60application/json\x60
+- External authentication: \x60Authorization: Bearer YOUR_NOX_API_KEY\x60
 
 أنشئ مفتاح API من لوحة Nox واحفظه في متغير بيئة أو مخزن أسرار خادمي. لا تضع المفتاح في كود المتصفح أو مستودع عام. صفحات الاختبار الرسمية داخل الموقع هي الاستثناء الوحيد الذي يمكنه استخدام وضع الاختبار دون مفتاح؛ لا تستخدم هذا الاستثناء في التطبيقات الخارجية.
 
@@ -17,33 +17,33 @@ Official API reference: https://nox.bmg-inc.web.id
 
 ## 2. Gemini — توليد النص ومتابعة الجلسات
 
-- Endpoint: `POST /api/v1/ai/gemini`
-- Required: `prompt` — نص من 1 إلى 30,000 حرف.
-- Optional: `instruction` — تعليمات نصية لتوجيه الإجابة.
-- Optional: `sessionId` — معرّف الجلسة من استجابة سابقة لمتابعة المحادثة.
+- Endpoint: \x60POST /api/v1/ai/gemini\x60
+- Required: \x60prompt\x60 — نص من 1 إلى 30,000 حرف.
+- Optional: \x60instruction\x60 — تعليمات نصية لتوجيه الإجابة.
+- Optional: \x60sessionId\x60 — معرّف الجلسة من استجابة سابقة لمتابعة المحادثة.
 - Maximum HTTP body: 1 MB.
 
 ### Request
 
-```json
+\x60\x60\x60json
 {
   "prompt": "اشرح الفرق بين let و const",
   "instruction": "أجب باللغة العربية"
 }
-```
+\x60\x60\x60
 
 ### cURL
 
-```bash
+\x60\x60\x60bash
 curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
   -H "Authorization: Bearer YOUR_NOX_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"prompt":"اشرح الفرق بين let و const","instruction":"أجب باللغة العربية"}'
-```
+\x60\x60\x60
 
 ### Success response
 
-```json
+\x60\x60\x60json
 {
   "success": true,
   "response": "النص الناتج من النموذج",
@@ -53,21 +53,21 @@ curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
   "responseId": null,
   "access": "api_key"
 }
-```
+\x60\x60\x60
 
-أرسل `sessionId` في الطلب التالي للحفاظ على سياق الجلسة. قيمة `method` توضح مسار التنفيذ الذي نجح.
+أرسل \x60sessionId\x60 في الطلب التالي للحفاظ على سياق الجلسة. قيمة \x60method\x60 توضح مسار التنفيذ الذي نجح.
 
 ## 3. GPTFree — توليد النص مع سجل محادثة
 
-- Endpoint: `POST /api/v1/ai/gptfree`
-- Required: `message` — نص من 1 إلى 30,000 حرف.
-- Optional: `history` — مصفوفة بحد أقصى 20 رسالة.
-- كل عنصر في `history` يحتوي `type` بقيمة `user` أو `agent` أو `assistant`، و`content` كنص.
+- Endpoint: \x60POST /api/v1/ai/gptfree\x60
+- Required: \x60message\x60 — نص من 1 إلى 30,000 حرف.
+- Optional: \x60history\x60 — مصفوفة بحد أقصى 20 رسالة.
+- كل عنصر في \x60history\x60 يحتوي \x60type\x60 بقيمة \x60user\x60 أو \x60agent\x60 أو \x60assistant\x60، و\x60content\x60 كنص.
 - Maximum HTTP body: 1 MB.
 
 ### Request
 
-```json
+\x60\x60\x60json
 {
   "message": "اشرح REST API",
   "history": [
@@ -75,55 +75,55 @@ curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
     { "type": "assistant", "content": "هو بروتوكول اتصال..." }
   ]
 }
-```
+\x60\x60\x60
 
 ### Success response
 
-```json
+\x60\x60\x60json
 {
   "success": true,
   "response": "النص الناتج",
   "provider": "gptfree",
   "access": "api_key"
 }
-```
+\x60\x60\x60
 
 ## 4. Star X — توليد الصور وتعديلها
 
-- Endpoint: `POST /api/v1/ai/star-x`
+- Endpoint: \x60POST /api/v1/ai/star-x\x60
 - Maximum HTTP body: 4 MB.
-- `action` مطلوب، والقيم المدعومة:
-  - `generate-image`: توليد صورة من وصف نصي؛ لا يحتاج `imageUrl`.
-  - `edit-scene`: تعديل مشهد داخل صورة؛ يحتاج `imageUrl` و`prompt`.
-  - `change-background`: تغيير خلفية الصورة؛ يحتاج `imageUrl` و`prompt`.
-  - `improve-lighting`: تحسين إضاءة الصورة؛ يحتاج `imageUrl` ولا يحتاج `prompt`.
-- `imageUrl` يجب أن يكون رابط HTTPS عامًا صالحًا عند الحاجة إليه.
-- `prompt` مطلوب لتوليد الصور وتعديل المشهد وتغيير الخلفية، وبحد أقصى 4,000 حرف.
+- \x60action\x60 مطلوب، والقيم المدعومة:
+  - \x60generate-image\x60: توليد صورة من وصف نصي؛ لا يحتاج \x60imageUrl\x60.
+  - \x60edit-scene\x60: تعديل مشهد داخل صورة؛ يحتاج \x60imageUrl\x60 و\x60prompt\x60.
+  - \x60change-background\x60: تغيير خلفية الصورة؛ يحتاج \x60imageUrl\x60 و\x60prompt\x60.
+  - \x60improve-lighting\x60: تحسين إضاءة الصورة؛ يحتاج \x60imageUrl\x60 ولا يحتاج \x60prompt\x60.
+- \x60imageUrl\x60 يجب أن يكون رابط HTTPS عامًا صالحًا عند الحاجة إليه.
+- \x60prompt\x60 مطلوب لتوليد الصور وتعديل المشهد وتغيير الخلفية، وبحد أقصى 4,000 حرف.
 - التعليمات النصية في Star X يجب أن تكون باللغة الإنجليزية.
-- الاستجابة الناجحة بيانات صورة ثنائية (image/*)، وليست JSON. استخدم `response.blob()` في المتصفح أو `response.arrayBuffer()` في Node.js.
+- الاستجابة الناجحة بيانات صورة ثنائية (image/*)، وليست JSON. استخدم \x60response.blob()\x60 في المتصفح أو \x60response.arrayBuffer()\x60 في Node.js.
 
 ### Request — generate image
 
-```json
+\x60\x60\x60json
 {
   "action": "generate-image",
   "prompt": "A cinematic photograph of a modern glass house beside a lake at sunset"
 }
-```
+\x60\x60\x60
 
 ### Request — edit scene
 
-```json
+\x60\x60\x60json
 {
   "action": "edit-scene",
   "imageUrl": "https://example.com/source.jpg",
   "prompt": "Add warm cinematic lighting and a natural mountain background"
 }
-```
+\x60\x60\x60
 
 ### JavaScript response handling
 
-```js
+\x60\x60\x60js
 const response = await fetch("https://nox.bmg-inc.web.id/api/v1/ai/star-x", {
   method: "POST",
   headers: {
@@ -142,7 +142,7 @@ if (!response.ok) {
 }
 
 const image = await response.blob();
-```
+\x60\x60\x60
 
 ## 5. أخطاء HTTP
 
