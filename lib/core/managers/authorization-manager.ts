@@ -1,3 +1,5 @@
+import type { ManagedSupabaseRpc } from "./supabase-rpc-manager";
+
 export type AuthorizationRpcResult = Readonly<{
   authorized: boolean;
   reason?: string;
@@ -5,10 +7,8 @@ export type AuthorizationRpcResult = Readonly<{
   message?: string;
 }>;
 
-type RpcResponse = Readonly<{ data: unknown; error: unknown }>;
-
 type ManagedAuthorizationOptions = Readonly<{
-  rpc: (procedure: string, args: Record<string, unknown>) => PromiseLike<RpcResponse>;
+  rpc: ManagedSupabaseRpc;
   serviceSlug: string;
   token: string | null;
   clientHash: () => string;
