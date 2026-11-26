@@ -24,7 +24,7 @@ export default function NotificationsCenter(){
   setLoading(true);setError("");
   const [{data:notifications,error:notificationError},{data:invites,error:invitationError}]=await Promise.all([
    db.from("user_notifications").select("id,title,body,type,read_at,created_at,metadata").eq("user_id",user).order("created_at",{ascending:false}).limit(200),
-   db.from("organization_invitations").select("id,organization_name,project_id,role,expires_at,created_at").eq("recipient_user_id",user).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).order("created_at",{ascending:false}).limit(50)
+   db.from("organization_invitations").select("id,organization_name,project_id,role,expires_at,created_at").eq("recipient_user_id",user).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false}).limit(50)
   ]);
   if(notificationError){setError("تعذر تحميل الإشعارات: "+notificationError.message);setRows([])}else setRows((notifications||[]) as Notification[]);
   if(invitationError){setError(current=>current?current+" · تعذر تحميل الدعوات: "+invitationError.message:"تعذر تحميل الدعوات: "+invitationError.message);setInvitations([])}else setInvitations((invites||[]) as Invitation[]);
