@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
+import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
@@ -77,7 +78,7 @@ function validImageUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 4096) return false;
   try { const url = new URL(value); return url.protocol === "https:"; } catch { return false; }
 }
-async function handlePost(request: NextRequest) {
+async function handlePost(request: NextRequest, context: ExecutionContext) {
   const auth = request.headers.get("authorization") ?? "";
   const apiKey = parseApiKeyAuthorization(auth);
   if (!apiKey.valid) return fail("صيغة Authorization غير صحيحة.", 401);
@@ -133,7 +134,7 @@ async function handlePost(request: NextRequest) {
     });
   } catch (error) {
     await completeUsage(usageId, 502, startedAt);
-    console.error("[Star X API]", error instanceof Error ? error.message : error);
+    console.error("[Star X API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });
     return fail("تعذر تنفيذ Star X حاليًا. حاول مرة أخرى لاحقًا.", 502);
   }
 }
@@ -141,5 +142,5 @@ export async function OPTIONS() {
   return managedServiceOptions();
 }
 export async function POST(request: NextRequest) {
-  return executeManagedService("star-x", request, () => handlePost(request));
+  return executeManagedService("star-x", request, (context) => handlePost(request, context));
 }
