@@ -79,7 +79,7 @@ test("Star X image downloads pin validated public DNS results and enforce a 4 MB
 });
 
 test("API authorization enforces account-wide plan, minute and weighted quotas atomically", () => {
-  const sql = read("../supabase/migrations/20261126090000_enforce_account_plan_usage_limits.sql");
+  const sql = read("../supabase/migrations/20261126063955_enforce_account_plan_usage_limits.sql");
   assert.match(sql, /nox_api_account:/);
   assert.match(sql, /for update/i);
   assert.match(sql, /api_admin_limits/i);
