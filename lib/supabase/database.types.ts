@@ -368,6 +368,42 @@ export type Database = {
           },
         ]
       }
+      organization_invitations: {
+        Row: { accepted_at: string | null; created_at: string; declined_at: string | null; email: string; expires_at: string; id: string; invited_by: string; organization_id: string; organization_name: string; project_id: string | null; recipient_user_id: string; revoked_at: string | null; role: string }
+        Insert: { accepted_at?: string | null; created_at?: string; declined_at?: string | null; email: string; expires_at?: string; id?: string; invited_by: string; organization_id: string; organization_name: string; project_id?: string | null; recipient_user_id: string; revoked_at?: string | null; role: string }
+        Update: { accepted_at?: string | null; created_at?: string; declined_at?: string | null; email?: string; expires_at?: string; id?: string; invited_by?: string; organization_id?: string; organization_name?: string; project_id?: string | null; recipient_user_id?: string; revoked_at?: string | null; role?: string }
+        Relationships: []
+      }
+      organization_members: {
+        Row: { created_at: string; invited_by: string | null; organization_id: string; role: string; user_id: string }
+        Insert: { created_at?: string; invited_by?: string | null; organization_id: string; role: string; user_id: string }
+        Update: { created_at?: string; invited_by?: string | null; organization_id?: string; role?: string; user_id?: string }
+        Relationships: []
+      }
+      organizations: {
+        Row: { created_at: string; id: string; kind: string; name: string; owner_id: string; updated_at: string }
+        Insert: { created_at?: string; id?: string; kind: string; name: string; owner_id: string; updated_at?: string }
+        Update: { created_at?: string; id?: string; kind?: string; name?: string; owner_id?: string; updated_at?: string }
+        Relationships: []
+      }
+      project_members: {
+        Row: { created_at: string; project_id: string; role: string; user_id: string }
+        Insert: { created_at?: string; project_id: string; role: string; user_id: string }
+        Update: { created_at?: string; project_id?: string; role?: string; user_id?: string }
+        Relationships: []
+      }
+      project_service_limits: {
+        Row: { project_id: string; requests_per_minute: number; service_slug: string; updated_at: string; updated_by: string | null }
+        Insert: { project_id: string; requests_per_minute: number; service_slug: string; updated_at?: string; updated_by?: string | null }
+        Update: { project_id?: string; requests_per_minute?: number; service_slug?: string; updated_at?: string; updated_by?: string | null }
+        Relationships: []
+      }
+      projects: {
+        Row: { created_at: string; created_by: string; description: string; id: string; name: string; organization_id: string; slug: string; updated_at: string }
+        Insert: { created_at?: string; created_by: string; description?: string; id?: string; name: string; organization_id: string; slug: string; updated_at?: string }
+        Update: { created_at?: string; created_by?: string; description?: string; id?: string; name?: string; organization_id?: string; slug?: string; updated_at?: string }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_status: string
@@ -490,6 +526,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_create_organization: { Args: { p_kind: string; p_name: string }; Returns: string }
+      bmg_create_project: { Args: { p_description?: string; p_name: string; p_organization_id: string }; Returns: string }
+      bmg_invite_organization_member: { Args: { p_email: string; p_organization_id: string; p_project_id?: string | null; p_role: string }; Returns: string }
+      bmg_list_organization_members: { Args: { p_organization_id: string }; Returns: { created_at: string; display_name: string | null; email: string | null; role: string; user_id: string }[] }
+      bmg_respond_to_organization_invitation: { Args: { p_accept: boolean; p_invitation_id: string }; Returns: boolean }
       bmg_admin_record_export: {
         Args: { p_dataset: string; p_format: string; p_rows: number }
         Returns: Json
