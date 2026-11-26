@@ -1,5 +1,5 @@
 const content = `# NOX APIS
-> Developer API platform and reference for the three active services.
+> Nox is the API service provider for developers. It operates the unified API layer, authentication, API keys, access controls, usage quotas, request handling, and service coordination for three active AI services.
 
 - Website: https://nox.bmg-inc.web.id
 - Human-readable docs: https://nox.bmg-inc.web.id/docs
@@ -18,6 +18,10 @@ const content = `# NOX APIS
 - Official website test pages are the only no-key exception; this exception is not for external applications.
 - Usage quotas and request rates depend on account, plan, key, and service. Do not assume a universal fixed rate.
 - Do not expose API keys in browser code or public repositories.
+
+- Developers integrate with Nox directly through the Nox API; they do not need separate integrations with underlying model services.
+- Nox servers operate the API layer and manage requests, authentication, quotas, and usage records. Some model execution may use specialized upstream model/runtime providers behind the Nox API.
+- Nox is the service provider and API operator; this documentation does not claim that every model or inference workload is self-hosted on Nox hardware.
 
 ## Active AI APIs
 
