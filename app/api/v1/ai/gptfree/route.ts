@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
-import { createClient } from "@supabase/supabase-js";
+import { createManagedSupabaseRpc, type ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
 import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
@@ -34,34 +34,21 @@ function error(message: string, status: number) {
   if (status === 429 || status === 503 || status === 504) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string) {
+async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
   return completeManagedUsageTracking({
     usageId: id,
     statusCode: status,
     startedAt,
     serverSecret: process.env.BMG_DEMO_RPC_SECRET,
-    rpc: async (procedure, args) => {
-      const { data, error } = await supabase().rpc(procedure, args);
-      return { data, error };
-    },
+    rpc,
     onError: (cause) => console.error("[Nox usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
   });
 }
-function supabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("Supabase is not configured.");
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-}
 function clientHash(request: NextRequest) { return createDemoClientHash(request, process.env.GEMINI_SESSION_SECRET, "Session secret is not configured."); }
-async function authorize(request: NextRequest, token: string | null) {
+async function authorize(request: NextRequest, token: string | null, rpc: ManagedSupabaseRpc) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: error("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
-  const db = supabase();
   const result = await authorizeManagedRequest({
-    rpc: async (procedure, args) => {
-      const { data, error: rpcError } = await db.rpc(procedure, args);
-      return { data, error: rpcError };
-    },
+    rpc,
     token,
     serviceSlug: "gptfree",
     clientHash: () => clientHash(request),
@@ -171,9 +158,10 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
   if (history.some(item => !item || typeof item !== "object" ||
     !["user", "agent", "assistant"].includes(String((item as Record<string, unknown>).type)) ||
     typeof (item as Record<string, unknown>).content !== "string")) return error("صيغة history غير صحيحة.", 400);
-  let usageId:number|null=null;const startedAt=Date.now();
+  let usageId:number|null=null;const startedAt=Date.now();let rpc: ManagedSupabaseRpc | null = null;
   try {
-    const access = await authorize(request, apiKey.token);
+    rpc = createManagedSupabaseRpc();
+    const access = await authorize(request, apiKey.token, rpc);
     if (!access.ok) return access.response;
     usageId=access.usageId??null;
     const upstream = await requestAgent({ message: data.message, images: [], history });
@@ -194,9 +182,9 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         }
       }
     }
-    if (upstreamError){await completeUsage(usageId,502,startedAt,context.requestId);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
+    if (upstreamError){await completeUsage(usageId,502,startedAt,context.requestId,rpc);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
     if (!responseText.trim()){await completeUsage(usageId,502,startedAt,context.requestId);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
-    await completeUsage(usageId,200,startedAt,context.requestId);
+    await completeUsage(usageId,200,startedAt,context.requestId,rpc);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: apiKey.token ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
