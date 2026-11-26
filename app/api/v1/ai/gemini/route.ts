@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
+import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { createClient } from "@supabase/supabase-js";
 import { askGemini } from "@/lib/server/gemini";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
@@ -58,7 +59,7 @@ async function authorize(request:NextRequest,token:string|null){
 export async function OPTIONS() {
   return managedServiceOptions();
 }
-async function handlePost(request: NextRequest) {
+async function handlePost(request: NextRequest, context: ExecutionContext) {
  const authorization=request.headers.get("authorization")??"";
   const apiKey = parseApiKeyAuthorization(authorization);
  if (!apiKey.valid) return jsonError("صيغة ترويسة Authorization غير صحيحة.", 401);
@@ -73,9 +74,9 @@ async function handlePost(request: NextRequest) {
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
  await completeUsage(usageId,200,startedAt);
  return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
- }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]",error instanceof Error?error.message:error);return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
+ }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
 }
 
 export async function POST(request: NextRequest) {
-  return executeManagedService("aql-gemini", request, () => handlePost(request));
+  return executeManagedService("aql-gemini", request, (context) => handlePost(request, context));
 }
