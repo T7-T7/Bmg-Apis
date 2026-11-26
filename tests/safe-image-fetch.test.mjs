@@ -13,7 +13,7 @@ test("public address validation rejects private, loopback, link-local and reserv
     "198.51.100.10", "203.0.113.10", "224.0.0.1", "255.255.255.255",
     "::", "::1", "fc00::1", "fe80::1", "ff02::1", "2001:db8::1", "::ffff:127.0.0.1",
   ]) assert.equal(isPublicAddress(address), false, address);
-  for (const address of ["8.8.8.8", "1.1.1.1", "2606:4700:4700::1111"]) {
+  for (const address of ["8.8.8.8", "1.1.1.1", "2606:4700:4700::1111", "2001:4860:4860::8888"]) {
     assert.equal(isPublicAddress(address), true, address);
   }
 });

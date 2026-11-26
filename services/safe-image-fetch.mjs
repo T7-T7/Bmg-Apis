@@ -22,7 +22,11 @@ function isPublicIPv4(address) {
 function isPublicIPv6(address) {
   const value = address.toLowerCase().split("%")[0];
   if (!value.startsWith("2") && !value.startsWith("3")) return false;
-  if (value.startsWith("2001:") || value.startsWith("2002:")) return false;
+  const [first, second = "0"] = value.split(":");
+  const firstGroup = Number.parseInt(first, 16);
+  const secondGroup = Number.parseInt(second || "0", 16);
+  if (firstGroup === 0x2001 && secondGroup <= 0x01ff) return false;
+  if (value.startsWith("2001:db8:") || value.startsWith("2002:")) return false;
   return true;
 }
 export function isPublicAddress(address) {
@@ -95,7 +99,8 @@ function sniffImageType(buffer) {
   if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return "image/jpeg";
   if (buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP") return "image/webp";
   if (buffer.length >= 6 && /^GIF8[79]a$/.test(buffer.toString("ascii", 0, 6))) return "image/gif";
-  if (buffer.length >= 12 && buffer.toString("ascii", 4, 8) === "ftyp") return "image/avif";
+  if (buffer.length >= 12 && buffer.toString("ascii", 4, 8) === "ftyp" &&
+      ["avif", "avis"].includes(buffer.toString("ascii", 8, 12))) return "image/avif";
   return null;
 }
 export async function fetchRemoteImage(value, headers = {}) {

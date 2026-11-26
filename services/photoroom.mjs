@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { fetchRemoteImage, MAX_IMAGE_BYTES } from './safe-image-fetch.mjs';
+import { fetchRemoteImage, isTrustedPhotoRoomHost, MAX_IMAGE_BYTES } from './safe-image-fetch.mjs';
 
 const FIREBASE_API_KEY = 'AIzaSyAJGrgbFGB_-h8V2oJLr4b-_ipetqM0duU';
 const FIREBASE_SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`;
@@ -248,10 +248,10 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
     }
 
     // Download through the SSRF-safe, size-limited image transport.
-    const downloaded = await fetchRemoteImage(imageUrl, {
-      'User-Agent': 'okhttp/4.12.0',
-      Authorization: idToken
-    });
+    const downloadHeaders = { 'User-Agent': 'okhttp/4.12.0' };
+    // Firebase credentials are only sent to a verified PhotoRoom-owned hostname.
+    if (isTrustedPhotoRoomHost(imageUrl)) downloadHeaders.Authorization = idToken;
+    const downloaded = await fetchRemoteImage(imageUrl, downloadHeaders);
     const { buffer, contentType } = downloaded;
 
     return {
