@@ -454,3 +454,20 @@ test("organization workspaces, project membership and invitation inbox use authe
   const portal = read("../components/portal.tsx");
   assert.ok(portal.includes("/dashboard/notifications"));
 });
+
+
+test("API keys are assigned to a project only when the actor has project key-creation access", () => {
+  const migration = read("../supabase/migrations/20261126213000_enable_project_specific_api_keys.sql");
+  assert.match(migration, /p_project_id uuid default null/i);
+  assert.match(migration, /auth\.mfa_factors/);
+  assert.match(migration, /Recent authenticator verification required/);
+  assert.match(migration, /m\.role in \('owner','admin'\)/i);
+  assert.match(migration, /pm\.role in \('owner','developer'\)/i);
+  assert.match(migration, /insert into private\.api_keys\(user_id,organization_id,project_id/i);
+  assert.match(migration, /revoke all on function public\.bmg_create_api_key\(text,text,timestamptz,uuid\) from public,anon/i);
+  const ui = read("../components/approved-pages.tsx");
+  const create = ui.slice(ui.indexOf("export function CreateApiKeyWorkspace"), ui.indexOf("export function SettingsWorkspace"));
+  assert.match(create, /projectOptions/);
+  assert.match(create, /p_project_id:projectId/);
+  assert.match(create, /اختر المشروع/);
+});
