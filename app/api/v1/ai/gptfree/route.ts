@@ -183,13 +183,13 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       }
     }
     if (upstreamError){await completeUsage(usageId,502,startedAt,context.requestId,rpc);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
-    if (!responseText.trim()){await completeUsage(usageId,502,startedAt,context.requestId);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
+    if (!responseText.trim()){await completeUsage(usageId,502,startedAt,context.requestId,rpc);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
     await completeUsage(usageId,200,startedAt,context.requestId,rpc);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: apiKey.token ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
-    await completeUsage(usageId,502,startedAt,context.requestId);
+    if (rpc) await completeUsage(usageId,502,startedAt,context.requestId,rpc);
     console.error("[Nox GPTFree API]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause });
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
