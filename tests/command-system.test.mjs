@@ -240,3 +240,15 @@ test("export audit events are recorded through a protected Nox command", () => {
   assert.ok(ui.includes('runAdminCommand("export.record"'));
   assert.ok(!ui.includes('supabase.from("audit_logs").insert'));
 });
+
+test("active command registry is fully wired and admin UI has no direct database mutations", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  const activeHandlers = [...registry.matchAll(/active\("(?:admin|owner)",\s*"([A-Za-z0-9_]+)"\)/g)].map((match) => match[1]);
+  const handlersBlock = runtime.match(/handlers:\s*Object\.freeze\(\{([\s\S]*?)\}\)/)?.[1] ?? "";
+  const wiredHandlers = new Set([...handlersBlock.matchAll(/\b([A-Za-z][A-Za-z0-9_]*)\b/g)].map((match) => match[1]));
+  assert.ok(activeHandlers.length > 0, "registry should expose active commands");
+  for (const handler of activeHandlers) assert.ok(wiredHandlers.has(handler), `active handler ${handler} must be registered at runtime`);
+  assert.doesNotMatch(ui, /\.from\([^)]*\)\.(?:insert|update|delete|upsert)\s*\(/, "admin UI mutations must pass through Nox commands");
+});
