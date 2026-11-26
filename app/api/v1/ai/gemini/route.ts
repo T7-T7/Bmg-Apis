@@ -24,6 +24,7 @@ async function authorize(request:NextRequest,token:string|null){
    clientHash: () => clientHash(request),
    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
  });
+ const result = access.authorization;
  if (!result.authorized) {
    if (result.reason === "rate_limited") return { ok: false as const, response: jsonError(token ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك." : "وصلت إلى حد التجربة المجانية. سجّل الدخول لاستخدام الخدمة بمفتاحك.", 429) };
    if (token && result.reason === "maintenance") return { ok: false as const, response: jsonError(result.message || "الخدمة تحت الصيانة مؤقتًا.", 503) };
