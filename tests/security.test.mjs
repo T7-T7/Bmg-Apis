@@ -250,7 +250,7 @@ test("usage completion rejects missing or negative database acknowledgements", (
   assert.match(manager, /invalid_acknowledgement/);
 });
 
-test("Nox Core owns the usage completion RPC and retry lifecycle for all three services", () => {
+test("Nox Core owns the usage completion RPC, retry policy and managed request lifecycle", () => {
   const manager = read("../lib/core/managers/usage-manager.ts");
   for (const fragment of [
     "completeManagedUsageTracking", "bmg_complete_api_request",
@@ -259,6 +259,11 @@ test("Nox Core owns the usage completion RPC and retry lifecycle for all three s
     "p_server_secret: serverSecret", "completeUsageTracking({",
   ]) assert.ok(manager.includes(fragment), fragment);
 
+  const access = read("../lib/core/managers/managed-access-manager.ts");
+  assert.ok(access.includes("completeManagedUsageTracking({"));
+  assert.ok(access.includes("usageId: authorization.usageId"));
+  assert.ok(access.includes("serverSecret,"));
+
   const routes = [
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
@@ -266,7 +271,8 @@ test("Nox Core owns the usage completion RPC and retry lifecycle for all three s
   ];
   for (const path of routes) {
     const route = read(path);
-    assert.ok(route.includes("completeManagedUsageTracking"), path);
+    assert.ok(route.includes("access.completeUsage"), path);
+    assert.ok(!route.includes("completeManagedUsageTracking"), path);
     assert.ok(!/rpc\(["\x27]bmg_complete_api_request/.test(route), path);
     assert.ok(!route.includes("p_usage_id:"), path);
     assert.equal(route.includes("p_server_secret"), false, path);
@@ -277,9 +283,9 @@ test("Nox Core owns the usage completion RPC and retry lifecycle for all three s
 
 test("usage completion retains service-specific status codes and timing boundaries", () => {
   const routes = [
-    ["../app/api/v1/ai/gemini/route.ts", "completeUsage(usageId,502,startedAt,context.requestId,rpc)", "completeUsage(usageId,200,startedAt,context.requestId,rpc)"],
-    ["../app/api/v1/ai/gptfree/route.ts", "completeUsage(usageId,502,startedAt,context.requestId,rpc)", "completeUsage(usageId,200,startedAt,context.requestId,rpc)"],
-    ["../app/api/v1/ai/star-x/route.ts", "completeUsage(usageId, 502, startedAt, context.requestId, rpc)", "completeUsage(usageId, 200, startedAt, context.requestId, rpc)"],
+    ["../app/api/v1/ai/gemini/route.ts", "finishUsage(502)", "finishUsage(200)"],
+    ["../app/api/v1/ai/gptfree/route.ts", "finishUsage(502)", "finishUsage(200)"],
+    ["../app/api/v1/ai/star-x/route.ts", "finishUsage(502)", "finishUsage(200)"],
   ];
   for (const [path, failure, success] of routes) {
     const route = read(path);
