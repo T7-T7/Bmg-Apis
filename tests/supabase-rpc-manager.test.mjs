@@ -34,11 +34,11 @@ test("each AI route obtains its shared RPC transport through Nox access manager"
 
   for (const path of routes) {
     const route = read(path);
-    assert.ok(route.includes("createManagedSupabaseRpc"), path);
-    assert.equal((route.match(/createManagedSupabaseRpc\(\)/g) || []).length, 1, path);
-    assert.match(route, /authorizeManagedRequest\(\{\s*rpc,/);
-    assert.match(route, /completeManagedUsageTracking\(\{[\s\S]*?\brpc,/);
-    assert.doesNotMatch(route, /from ["']@supabase\/supabase-js["']/);
-    assert.doesNotMatch(route, /createClient\(/);
+    assert.ok(route.includes("authorizeManagedServiceRequest"), path);
+    assert.match(route, /completeManagedUsageTracking\\(\\{[\\s\\S]*?\\brpc,/);
+    assert.doesNotMatch(route, /createManagedSupabaseRpc\\(/);
+    assert.doesNotMatch(route, /authorizeManagedRequest\\(/);
+    assert.doesNotMatch(route, /from ["']@supabase\\/supabase-js["']/);
+    assert.doesNotMatch(route, /createClient\\(/);
   }
 });
