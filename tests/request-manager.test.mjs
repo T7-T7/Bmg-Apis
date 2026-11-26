@@ -21,21 +21,19 @@ test("request manager parses valid JSON without changing its value", async () =>
   assert.deepEqual(await readJsonRequestBody(request, 1024), { prompt: "hello", count: 2 });
 });
 
-test("request manager rejects declared content lengths above the byte limit before reading", async () => {
-  let read = false;
-  const stream = new ReadableStream({
-    pull(controller) {
-      read = true;
-      controller.enqueue(new TextEncoder().encode("{}"));
-      controller.close();
+test("request manager rejects declared content lengths above the byte limit before accessing the body", async () => {
+  let bodyAccessed = false;
+  const request = {
+    headers: { get: (name) => name === "content-length" ? "9" : null },
+    get body() {
+      bodyAccessed = true;
+      throw new Error("body must not be accessed");
     },
-  });
-  const request = requestWithStream(stream, { "content-length": "9" });
+  };
 
   await assert.rejects(readJsonRequestBody(request, 8), PayloadTooLargeError);
-  assert.equal(read, false);
+  assert.equal(bodyAccessed, false);
 });
-
 test("request manager enforces the byte limit when content length is absent", async () => {
   const stream = new ReadableStream({
     start(controller) {
