@@ -10,6 +10,7 @@ Nox هي مقدم خدمات API والجهة المسؤولة عن تشغيل �
 - Method: \x60POST\x60
 - Content-Type: \x60application/json\x60
 - External authentication: \x60Authorization: Bearer YOUR_NOX_API_KEY\x60
+- Format of newly issued keys: \x60nox_\x60 followed by 52 letters, digits, underscores, or hyphens. Send the complete key unchanged after \x60Bearer\x60.
 
 أنشئ مفتاح API من لوحة Nox واحفظه في متغير بيئة أو مخزن أسرار خادمي. لا تضع المفتاح في كود المتصفح أو مستودع عام. صفحات الاختبار الرسمية داخل الموقع هي الاستثناء الوحيد الذي يمكنه استخدام وضع الاختبار دون مفتاح؛ لا تستخدم هذا الاستثناء في التطبيقات الخارجية.
 
