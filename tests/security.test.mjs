@@ -221,7 +221,7 @@ test("Gemini retries share one deadline shorter than the Vercel route limit", ()
 
 test("usage completion retries transient failures and accepts idempotent RPC acknowledgements", () => {
   const manager = read("../lib/core/managers/usage-manager.ts");
-  const migration = read("../supabase/migrations/20261126080000_harden_usage_completion_and_rpc_grants.sql");
+  const migration = read("../supabase/migrations/20261126065015_harden_usage_completion_and_rpc_grants.sql");
   assert.match(manager, /COMPLETION_ATTEMPTS = 3/);
   assert.match(manager, /150 \* 2 \*\* attempt/);
   assert.match(manager, /result\.completed !== true/);
