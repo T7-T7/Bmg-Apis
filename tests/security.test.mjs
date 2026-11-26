@@ -258,7 +258,8 @@ test("Nox Core owns the usage completion RPC and retry lifecycle for all three s
   for (const path of routes) {
     const route = read(path);
     assert.ok(route.includes("completeManagedUsageTracking"), path);
-    assert.equal(route.includes('rpc("bmg_complete_api_request"'), false, path);
+    assert.ok(!/rpc\(["\x27]bmg_complete_api_request/.test(route), path);
+    assert.ok(!route.includes("p_usage_id:"), path);
     assert.equal(route.includes("p_server_secret"), false, path);
     assert.ok(route.includes("statusCode: status"), path);
     assert.ok(route.includes("startedAt,"), path);
