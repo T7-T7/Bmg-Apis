@@ -75,6 +75,7 @@ function requestBoundedHttps(target, headers, maxBytes) {
       protocol: 'https:', hostname, port: 443,
       path: `${url.pathname}${url.search}`, method: 'GET', family,
       headers, servername: isIP(hostname) ? undefined : hostname, rejectUnauthorized: true, agent: false,
+      signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS),
       lookup: (_host, options, callback) => options?.all
         ? callback(null, [{ address, family }])
         : callback(null, address, family)
@@ -110,7 +111,6 @@ function requestBoundedHttps(target, headers, maxBytes) {
       res.on('end', () => resolve({ status, headers: res.headers, buffer: Buffer.concat(chunks, total) }));
       res.on('error', reject);
     });
-    req.setTimeout(IMAGE_FETCH_TIMEOUT_MS, () => req.destroy(new Error('Image download timed out')));
     req.on('error', reject);
     req.end();
   });
@@ -172,7 +172,7 @@ async function getFirebaseToken() {
   });
 
   if (!res.ok) {
-    const errText = await res.text();
+    const errText = await readResponseTextBounded(res, 16 * 1024);
     throw new Error(`Firebase anonymous auth failed (${res.status}): ${errText}`);
   }
 
@@ -322,7 +322,7 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
     });
 
     if (!res.ok) {
-      const errText = await res.text();
+      const errText = await readResponseTextBounded(res, 16 * 1024);
       throw new Error(`PhotoRoom AI tool ${toolId} failed (${res.status}): ${errText}`);
     }
 
