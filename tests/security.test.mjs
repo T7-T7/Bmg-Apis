@@ -75,8 +75,9 @@ test("AI API routes enforce explicit bounded JSON request sizes", () => {
 test("Star X image downloads pin validated public DNS results and enforce a 4 MB cap", () => {
   const service = read("../services/photoroom.mjs");
   assert.ok(service.includes("const MAX_IMAGE_BYTES = 4 * 1024 * 1024;"));
-  assert.ok(service.includes("lookup(hostname, { all: true, verbatim: true })"));
+  assert.ok(service.includes("resolveHost(hostname, { all: true, verbatim: true })"));
   assert.match(service, /isPublicAddress/);
+  assert.match(service, /resolvePublicHttpsTarget\(value, resolveHost = lookup\)/);
   assert.match(service, /httpsRequest/);
   assert.match(service, /redirects <= MAX_IMAGE_REDIRECTS/);
   assert.ok(service.includes("callback(null, address, family)"));
