@@ -411,3 +411,46 @@ test("API key update RPC resolves auth helpers with a restricted search path", (
   assert.match(migration, /set search_path = ''/);
   assert.match(migration, /grant execute on function public\.bmg_update_api_key\(uuid, text, timestamptz\) to authenticated/i);
 });
+
+
+test("API key creation and deletion require a recent verified TOTP while name updates do not", () => {
+  const migration = read("../supabase/migrations/20261126211000_require_mfa_and_add_invitation_inbox_support.sql");
+  const create = migration.slice(migration.indexOf("create or replace function public.bmg_create_api_key"), migration.indexOf("create or replace function public.bmg_delete_api_key"));
+  const remove = migration.slice(migration.indexOf("create or replace function public.bmg_delete_api_key"), migration.indexOf("create or replace function public.bmg_authorize_api_request"));
+  const update = migration.slice(migration.indexOf("create or replace function public.bmg_update_api_key"), migration.indexOf("alter table public.organizations"));
+  assert.match(create, /Two-factor authentication required/);
+  assert.match(create, /Recent authenticator verification required/);
+  assert.match(create, /auth\.mfa_factors/);
+  assert.match(remove, /Two-factor authentication required/);
+  assert.match(remove, /Recent authenticator verification required/);
+  assert.match(remove, /bmg_delete_api_key_internal/);
+  assert.doesNotMatch(update, /auth\.mfa_factors|auth\.jwt|Recent authenticator verification required/);
+  const ui = read("../components/approved-pages.tsx");
+  const keyWorkspace = ui.slice(ui.indexOf("export function ApiKeysWorkspace"), ui.indexOf("export function CreateApiKeyWorkspace"));
+  const createWorkspace = ui.slice(ui.indexOf("export function CreateApiKeyWorkspace"), ui.indexOf("export function SettingsWorkspace"));
+  assert.match(keyWorkspace, /saveName\(\).*?performUpdate\(\)/);
+  assert.match(keyWorkspace, /beginSensitiveAction\(\{kind:"delete",row\}\)/);
+  assert.match(createWorkspace, /db\.auth\.mfa\.challenge/);
+  assert.match(createWorkspace, /db\.auth\.mfa\.verify/);
+  assert.match(createWorkspace, /onClick=\{requestCreate\}/);
+});
+
+test("organization workspaces, project membership and invitation inbox use authenticated RPCs", () => {
+  const migration = read("../supabase/migrations/20261126210000_add_workspaces_projects_invitations_and_key_mfa.sql");
+  const followup = read("../supabase/migrations/20261126211000_require_mfa_and_add_invitation_inbox_support.sql");
+  for (const table of ["organizations","organization_members","projects","project_members","organization_invitations","project_service_limits"]) {
+    assert.match(migration, new RegExp("create table if not exists public\\\\." + table, "i"));
+  }
+  assert.match(migration, /enable row level security/);
+  assert.match(migration, /bmg_create_organization/);
+  assert.match(migration, /bmg_create_project/);
+  assert.match(migration, /bmg_invite_organization_member/);
+  assert.match(migration, /bmg_respond_to_organization_invitation/);
+  assert.match(followup, /organization_name/);
+  const inbox = read("../components/notifications-center.tsx");
+  assert.match(inbox, /organization_invitations/);
+  assert.match(inbox, /bmg_respond_to_organization_invitation/);
+  assert.match(inbox, /قبول الدعوة/);
+  const portal = read("../components/portal.tsx");
+  assert.match(portal, /dashboard\\/notifications/);
+});
