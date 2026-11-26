@@ -54,7 +54,7 @@ test("AI API routes enforce explicit bounded JSON request sizes", () => {
     assert.ok(route.includes("PayloadTooLargeError"));
     assert.ok(!route.includes("await request.text()"));
   }
-  assert.match(starX, /const MAX_BODY = 4 \\* 1024 \\* 1024/);
+  assert.ok(starX.includes("const MAX_BODY = 4 * 1024 * 1024;"));
   assert.ok(starX.includes("حجم الطلب يتجاوز 4 MB."));
   assert.ok(starX.includes("readJsonRequestBody(request, MAX_BODY)"));
   assert.ok(starX.includes("PayloadTooLargeError"));
@@ -65,17 +65,17 @@ test("AI API routes enforce explicit bounded JSON request sizes", () => {
 
 test("Star X image downloads pin validated public DNS results and enforce a 4 MB cap", () => {
   const service = read("../services/photoroom.mjs");
-  assert.match(service, /MAX_IMAGE_BYTES = 4 \\* 1024 \\* 1024/);
-  assert.match(service, /lookup\\(hostname, \\{ all: true, verbatim: true \\}\\)/);
+  assert.ok(service.includes("const MAX_IMAGE_BYTES = 4 * 1024 * 1024;"));
+  assert.ok(service.includes("lookup(hostname, { all: true, verbatim: true })"));
   assert.match(service, /isPublicAddress/);
   assert.match(service, /httpsRequest/);
   assert.match(service, /redirects <= MAX_IMAGE_REDIRECTS/);
-  assert.match(service, /callback\\(null, address, family\\)/);
+  assert.ok(service.includes("callback(null, address, family)"));
   assert.match(service, /Authorization = authorization/);
-  assert.match(service, /target\\.hostname === 'photoroom\\.com'/);
+  assert.ok(service.includes(`target.hostname === 'photoroom.com'`));
   assert.match(service, /readResponseTextBounded/);
-  assert.doesNotMatch(service, /fetch\\(input,/);
-  assert.doesNotMatch(service, /fetch\\(imageUrl,/);
+  assert.ok(!service.includes("fetch(input,"));
+  assert.ok(!service.includes("fetch(imageUrl,"));
 });
 
 test("API authorization enforces account-wide plan, minute and weighted quotas atomically", () => {
