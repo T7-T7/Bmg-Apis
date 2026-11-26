@@ -50,6 +50,39 @@ test("server-only credentials are not referenced by browser application modules"
   }
 });
 
+test("public demo RPC is server-secret protected, serialized and quota-limited", () => {
+  const migration = read("../supabase/migrations/20261120071000_secure_public_demo_rpc.sql");
+  assert.match(migration, /p_server_secret text/i);
+  assert.match(migration, /private\.api_demo_config/i);
+  assert.match(migration, /extensions\.digest\(convert_to\(p_server_secret/i);
+  assert.match(migration, /pg_advisory_xact_lock/i);
+  assert.match(migration, /v_limit:=case when p_service_slug='aql-gemini' then 4 else 20 end/i);
+  assert.match(migration, /created_at>now\(\)-interval '1 minute'/i);
+  assert.match(migration, /created_at<now\(\)-interval '24 hours'/i);
+  assert.match(migration, /revoke all on function public\.bmg_authorize_demo_request\(text,text,text,text\) from public,authenticated/i);
+  assert.match(migration, /grant execute on function public\.bmg_authorize_demo_request\(text,text,text,text\) to anon,service_role/i);
+});
+
+test("all no-key demo paths require the configured website origin and server-side RPC", () => {
+  const routes = [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ];
+  for (const path of routes) {
+    const route = read(path);
+    assert.match(route, /if\s*\(!token\s*&&\s*!isWebsiteTestRequest\(request\)\)/, path);
+    assert.match(route, /serverSecret:\s*process\.env\.BMG_DEMO_RPC_SECRET/, path);
+    assert.match(route, /authorizeManagedServiceRequest/, path);
+  }
+  const manager = read("../lib/server/service-manager.ts");
+  assert.match(manager, /origin === configuredOrigin/);
+  assert.match(manager, /Origin is a browser boundary, not a cryptographic identity mechanism/);
+  const auth = read("../lib/core/managers/auth-manager.ts");
+  assert.match(auth, /createHmac\("sha256", secret\)/);
+  assert.match(auth, /x-vercel-forwarded-for/);
+});
+
 test("AI API routes enforce explicit bounded JSON request sizes", () => {
   const gemini = read("../app/api/v1/ai/gemini/route.ts");
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
