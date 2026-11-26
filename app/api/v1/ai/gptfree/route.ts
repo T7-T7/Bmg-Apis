@@ -34,7 +34,7 @@ function error(message: string, status: number) {
   if (status === 429 || status === 503 || status === 504) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function completeUsage(id: number | null, status: number, startedAt: number) {
+async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string) {
   return completeManagedUsageTracking({
     usageId: id,
     statusCode: status,
@@ -44,7 +44,7 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
       const { data, error } = await supabase().rpc(procedure, args);
       return { data, error };
     },
-    onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
+    onError: (cause) => console.error("[Nox usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
   });
 }
 function supabase() {
@@ -194,14 +194,14 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         }
       }
     }
-    if (upstreamError){await completeUsage(usageId,502,startedAt);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
-    if (!responseText.trim()){await completeUsage(usageId,502,startedAt);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
-    await completeUsage(usageId,200,startedAt);
+    if (upstreamError){await completeUsage(usageId,502,startedAt,context.requestId);return error("واجه مزود GPTFree مشكلة أثناء إنشاء الرد.", 502)}
+    if (!responseText.trim()){await completeUsage(usageId,502,startedAt,context.requestId);return error("لم يُرجع مزود GPTFree محتوى صالحًا.", 502)}
+    await completeUsage(usageId,200,startedAt,context.requestId);
     return NextResponse.json({ success: true, response: responseText, provider: "gptfree", access: apiKey.token ? "api_key" : "demo" }, {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
-    await completeUsage(usageId,502,startedAt);
+    await completeUsage(usageId,502,startedAt,context.requestId);
     console.error("[Nox GPTFree API]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause });
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }

@@ -17,7 +17,7 @@ function jsonError(message:string,status:number){
  if(status===429)headers["Retry-After"]="60";
  return NextResponse.json({success:false,error:message,code},{status,headers});
 }
-async function completeUsage(id: number | null, status: number, startedAt: number) {
+async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string) {
   return completeManagedUsageTracking({
     usageId: id,
     statusCode: status,
@@ -27,7 +27,7 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
       const { data, error } = await getSupabase().rpc(procedure, args);
       return { data, error };
     },
-    onError: (cause) => console.error("[Nox usage completion]", cause instanceof Error ? cause.message : cause)
+    onError: (cause) => console.error("[Nox usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
   });
 }
 function getSupabase(){const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key)throw new Error("Supabase environment variables are missing.");return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}})}
@@ -72,9 +72,9 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
  let usageId:number|null=null;const startedAt=Date.now();try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);usageId=access.usageId??null;
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
- await completeUsage(usageId,200,startedAt);
+ await completeUsage(usageId,200,startedAt,context.requestId);
  return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
- }catch(error){await completeUsage(usageId,502,startedAt);console.error("[Nox Gemini API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
+ }catch(error){await completeUsage(usageId,502,startedAt,context.requestId);console.error("[Nox Gemini API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });return jsonError("تعذر تنفيذ الخدمة حاليًا. حاول مرة أخرى لاحقًا.",502)}
 }
 
 export async function POST(request: NextRequest) {

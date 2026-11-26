@@ -61,7 +61,7 @@ async function authorize(request: NextRequest, token: string | null) {
   return { ok: true as const, usageId: result.usageId };
 }
 
-async function completeUsage(id: number | null, status: number, startedAt: number) {
+async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string) {
   return completeManagedUsageTracking({
     usageId: id,
     statusCode: status,
@@ -71,7 +71,7 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
       const { data, error } = await db().rpc(procedure, args);
       return { data, error };
     },
-    onError: (cause) => console.error("[Star X usage completion]", cause instanceof Error ? cause.message : cause)
+    onError: (cause) => console.error("[Star X usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
   });
 }
 function validImageUrl(value: unknown): value is string {
@@ -118,7 +118,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         : action === "change-background"
           ? await aiBackground(data.imageUrl as string, data.prompt as string, options)
           : await aiShadows(data.imageUrl as string, options);
-    await completeUsage(usageId, 200, startedAt);
+    await completeUsage(usageId, 200, startedAt, context.requestId);
     const buffer = result.buffer;
     return new Response(new Uint8Array(buffer), {
       status: 200,
@@ -133,7 +133,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       }
     });
   } catch (error) {
-    await completeUsage(usageId, 502, startedAt);
+    await completeUsage(usageId, 502, startedAt, context.requestId);
     console.error("[Star X API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });
     return fail("تعذر تنفيذ Star X حاليًا. حاول مرة أخرى لاحقًا.", 502);
   }

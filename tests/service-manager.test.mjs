@@ -175,3 +175,16 @@ test("Nox Core passes its execution context into each service route", () => {
     assert.ok(route.includes("requestId: context.requestId"), path);
   }
 });
+
+test("usage completion failures carry the originating Nox request id", () => {
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("requestId: string"), path);
+    assert.ok(route.includes("{ requestId, error: cause instanceof Error"), path);
+    assert.ok(route.includes("context.requestId"), path);
+  }
+});
