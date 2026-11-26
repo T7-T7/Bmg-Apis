@@ -439,7 +439,7 @@ test("organization workspaces, project membership and invitation inbox use authe
   const migration = read("../supabase/migrations/20261126210000_add_workspaces_projects_invitations_and_key_mfa.sql");
   const followup = read("../supabase/migrations/20261126211000_require_mfa_and_add_invitation_inbox_support.sql");
   for (const table of ["organizations","organization_members","projects","project_members","organization_invitations","project_service_limits"]) {
-    assert.match(migration, new RegExp("create table if not exists public\\\\." + table, "i"));
+    assert.ok(migration.toLowerCase().includes("create table if not exists public."+table.toLowerCase()));
   }
   assert.match(migration, /enable row level security/);
   assert.match(migration, /bmg_create_organization/);
