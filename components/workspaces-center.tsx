@@ -11,7 +11,6 @@ type Invitation={id:string;email:string;role:"admin"|"developer"|"viewer";projec
 
 export default function WorkspacesCenter(){
  const [db]=useState(()=>{try{return getSupabaseBrowserClient()}catch{return null}});
- const client=db as any;
  const [userId,setUserId]=useState("");
  const [organizations,setOrganizations]=useState<Organization[]>([]);
  const [selectedOrgId,setSelectedOrgId]=useState("");
@@ -34,7 +33,7 @@ export default function WorkspacesCenter(){
  const selectedOrg=useMemo(()=>organizations.find(x=>x.id===selectedOrgId)||null,[organizations,selectedOrgId]);
  const loadOrganizations=useCallback(async()=>{
   if(!db)return;
-  const {data,error}=await client.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});
+  const {data,error}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});
   if(error){setError("تعذر تحميل مساحات العمل: "+error.message);return}
   const list=(data||[]) as Organization[];
   setOrganizations(list);
@@ -44,10 +43,10 @@ export default function WorkspacesCenter(){
   if(!db||!selectedOrgId||!userId)return;
   setLoading(true);setError("");
   const [projectResult,memberResult,inviteResult,myMembership]=await Promise.all([
-   client.from("projects").select("id,organization_id,name,slug,description,created_at").eq("organization_id",selectedOrgId).order("created_at",{ascending:true}),
-   client.rpc("bmg_list_organization_members",{p_organization_id:selectedOrgId}),
-   client.from("organization_invitations").select("id,email,role,project_id,expires_at,created_at").eq("organization_id",selectedOrgId).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).order("created_at",{ascending:false}),
-   client.from("organization_members").select("role").eq("organization_id",selectedOrgId).eq("user_id",userId).maybeSingle()
+   db.from("projects").select("id,organization_id,name,slug,description,created_at").eq("organization_id",selectedOrgId).order("created_at",{ascending:true}),
+   db.rpc("bmg_list_organization_members",{p_organization_id:selectedOrgId}),
+   db.from("organization_invitations").select("id,email,role,project_id,expires_at,created_at").eq("organization_id",selectedOrgId).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).order("created_at",{ascending:false}),
+   db.from("organization_members").select("role").eq("organization_id",selectedOrgId).eq("user_id",userId).maybeSingle()
   ]);
   if(projectResult.error)setError("تعذر تحميل المشاريع: "+projectResult.error.message);else setProjects((projectResult.data||[]) as Project[]);
   if(memberResult.error)setError(current=>current?current+" · تعذر تحميل الأعضاء: "+memberResult.error.message:"تعذر تحميل الأعضاء: "+memberResult.error.message);else setMembers((memberResult.data||[]) as Member[]);
@@ -55,12 +54,12 @@ export default function WorkspacesCenter(){
   setMyRole((myMembership.data?.role||"") as Member["role"]|"");
   setLoading(false);
  },[db,selectedOrgId,userId]);
- useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void client.auth.getUser().then(async(result:any)=>{const {data,error}=result;if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await client.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
+ useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void db.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
  useEffect(()=>{if(selectedOrgId&&userId)void loadDetails()},[selectedOrgId,userId,loadDetails]);
 
- async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await client.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await client.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
- async function createProject(){if(!db||busy||!selectedOrgId)return;if(projectName.trim().length<2){setError("اكتب اسمًا للمشروع لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {error}=await client.rpc("bmg_create_project",{p_organization_id:selectedOrgId,p_name:projectName.trim(),p_description:projectDescription.trim()});if(error)setError("تعذر إنشاء المشروع: "+error.message);else{setProjectName("");setProjectDescription("");setNotice("تم إنشاء المشروع.");await loadDetails()}setBusy(false)}
- async function inviteMember(){if(!db||busy||!selectedOrgId)return;if(!inviteEmail.trim()){setError("أدخل بريد الحساب الذي تريد دعوته.");return}if(inviteProject&&inviteRole==="admin"){setError("دور مدير المؤسسة لا يمكن منحه لدعوة مشروع محدد.");return}setBusy(true);setError("");setNotice("");const {error}=await client.rpc("bmg_invite_organization_member",{p_organization_id:selectedOrgId,p_email:inviteEmail.trim().toLowerCase(),p_role:inviteRole,p_project_id:inviteProject||null});if(error)setError(error.message.includes("No registered account")?"لم نعثر على حساب مسجل بهذا البريد. يجب أن يكون العضو قد أنشأ حسابًا في المنصة أولًا.": "تعذر إنشاء الدعوة: "+error.message);else{setInviteEmail("");setNotice("تم إنشاء الدعوة وإرسال إشعار إلى البريد الوارد للحساب المستهدف.");await loadDetails()}setBusy(false)}
+ async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await db.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
+ async function createProject(){if(!db||busy||!selectedOrgId)return;if(projectName.trim().length<2){setError("اكتب اسمًا للمشروع لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_create_project",{p_organization_id:selectedOrgId,p_name:projectName.trim(),p_description:projectDescription.trim()});if(error)setError("تعذر إنشاء المشروع: "+error.message);else{setProjectName("");setProjectDescription("");setNotice("تم إنشاء المشروع.");await loadDetails()}setBusy(false)}
+ async function inviteMember(){if(!db||busy||!selectedOrgId)return;if(!inviteEmail.trim()){setError("أدخل بريد الحساب الذي تريد دعوته.");return}if(inviteProject&&inviteRole==="admin"){setError("دور مدير المؤسسة لا يمكن منحه لدعوة مشروع محدد.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_invite_organization_member",{p_organization_id:selectedOrgId,p_email:inviteEmail.trim().toLowerCase(),p_role:inviteRole,p_project_id:inviteProject||null});if(error)setError(error.message.includes("No registered account")?"لم نعثر على حساب مسجل بهذا البريد. يجب أن يكون العضو قد أنشأ حسابًا في المنصة أولًا.": "تعذر إنشاء الدعوة: "+error.message);else{setInviteEmail("");setNotice("تم إنشاء الدعوة وإرسال إشعار إلى البريد الوارد للحساب المستهدف.");await loadDetails()}setBusy(false)}
  const roleLabel=(role:string)=>({owner:"المالك",admin:"مدير",developer:"مطور",viewer:"مشاهد"}[role]||role);
  const kindLabel=(kind:string)=>kind==="individual"?"فردي":kind==="company"?"شركة":"مؤسسة";
  return <section className={styles.page} dir="rtl">
