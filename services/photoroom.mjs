@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { fetchRemoteImage, MAX_IMAGE_BYTES } from './safe-image-fetch.mjs';
 
 const FIREBASE_API_KEY = 'AIzaSyAJGrgbFGB_-h8V2oJLr4b-_ipetqM0duU';
 const FIREBASE_SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`;
@@ -41,19 +42,18 @@ async function getFirebaseToken() {
 }
 
 async function resolveInput(input) {
+  let buffer;
   if (Buffer.isBuffer(input) || input instanceof Uint8Array || input instanceof ArrayBuffer) {
-    return Buffer.from(input);
+    buffer = Buffer.from(input);
+  } else if (typeof input === 'string') {
+    if (existsSync(input)) buffer = readFileSync(input);
+    else if (input.startsWith('https://')) buffer = (await fetchRemoteImage(input)).buffer;
+    else throw new TypeError('Invalid input string (must be existing file path or HTTPS URL)');
+  } else {
+    throw new TypeError('Input must be a file path, HTTPS URL, or Buffer');
   }
-  if (typeof input === 'string') {
-    if (existsSync(input)) return readFileSync(input);
-    if (input.startsWith('http://') || input.startsWith('https://')) {
-      const res = await fetch(input, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      if (!res.ok) throw new Error(`Failed to fetch input image: HTTP ${res.status}`);
-      return Buffer.from(await res.arrayBuffer());
-    }
-    throw new TypeError('Invalid input string (must be existing file path or URL)');
-  }
-  throw new TypeError('Input must be a file path, URL, or Buffer');
+  if (buffer.length > MAX_IMAGE_BYTES) throw new RangeError('Input image exceeds the 4 MB limit.');
+  return buffer;
 }
 
 function mergeAlpha(originalBuffer, maskBuffer) {
@@ -146,6 +146,9 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
   ];
 
   for (const [key, val] of Object.entries(inputs)) {
+    if (Buffer.isBuffer(val) && val.length > MAX_IMAGE_BYTES) {
+      throw new RangeError('Input image exceeds the 4 MB limit.');
+    }
     if (Buffer.isBuffer(val)) {
       const isPng = val[0] === 0x89 && val[1] === 0x50;
       const ext = isPng ? 'png' : 'jpg';
@@ -244,20 +247,12 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
       throw new Error(`PhotoRoom stream ended with no image URL${hint}`);
     }
 
-    // تحميل الصورة
-    const dlRes = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'okhttp/4.12.0',
-        Authorization: idToken
-      }
+    // Download through the SSRF-safe, size-limited image transport.
+    const downloaded = await fetchRemoteImage(imageUrl, {
+      'User-Agent': 'okhttp/4.12.0',
+      Authorization: idToken
     });
-
-    if (!dlRes.ok) {
-      throw new Error(`Failed to download PhotoRoom output (${dlRes.status})`);
-    }
-
-    const contentType = dlRes.headers.get('content-type') || 'image/jpeg';
-    const buffer = Buffer.from(await dlRes.arrayBuffer());
+    const { buffer, contentType } = downloaded;
 
     return {
       status: true,

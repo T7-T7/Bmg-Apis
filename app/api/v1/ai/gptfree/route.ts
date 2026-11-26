@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const AGENT_URL = "https://us-central1-gptfree-2.cloudfunctions.net/agent_stream";
-const MAX_BODY = 1_048_576;
+const MAX_BODY = 4 * 1024 * 1024;
 const MAX_HISTORY = 20;
 const MAX_MESSAGE = 30_000;
 
@@ -163,7 +163,7 @@ async function handlePost(request: NextRequest) {
   try {
     body = await readJsonRequestBody(request, MAX_BODY);
   } catch (cause) {
-    if (cause instanceof PayloadTooLargeError) return error("حجم الطلب يتجاوز 1 MB.", 413);
+    if (cause instanceof PayloadTooLargeError) return error("حجم الطلب يتجاوز 4 MB.", 413);
     return error("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400);
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) return error("جسم الطلب غير صالح.", 400);

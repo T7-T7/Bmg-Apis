@@ -5,10 +5,11 @@ import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photor
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
+import { validateRemoteImageUrl } from "@/services/safe-image-fetch.mjs";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
-const MAX_BODY = 1_048_576;
+const MAX_BODY = 4 * 1024 * 1024;
 const MAX_PROMPT = 4000;
 
 function db() {
@@ -79,7 +80,7 @@ async function completeUsage(id: number | null, status: number, startedAt: numbe
 }
 function validImageUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 4096) return false;
-  try { const url = new URL(value); return url.protocol === "https:"; } catch { return false; }
+  try { validateRemoteImageUrl(value); return true; } catch { return false; }
 }
 async function handlePost(request: NextRequest) {
   const auth = request.headers.get("authorization") ?? "";
@@ -88,7 +89,7 @@ async function handlePost(request: NextRequest) {
   let body: unknown;
   try { body = await readJsonRequestBody(request, MAX_BODY); }
   catch (cause) {
-    if (cause instanceof PayloadTooLargeError) return fail("حجم الطلب يتجاوز 1 MB.", 413);
+    if (cause instanceof PayloadTooLargeError) return fail("حجم الطلب يتجاوز 4 MB.", 413);
     return fail("يجب إرسال جسم الطلب بصيغة JSON صحيحة.", 400);
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) return fail("جسم الطلب غير صالح.", 400);

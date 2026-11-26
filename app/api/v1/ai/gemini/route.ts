@@ -8,7 +8,7 @@ import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/r
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MAX_PROMPT_CHARS = 30_000;
-const MAX_BODY_BYTES = 1_048_576;
+const MAX_BODY_BYTES = 4 * 1024 * 1024;
 function jsonError(message:string,status:number){
  const code=status===400?"INVALID_REQUEST":status===401?"UNAUTHORIZED":status===413?"PAYLOAD_TOO_LARGE":status===429?"RATE_LIMITED":status===503?"SERVICE_UNAVAILABLE":status===403?"FORBIDDEN":"UPSTREAM_ERROR";
  const headers:Record<string,string>={"Access-Control-Allow-Origin":"*","Cache-Control":"no-store"};
@@ -47,7 +47,7 @@ async function handlePost(request: NextRequest) {
  const authorization=request.headers.get("authorization")??"";
   const apiKey = parseApiKeyAuthorization(authorization);
  if (!apiKey.valid) return jsonError("صيغة ترويسة Authorization غير صحيحة.", 401);
- let body:unknown;try{body=await readJsonRequestBody(request, MAX_BODY_BYTES)}catch(cause){if(cause instanceof PayloadTooLargeError)return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (1 MB).",413);if(cause instanceof SyntaxError)return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.",400);return jsonError("تعذر قراءة جسم الطلب.",400)}
+ let body:unknown;try{body=await readJsonRequestBody(request, MAX_BODY_BYTES)}catch(cause){if(cause instanceof PayloadTooLargeError)return jsonError("حجم الطلب يتجاوز الحد الأقصى المسموح (4 MB).",413);if(cause instanceof SyntaxError)return jsonError("يجب إرسال جسم الطلب بصيغة JSON صحيحة.",400);return jsonError("تعذر قراءة جسم الطلب.",400)}
  if(!body||typeof body!=="object"||Array.isArray(body))return jsonError("يجب أن يكون جسم الطلب كائن JSON.",400);
  const data=body as Record<string,unknown>;
  if(typeof data.prompt!=="string"||!data.prompt.trim())return jsonError("الحقل prompt مطلوب ويجب أن يحتوي على نص.",400);

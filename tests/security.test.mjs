@@ -43,13 +43,13 @@ test("server-only credentials are not referenced by browser application modules"
   }
 });
 
-test("AI API routes use the shared bounded request reader without changing byte limits", () => {
+test("AI API routes enforce the shared 4 MB bounded request limit", () => {
   const gemini = read("../app/api/v1/ai/gemini/route.ts");
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
   const starX = read("../app/api/v1/ai/star-x/route.ts");
   const manager = read("../lib/core/managers/request-manager.ts");
   for (const route of [gemini, gptfree, starX]) {
-    assert.ok(route.includes("1_048_576"));
+    assert.ok(route.includes("4 * 1024 * 1024"));
     assert.ok(route.includes("readJsonRequestBody(request,"));
     assert.ok(route.includes("PayloadTooLargeError"));
     assert.ok(!route.includes("await request.text()"));
