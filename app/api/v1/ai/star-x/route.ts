@@ -28,6 +28,7 @@ async function authorize(request: NextRequest, token: string | null) {
     clientHash: () => clientHash(request),
     serverSecret: process.env.BMG_DEMO_RPC_SECRET,
   });
+  const result = access.authorization;
   if (!result.authorized) {
     if (!token) {
       const limited = result.reason === "rate_limited";
