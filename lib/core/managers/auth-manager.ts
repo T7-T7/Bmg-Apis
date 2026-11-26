@@ -4,7 +4,7 @@ export type ApiKeyAuthorization = Readonly<{ valid: boolean; token: string | nul
 
 export function parseApiKeyAuthorization(header: string): ApiKeyAuthorization {
   if (!header) return Object.freeze({ valid: true, token: null });
-  const match = header.match(/^Bearer\s+((?:nox_live_|bmg_live_)[A-Za-z0-9_-]+)$/i);
+  const match = header.match(/^Bearer\s+((?:nox_[A-Za-z0-9_-]{52}|nox_live_[A-Za-z0-9_-]+|bmg_live_[A-Za-z0-9_-]+))$/i);
   return match
     ? Object.freeze({ valid: true, token: match[1] })
     : Object.freeze({ valid: false, token: null });
