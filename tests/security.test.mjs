@@ -217,3 +217,17 @@ test("Gemini retries share one deadline shorter than the Vercel route limit", ()
   assert.match(service, /askGeminiMethod2\(prompt, instruction, previous, deadline\)/);
   assert.match(service, /bootstrap\(deadline\)/);
 });
+
+
+test("usage completion retries transient failures and accepts idempotent RPC acknowledgements", () => {
+  const manager = read("../lib/core/managers/usage-manager.ts");
+  const migration = read("../supabase/migrations/20261126080000_harden_usage_completion_and_rpc_grants.sql");
+  assert.match(manager, /COMPLETION_ATTEMPTS = 3/);
+  assert.match(manager, /150 \* 2 \*\* attempt/);
+  assert.match(manager, /result\.completed !== true/);
+  assert.match(manager, /onError\(lastError\)/);
+  assert.match(migration, /revoke all on function public\.bmg_authorize_api_request[\s\S]*from public, authenticated/i);
+  assert.match(migration, /grant execute on function public\.bmg_authorize_demo_request[\s\S]*to anon, service_role/i);
+  assert.match(migration, /already_completed/);
+  assert.match(migration, /status_code is not null/);
+});
