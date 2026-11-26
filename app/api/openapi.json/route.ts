@@ -16,7 +16,7 @@ const specification = {
       post: {
         tags: ["AI"], operationId: "generateGptFreeResponse",
         summary: "إنشاء رد باستخدام GPTFree",
-        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        description: "يرسل رسالة إلى GPTFree ويعيد الرد النصي. يدعم سجل محادثة history بحد أقصى 20 رسالة، وحد جسم الطلب 1 MB. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
         security: [{ NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["message"],
@@ -29,7 +29,7 @@ const specification = {
         }, example: { message: "اشرح REST API", history: [] } } } },
         responses: {
           "200": { description: "تم إنشاء الرد." },
-          "400": { description: "طلب غير صالح." }, "401": { description: "مفتاح API المرسل غير صالح أو ملغى." },
+          "400": { description: "طلب غير صالح." }, "401": { description: "مفتاح API المرسل غير صالح أو ملغى." }, "413": { description: "تجاوز جسم الطلب حد 1 MB." },
           "429": { description: "تجاوز حد الاستخدام." }, "502": { description: "تعذر الحصول على رد من GPTFree." },
           "503": { description: "الخدمة غير متاحة." }
         }
@@ -39,7 +39,7 @@ const specification = {
       post: {
         tags: ["AI"], operationId: "runStarXImageTool",
         summary: "تشغيل أدوات Star X للصور",
-        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        description: "تعديل المشهد وتوليد الصور وتغيير الخلفية وتحسين الإضاءة باستخدام أداة AI Shadows. التعليمات الإنجليزية فقط؛ النموذج لا يفهم العربية. الحد الأقصى لجسم الطلب 4 MB. الاستجابة الناجحة صورة ثنائية وليست JSON. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
         security: [{ NoxApiKey: [] }],
         requestBody: { required: true, content: { "application/json": { schema: {
           type: "object", additionalProperties: false, required: ["action"],
@@ -50,8 +50,8 @@ const specification = {
           }
         }, example: { action: "generate-image", prompt: "A cinematic photograph of a modern glass house beside a lake at sunset" } } } },
         responses: {
-          "200": { description: "Generated image binary (image/*)." },
-          "400": { description: "Invalid request or unsupported prompt language." },
+          "200": { description: "Generated image binary (image/*).", content: { "image/*": { schema: { type: "string", format: "binary" } } } },
+          "400": { description: "Invalid request or unsupported prompt language." },\n          "403": { description: "Account restriction or insufficient service scope." },\n          "413": { description: "Request body exceeds the 4 MB limit." },
           "401": { description: "Invalid API key supplied in the request." },
           "429": { description: "Rate limit exceeded." },
           "502": { description: "Provider execution failed." },
@@ -64,7 +64,7 @@ const specification = {
         tags: ["AI"],
         operationId: "generateGeminiResponse",
         summary: "إنشاء رد باستخدام Gemini",
-        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. الحد الحالي 30 طلبًا في الدقيقة لكل مفتاح API. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
+        description: "يرسل prompt إلى Gemini ويعيد الرد ومعرّف جلسة يمكن تمريره في الطلب التالي لمتابعة المحادثة. الحد الأقصى لـ prompt هو 30000 حرف. حدود الاستخدام ومعدل الطلبات تُحدد بحسب الحساب والخطة والمفتاح والخدمة، ولا يوجد رقم موحد مضمون لكل الحسابات. الحد الأقصى لجسم الطلب 1 MB. الطلبات الخارجية تتطلب API Key صالحًا في ترويسة Authorization: Bearer. الاستثناء الوحيد هو طلبات الاختبار من صفحات الموقع الرسمية، وتُعتمد عبر Origin الموقع دون حقل مفتاح.",
         security: [{ NoxApiKey: [] }],
         requestBody: {
           required: true,
