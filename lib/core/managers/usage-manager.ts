@@ -18,12 +18,15 @@ export async function completeUsageTracking({
     try {
       const result = await complete();
       if (
-        result !== null &&
-        typeof result === "object" &&
-        "completed" in result &&
+        result === null ||
+        typeof result !== "object" ||
+        !("completed" in result) ||
         result.completed !== true
       ) {
-        const reason = "reason" in result ? String(result.reason) : "not_confirmed";
+        const reason =
+          result !== null && typeof result === "object" && "reason" in result
+            ? String(result.reason)
+            : "invalid_acknowledgement";
         throw new Error(`Usage completion was not confirmed: ${reason}`);
       }
       return;
