@@ -490,6 +490,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_set_service_archived: {
+        Args: { p_archived: boolean; p_service_id: string }
+        Returns: Json
+      }
+      bmg_admin_create_service_dependency: {
+        Args: { p_dependency_type: string; p_description: string; p_depends_on_service_id: string; p_service_id: string }
+        Returns: Json
+      }
+      bmg_admin_delete_service_dependency: {
+        Args: { p_id: string }
+        Returns: Json
+      }
+      bmg_admin_toggle_maintenance: {
+        Args: { p_enabled: boolean; p_id: string }
+        Returns: Json
+      }
       bmg_admin_broadcast_notification: {
         Args: { p_body: string; p_title: string; p_type: string; p_user_id: string | null }
         Returns: Json

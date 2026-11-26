@@ -135,24 +135,13 @@ export async function createAdminCommandRuntime(): Promise<{
     if (context.actor.role !== "admin") {
       throw new Error("تغيير حالة الخدمات متاح لحسابات الإدارة المصرح لها من قاعدة البيانات.");
     }
-    const archivedAt = input.archived ? new Date().toISOString() : null;
-    const { data, error } = await supabase
-      .from("api_services")
-      .update({ archived_at: archivedAt, updated_at: new Date().toISOString() })
-      .eq("id", serviceId)
-      .select("id,slug,archived_at")
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error("الخدمة غير موجودة أو لا تملك صلاحية تعديلها.");
-    const { error: auditError } = await supabase.from("audit_logs").insert({
-      actor_id: context.actor.id,
-      action: input.archived ? "service.archive" : "service.restore",
-      entity_type: "api_service",
-      entity_id: serviceId,
-      details: { slug: data.slug, archived_at: data.archived_at },
+    const { data, error } = await supabase.rpc("bmg_admin_set_service_archived", {
+      p_service_id: serviceId,
+      p_archived: input.archived,
     });
-    if (auditError) throw new Error(auditError.message);
-    return { serviceId, slug: data.slug, archived: data.archived_at !== null };
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("لم يتم تغيير حالة أرشفة الخدمة.");
+    return data as { serviceId: string; slug: string; archived: boolean };
   };
 
   const saveDependency: AdminCommandHandler = async (value, context) => {
@@ -164,17 +153,14 @@ export async function createAdminCommandRuntime(): Promise<{
     const dependencyType = enumValue(input.dependency_type, ["required", "optional"] as const, "dependency_type");
     const description = typeof input.description === "string" ? input.description.trim() : "";
     if (description.length > 1000) throw new Error("وصف الاعتمادية يتجاوز 1000 حرف.");
-    const { data, error } = await supabase.from("api_service_dependencies").insert({
-      service_id: serviceId, depends_on_service_id: dependsOnServiceId,
-      dependency_type: dependencyType, description, created_by: context.actor.id,
-    }).select("id,service_id,depends_on_service_id,dependency_type").single();
-    if (error) throw new Error(error.message);
-    const { error: auditError } = await supabase.from("audit_logs").insert({
-      actor_id: context.actor.id, action: "service_dependency.create",
-      entity_type: "api_service_dependency", entity_id: data.id,
-      details: { service_id: data.service_id, depends_on_service_id: data.depends_on_service_id, dependency_type: data.dependency_type },
+    const { data, error } = await supabase.rpc("bmg_admin_create_service_dependency", {
+      p_service_id: serviceId,
+      p_depends_on_service_id: dependsOnServiceId,
+      p_dependency_type: dependencyType,
+      p_description: description,
     });
-    if (auditError) throw new Error(auditError.message);
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("لم يتم إنشاء الاعتمادية.");
     return data;
   };
 
@@ -182,18 +168,12 @@ export async function createAdminCommandRuntime(): Promise<{
     const input = objectInput(value);
     if (context.actor.role !== "admin") throw new Error("إدارة اعتماديات الخدمات متاحة لحسابات الإدارة المصرح لها من قاعدة البيانات.");
     const dependencyId = uuid(input.id, "id");
-    const { data, error } = await supabase.from("api_service_dependencies")
-      .delete().eq("id", dependencyId)
-      .select("id,service_id,depends_on_service_id").maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error("الاعتمادية غير موجودة أو لا تملك صلاحية حذفها.");
-    const { error: auditError } = await supabase.from("audit_logs").insert({
-      actor_id: context.actor.id, action: "service_dependency.delete",
-      entity_type: "api_service_dependency", entity_id: data.id,
-      details: { service_id: data.service_id, depends_on_service_id: data.depends_on_service_id },
+    const { data, error } = await supabase.rpc("bmg_admin_delete_service_dependency", {
+      p_id: dependencyId,
     });
-    if (auditError) throw new Error(auditError.message);
-    return { deleted: true, id: data.id };
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("لم يتم حذف الاعتمادية.");
+    return data as { deleted: boolean; id: string };
   };
 
   const broadcastNotification: AdminCommandHandler = async (value) => {
@@ -387,21 +367,12 @@ export async function createAdminCommandRuntime(): Promise<{
     const input = objectInput(value);
     const maintenanceId = uuid(input.id, "id");
     if (typeof input.enabled !== "boolean") throw new Error("حالة الصيانة يجب أن تكون true أو false.");
-    const { data, error } = await supabase.from("maintenance_windows")
-      .update({ enabled: input.enabled, updated_at: new Date().toISOString(), updated_by: context.actor.id })
-      .eq("id", maintenanceId)
-      .select("id,service_id,enabled")
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error("نافذة الصيانة غير موجودة أو لا تملك صلاحية تعديلها.");
-    const { error: auditError } = await supabase.from("audit_logs").insert({
-      actor_id: context.actor.id,
-      action: "maintenance.toggle",
-      entity_type: "maintenance_window",
-      entity_id: data.id,
-      details: { service_id: data.service_id, enabled: data.enabled },
+    const { data, error } = await supabase.rpc("bmg_admin_toggle_maintenance", {
+      p_id: maintenanceId,
+      p_enabled: input.enabled,
     });
-    if (auditError) throw new Error(auditError.message);
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("لم يتم تغيير حالة الصيانة.");
     return data;
   };
 

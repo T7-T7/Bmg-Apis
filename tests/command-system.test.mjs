@@ -64,9 +64,9 @@ test("service archive and restore use protected Nox commands", () => {
   const ui = read("../components/admin-console.tsx");
   assert.ok(registry.includes('"service.archive": active("admin", "setServiceArchived")'));
   assert.ok(registry.includes('"service.restore": active("admin", "setServiceArchived")'));
-  assert.ok(runtime.includes('.from("api_services")'));
-  assert.ok(runtime.includes('.from("audit_logs").insert'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_set_service_archived"'));
   assert.ok(runtime.includes('context.actor.role !== "admin"'));
+  assert.ok(!runtime.includes('.from("api_services")') || runtime.indexOf('.from("api_services")') < runtime.indexOf('const setServiceArchived'));
   assert.ok(ui.includes('runAdminCommand(archived?"service.archive":"service.restore"'));
   assert.ok(!ui.includes('.from("api_services").update({archived_at'));
 });
@@ -77,11 +77,10 @@ test("service dependency mutations use active protected Nox commands", () => {
   const ui = read("../components/admin-console.tsx");
   assert.ok(registry.includes('"service_dependency.create": active("admin", "saveDependency")'));
   assert.ok(registry.includes('"service_dependency.delete": active("admin", "deleteDependency")'));
-  assert.ok(runtime.includes('.from("api_service_dependencies").insert'));
-  assert.ok(runtime.includes('.from("api_service_dependencies")'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_create_service_dependency"'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_delete_service_dependency"'));
   assert.ok(runtime.includes('context.actor.role !== "admin"'));
   assert.ok(runtime.includes('enumValue(input.dependency_type, ["required", "optional"]'));
-  assert.ok(runtime.includes('action: "service_dependency.create"'));
   assert.ok(ui.includes('runAdminCommand("service_dependency.create"'));
   assert.ok(ui.includes('runAdminCommand("service_dependency.delete"'));
   assert.ok(!ui.includes('.from("api_service_dependencies").insert'));
@@ -152,8 +151,7 @@ test("maintenance configuration and toggles use protected atomic Nox commands", 
   const ui = read("../components/admin-console.tsx");
   assert.ok(registry.includes('"maintenance.toggle": active("admin", "setMaintenanceEnabled")'));
   assert.ok(registry.includes('"maintenance.configure": active("admin", "configureMaintenance")'));
-  assert.ok(runtime.includes('.from("maintenance_windows")'));
-  assert.ok(runtime.includes('action: "maintenance.toggle"'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_toggle_maintenance"'));
   assert.ok(runtime.includes('supabase.rpc("bmg_admin_configure_maintenance"'));
   assert.ok(runtime.includes('p_service_id: serviceId'));
   assert.ok(runtime.includes('p_starts_at: startsAt'));
