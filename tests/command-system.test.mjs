@@ -252,3 +252,12 @@ test("active command registry is fully wired and admin UI has no direct database
   for (const handler of activeHandlers) assert.ok(wiredHandlers.has(handler), `active handler ${handler} must be registered at runtime`);
   assert.doesNotMatch(ui, /\.from\([^)]*\)\.(?:insert|update|delete|upsert)\s*\(/, "admin UI mutations must pass through Nox commands");
 });
+
+test("admin command route does not expose internal handler or database errors", () => {
+  const route = read("../app/api/admin/commands/route.ts");
+  assert.ok(route.includes('code: "INTERNAL_ERROR"'));
+  assert.ok(route.includes('status: 500'));
+  assert.ok(route.includes('"X-Content-Type-Options": "nosniff"'));
+  assert.ok(route.includes('console.error("[Nox Admin Command]"'));
+  assert.ok(!route.includes("const message = error instanceof Error ? error.message"));
+});

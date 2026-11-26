@@ -44,10 +44,9 @@ export async function POST(request: Request) {
         status: error.status, headers: { "Cache-Control": "no-store" },
       });
     }
-    const message = error instanceof Error ? error.message : "تعذر تنفيذ الأمر الإداري.";
-    const status = message.includes("يلزم تسجيل الدخول") ? 401 : 400;
-    return NextResponse.json({ success: false, error: message }, {
-      status, headers: { "Cache-Control": "no-store" },
+    console.error("[Nox Admin Command]", error instanceof Error ? error.message : error);
+    return NextResponse.json({ success: false, code: "INTERNAL_ERROR", error: "حدث خطأ داخلي أثناء تنفيذ الأمر الإداري." }, {
+      status: 500, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
     });
   }
 }
