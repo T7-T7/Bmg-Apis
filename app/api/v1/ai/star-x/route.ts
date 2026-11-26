@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
 import { authorizeManagedServiceRequest } from "@/lib/core/managers/managed-access-manager";
-import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
 export const runtime = "nodejs";
@@ -24,7 +22,7 @@ function fail(message: string, status: number) {
 }
 async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: fail("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
-  const { rpc, authorization: result } = await authorizeManagedServiceRequest({
+  const access = await authorizeManagedServiceRequest({
     token,
     serviceSlug: "star-x",
     clientHash: () => clientHash(request),
@@ -47,19 +45,9 @@ async function authorize(request: NextRequest, token: string | null) {
       : "مفتاح API غير صالح أو ملغى أو منتهي الصلاحية.";
     return { ok: false as const, response: fail(message, status) };
   }
-  return { ok: true as const, usageId: result.usageId, rpc };
+  return { ok: true as const, completeUsage: access.completeUsage };
 }
 
-async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
-  return completeManagedUsageTracking({
-    usageId: id,
-    statusCode: status,
-    startedAt,
-    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
-    rpc,
-    onError: (cause) => console.error("[Star X usage completion]", { requestId, error: cause instanceof Error ? cause.message : cause })
-  });
-}
 function validImageUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 4096) return false;
   try { const url = new URL(value); return url.protocol === "https:"; } catch { return false; }
@@ -91,13 +79,11 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
   }
 
   const startedAt = Date.now();
-  let usageId: number | null = null;
-  let rpc: ManagedSupabaseRpc | null = null;
+  let finishUsage: ((statusCode: number) => Promise<void>) | null = null;
   try {
     const access = await authorize(request, apiKey.token);
     if (!access.ok) return access.response;
-    rpc = access.rpc;
-    usageId = access.usageId;
+    finishUsage = (statusCode) => access.completeUsage({ statusCode, startedAt, onError: (cause) => console.error("[Star X usage completion]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause }) });
     const options = { timeoutMs: 150000 };
     const result = action === "edit-scene"
       ? await aiScenes(data.imageUrl as string, data.prompt as string, options)
@@ -106,7 +92,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
         : action === "change-background"
           ? await aiBackground(data.imageUrl as string, data.prompt as string, options)
           : await aiShadows(data.imageUrl as string, options);
-    await completeUsage(usageId, 200, startedAt, context.requestId, rpc);
+    await finishUsage(200);
     const buffer = result.buffer;
     return new Response(new Uint8Array(buffer), {
       status: 200,
@@ -121,7 +107,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       }
     });
   } catch (error) {
-    if (rpc) await completeUsage(usageId, 502, startedAt, context.requestId, rpc);
+    if (finishUsage) await finishUsage(502);
     console.error("[Star X API]", { requestId: context.requestId, error: error instanceof Error ? error.message : error });
     return fail("تعذر تنفيذ Star X حاليًا. حاول مرة أخرى لاحقًا.", 502);
   }
