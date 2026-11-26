@@ -3,6 +3,9 @@ import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
+import { request as httpsRequest } from 'node:https';
 
 const FIREBASE_API_KEY = 'AIzaSyAJGrgbFGB_-h8V2oJLr4b-_ipetqM0duU';
 const FIREBASE_SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`;
@@ -14,6 +17,143 @@ const APP_VERSION = '2026.45.02 (2618)';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
+
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_STREAM_BYTES = 1024 * 1024;
+const IMAGE_FETCH_TIMEOUT_MS = 12_000;
+const MAX_IMAGE_REDIRECTS = 3;
+
+function isPublicAddress(address) {
+  const version = isIP(address);
+  if (version === 4) {
+    const [a, b, c] = address.split('.').map(Number);
+    if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
+    if (a === 100 && b >= 64 && b <= 127) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && (b === 168 || (b === 0 && c === 0) || (b === 0 && c === 2))) return false;
+    if (a === 198 && (b === 18 || b === 19 || b === 51)) return false;
+    if (a === 203 && b === 0 && c === 113) return false;
+    if (a === 255) return false;
+    return true;
+  }
+  if (version === 6) {
+    const value = address.toLowerCase().split('%')[0];
+    if (value.startsWith('::') || value.startsWith('::ffff:')) return false;
+    if (/^(fc|fd|fe[89ab]|ff)/.test(value)) return false;
+    if (value.startsWith('2001:db8:')) return false;
+    const first = Number.parseInt(value.split(':')[0] || '0', 16);
+    return first >= 0x2000 && first <= 0x3fff;
+  }
+  return false;
+}
+
+async function resolvePublicHttpsTarget(value) {
+  let url;
+  try { url = new URL(value); } catch { throw new TypeError('Invalid image URL'); }
+  if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
+    throw new TypeError('Only public HTTPS image URLs are allowed');
+  }
+  if (url.port && url.port !== '443') throw new TypeError('Non-standard image ports are not allowed');
+  const hostname = url.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
+    throw new TypeError('Private image hosts are not allowed');
+  }
+  const addresses = isIP(hostname)
+    ? [{ address: hostname, family: isIP(hostname) }]
+    : await lookup(hostname, { all: true, verbatim: true });
+  if (!addresses.length || addresses.some((entry) => !isPublicAddress(entry.address))) {
+    throw new TypeError('Image host resolves to a non-public network address');
+  }
+  return { url, hostname, address: addresses[0].address, family: addresses[0].family };
+}
+
+function requestBoundedHttps(target, headers, maxBytes) {
+  return new Promise((resolve, reject) => {
+    const { url, hostname, address, family } = target;
+    const req = httpsRequest({
+      protocol: 'https:', hostname, port: 443,
+      path: `${url.pathname}${url.search}`, method: 'GET',
+      headers, servername: hostname, rejectUnauthorized: true, agent: false,
+      lookup: (_host, _options, callback) => callback(null, address, family)
+    }, (res) => {
+      const status = res.statusCode || 0;
+      const location = res.headers.location;
+      if (status >= 300 && status < 400 && location) {
+        res.resume();
+        resolve({ status, location, headers: res.headers, buffer: Buffer.alloc(0) });
+        return;
+      }
+      if (status < 200 || status >= 300) {
+        res.resume();
+        resolve({ status, headers: res.headers, buffer: Buffer.alloc(0) });
+        return;
+      }
+      const contentLength = Number(res.headers['content-length'] || 0);
+      if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+        res.destroy(new RangeError('Image exceeds the 4 MB limit'));
+        reject(new RangeError('Image exceeds the 4 MB limit'));
+        return;
+      }
+      const chunks = [];
+      let total = 0;
+      res.on('data', (chunk) => {
+        total += chunk.length;
+        if (total > maxBytes) {
+          res.destroy(new RangeError('Image exceeds the 4 MB limit'));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      res.on('end', () => resolve({ status, headers: res.headers, buffer: Buffer.concat(chunks, total) }));
+      res.on('error', reject);
+    });
+    req.setTimeout(IMAGE_FETCH_TIMEOUT_MS, () => req.destroy(new Error('Image download timed out')));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function downloadPublicImage(value, { authorization } = {}) {
+  let current = value;
+  for (let redirects = 0; redirects <= MAX_IMAGE_REDIRECTS; redirects += 1) {
+    const target = await resolvePublicHttpsTarget(current);
+    const headers = { 'User-Agent': 'Mozilla/5.0', Accept: 'image/*' };
+    const trustedPhotoRoomHost = target.hostname === 'photoroom.com' || target.hostname.endsWith('.photoroom.com');
+    if (authorization && trustedPhotoRoomHost) headers.Authorization = authorization;
+    const result = await requestBoundedHttps(target, headers, MAX_IMAGE_BYTES);
+    if (result.location) {
+      if (redirects === MAX_IMAGE_REDIRECTS) throw new Error('Too many image redirects');
+      current = new URL(result.location, target.url).toString();
+      continue;
+    }
+    if (result.status < 200 || result.status >= 300) throw new Error(`Image download failed: HTTP ${result.status}`);
+    const contentType = String(result.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+    if (!contentType.startsWith('image/') || contentType === 'image/svg+xml') throw new TypeError('Remote resource is not a supported raster image');
+    return { buffer: result.buffer, contentType };
+  }
+  throw new Error('Image download failed');
+}
+
+async function readResponseTextBounded(response, maxBytes = MAX_STREAM_BYTES) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        throw new RangeError('PhotoRoom response exceeded the stream size limit');
+      }
+      chunks.push(Buffer.from(value));
+    }
+  } finally { reader.releaseLock(); }
+  return Buffer.concat(chunks, total).toString('utf8');
+}
 
 async function getFirebaseToken() {
   const now = Date.now();
@@ -42,16 +182,18 @@ async function getFirebaseToken() {
 
 async function resolveInput(input) {
   if (Buffer.isBuffer(input) || input instanceof Uint8Array || input instanceof ArrayBuffer) {
-    return Buffer.from(input);
+    const buffer = Buffer.from(input);
+    if (buffer.length > MAX_IMAGE_BYTES) throw new RangeError('Input image exceeds the 4 MB limit');
+    return buffer;
   }
   if (typeof input === 'string') {
-    if (existsSync(input)) return readFileSync(input);
-    if (input.startsWith('http://') || input.startsWith('https://')) {
-      const res = await fetch(input, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      if (!res.ok) throw new Error(`Failed to fetch input image: HTTP ${res.status}`);
-      return Buffer.from(await res.arrayBuffer());
+    if (existsSync(input)) {
+      const buffer = readFileSync(input);
+      if (buffer.length > MAX_IMAGE_BYTES) throw new RangeError('Input image exceeds the 4 MB limit');
+      return buffer;
     }
-    throw new TypeError('Invalid input string (must be existing file path or URL)');
+    if (input.startsWith('https://')) return (await downloadPublicImage(input)).buffer;
+    throw new TypeError('Invalid input string (must be an existing file path or public HTTPS URL)');
   }
   throw new TypeError('Input must be a file path, URL, or Buffer');
 }
@@ -182,7 +324,7 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
       throw new Error(`PhotoRoom AI tool ${toolId} failed (${res.status}): ${errText}`);
     }
 
-    const text = await res.text();
+    const text = await readResponseTextBounded(res);
     const events = parseSSE(text);
 
     let imageUrl = null;
@@ -245,19 +387,7 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
     }
 
     // تحميل الصورة
-    const dlRes = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'okhttp/4.12.0',
-        Authorization: idToken
-      }
-    });
-
-    if (!dlRes.ok) {
-      throw new Error(`Failed to download PhotoRoom output (${dlRes.status})`);
-    }
-
-    const contentType = dlRes.headers.get('content-type') || 'image/jpeg';
-    const buffer = Buffer.from(await dlRes.arrayBuffer());
+    const { buffer, contentType } = await downloadPublicImage(imageUrl, { authorization: idToken });
 
     return {
       status: true,
