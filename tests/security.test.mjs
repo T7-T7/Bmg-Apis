@@ -17,8 +17,15 @@ test("API key authorization RPC requires the server secret and rejects the legac
   assert.match(sql, /private\.api_demo_config/i);
   assert.match(sql, /extensions\.digest\(convert_to\(p_server_secret/i);
   assert.match(sql, /drop function public\.bmg_authorize_api_request\(text,text,text\)/i);
-  for (const path of ["../app/api/v1/ai/gemini/route.ts", "../app/api/v1/ai/gptfree/route.ts"]) {
-    assert.match(read(path), /p_server_secret:\s*process\.env\.BMG_DEMO_RPC_SECRET/);
+  for (const path of [
+    "../app/api/v1/ai/gemini/route.ts",
+    "../app/api/v1/ai/gptfree/route.ts",
+    "../app/api/v1/ai/star-x/route.ts",
+  ]) {
+    const route = read(path);
+    assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
+    assert.ok(route.includes("authorizeManagedRequest"), path);
+    assert.ok(!route.includes("p_server_secret:"), path);
   }
 });
 
