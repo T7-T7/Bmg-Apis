@@ -1,10 +1,18 @@
 import type { AuthorizationRpcResult } from "./authorization-manager";
 import { authorizeManagedRequest } from "./authorization-manager";
+import { completeManagedUsageTracking } from "./usage-manager";
 import { createManagedSupabaseRpc, type ManagedSupabaseRpc } from "./supabase-rpc-manager";
+
+export type ManagedUsageCompletionOptions = Readonly<{
+  statusCode: number;
+  startedAt: number;
+  onError: (cause: unknown) => void;
+}>;
 
 export type ManagedServiceAccess = Readonly<{
   rpc: ManagedSupabaseRpc;
   authorization: AuthorizationRpcResult;
+  completeUsage: (options: ManagedUsageCompletionOptions) => Promise<void>;
 }>;
 
 type ManagedServiceAccessOptions = Readonly<{
@@ -15,9 +23,9 @@ type ManagedServiceAccessOptions = Readonly<{
 }>;
 
 /**
- * Nox Core owns the shared access bootstrap: create one request-scoped
- * Supabase RPC transport, then use it for the service authorization decision.
- * Routes retain only their service-specific public denial response mapping.
+ * Nox Core owns the request-scoped access and usage lifecycle:
+ * one RPC transport authorizes the request and completes its usage record.
+ * Service routes retain their existing public denial and response contracts.
  */
 export async function authorizeManagedServiceRequest({
   serviceSlug,
@@ -34,5 +42,17 @@ export async function authorizeManagedServiceRequest({
     serverSecret,
   });
 
-  return Object.freeze({ rpc, authorization });
+  return Object.freeze({
+    rpc,
+    authorization,
+    completeUsage: ({ statusCode, startedAt, onError }) =>
+      completeManagedUsageTracking({
+        usageId: authorization.usageId,
+        statusCode,
+        startedAt,
+        serverSecret,
+        rpc,
+        onError,
+      }),
+  });
 }
