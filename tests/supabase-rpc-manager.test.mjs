@@ -18,7 +18,14 @@ test("Nox Core owns request-scoped Supabase RPC client configuration", () => {
   ]) assert.ok(manager.includes(fragment), fragment);
 });
 
-test("each AI route reuses one request-scoped RPC transport for authorization and usage", () => {
+test("Nox access manager creates and shares the request-scoped RPC transport", () => {
+  const access = read("../lib/core/managers/managed-access-manager.ts");
+  assert.ok(access.includes("createManagedSupabaseRpc()"));
+  assert.ok(access.includes("authorizeManagedRequest({"));
+  assert.ok(access.includes("return Object.freeze({ rpc, authorization })"));
+});
+
+test("each AI route obtains its shared RPC transport through Nox access manager", () => {
   const routes = [
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
