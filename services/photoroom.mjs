@@ -51,7 +51,7 @@ export function isPublicAddress(address) {
   return false;
 }
 
-async function resolvePublicHttpsTarget(value) {
+export async function resolvePublicHttpsTarget(value, resolveHost = lookup) {
   let url;
   try { url = new URL(value); } catch { throw new TypeError('Invalid image URL'); }
   if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
@@ -64,7 +64,7 @@ async function resolvePublicHttpsTarget(value) {
   }
   const addresses = isIP(hostname)
     ? [{ address: hostname, family: isIP(hostname) }]
-    : await lookup(hostname, { all: true, verbatim: true });
+    : await resolveHost(hostname, { all: true, verbatim: true });
   if (!addresses.length || addresses.some((entry) => !isPublicAddress(entry.address))) {
     throw new TypeError('Image host resolves to a non-public network address');
   }
