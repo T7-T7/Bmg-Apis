@@ -68,6 +68,8 @@ test("AI API routes enforce explicit bounded JSON request sizes", () => {
   assert.ok(!starX.includes("await request.text()"));
   assert.ok(manager.includes("request.body?.getReader()"));
   assert.ok(manager.includes("await reader.cancel()"));
+  assert.ok(manager.includes('new TextDecoder("utf-8", { fatal: true })'));
+  assert.ok(manager.includes("Preserve the size-limit error if the underlying stream cannot cancel."));
 });
 
 test("Star X image downloads pin validated public DNS results and enforce a 4 MB cap", () => {
