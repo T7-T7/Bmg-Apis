@@ -679,7 +679,7 @@ export type Database = {
         Returns: Json
       }
       bmg_create_api_key: {
-        Args: { p_expires_at?: string; p_key: string; p_label: string }
+        Args: { p_expires_at?: string; p_key: string; p_label: string; p_project_id?: string | null }
         Returns: {
           created_at: string
           id: string
