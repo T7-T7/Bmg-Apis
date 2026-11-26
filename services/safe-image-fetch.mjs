@@ -49,6 +49,12 @@ export function validateRemoteImageUrl(value) {
   if (isIP(host)) throw new TypeError("IP-literal image URLs are not allowed; use a public hostname.");
   return url;
 }
+export function isTrustedPhotoRoomHost(value) {
+  const url = validateRemoteImageUrl(value);
+  const hostname = url.hostname.toLowerCase();
+  return hostname === "photoroom.com" || hostname.endsWith(".photoroom.com");
+}
+
 async function resolvePublicAddress(hostname) {
   const records = await lookup(hostname, { all: true, verbatim: true });
   if (!records.length || records.some((record) => !isPublicAddress(record.address))) {

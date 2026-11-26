@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_IMAGE_BYTES, isPublicAddress, validateRemoteImageUrl } from "../services/safe-image-fetch.mjs";
+import { MAX_IMAGE_BYTES, isPublicAddress, isTrustedPhotoRoomHost, validateRemoteImageUrl } from "../services/safe-image-fetch.mjs";
 
 test("remote image fetcher caps downloads at exactly 4 MiB", () => {
   assert.equal(MAX_IMAGE_BYTES, 4 * 1024 * 1024);
@@ -46,4 +46,11 @@ test("PhotoRoom does not forward Firebase credentials to untrusted output hosts"
   const source = readFileSync(new URL("../services/photoroom.mjs", import.meta.url), "utf8");
   assert.match(source, /if \(isTrustedPhotoRoomHost\(imageUrl\)\) downloadHeaders\.Authorization = idToken/);
   assert.doesNotMatch(source, /fetchRemoteImage\(imageUrl,\s*\{[^}]*Authorization:\s*idToken/s);
+});
+
+test("PhotoRoom host trust check cannot be bypassed with a lookalike domain", () => {
+  assert.equal(isTrustedPhotoRoomHost("https://photoroom.com/output.png"), true);
+  assert.equal(isTrustedPhotoRoomHost("https://cdn.photoroom.com/output.png"), true);
+  assert.equal(isTrustedPhotoRoomHost("https://photoroom.com.attacker.example/output.png"), false);
+  assert.equal(isTrustedPhotoRoomHost("https://attacker.example/output.png"), false);
 });
