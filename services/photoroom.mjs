@@ -55,7 +55,7 @@ async function resolvePublicHttpsTarget(value) {
     throw new TypeError('Only public HTTPS image URLs are allowed');
   }
   if (url.port && url.port !== '443') throw new TypeError('Non-standard image ports are not allowed');
-  const hostname = url.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+  const hostname = url.hostname.replace('[', '').replace(']', '').toLowerCase();
   if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
     throw new TypeError('Private image hosts are not allowed');
   }
