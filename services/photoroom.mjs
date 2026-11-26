@@ -32,7 +32,7 @@ function isPublicAddress(address) {
     if (a === 169 && b === 254) return false;
     if (a === 172 && b >= 16 && b <= 31) return false;
     if (a === 192 && (b === 168 || (b === 0 && c === 0) || (b === 0 && c === 2))) return false;
-    if (a === 198 && (b === 18 || b === 19 || b === 51)) return false;
+    if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false;
     if (a === 203 && b === 0 && c === 113) return false;
     if (a === 255) return false;
     return true;
@@ -41,7 +41,7 @@ function isPublicAddress(address) {
     const value = address.toLowerCase().split('%')[0];
     if (value.startsWith('::') || value.startsWith('::ffff:')) return false;
     if (/^(fc|fd|fe[89ab]|ff)/.test(value)) return false;
-    if (value.startsWith('2001:db8:')) return false;
+    if (value.startsWith('2001:db8:') || value.startsWith('2001:2:') || value.startsWith('2001:10:') || value.startsWith('2001:20:')) return false;
     const first = Number.parseInt(value.split(':')[0] || '0', 16);
     return first >= 0x2000 && first <= 0x3fff;
   }
@@ -73,9 +73,11 @@ function requestBoundedHttps(target, headers, maxBytes) {
     const { url, hostname, address, family } = target;
     const req = httpsRequest({
       protocol: 'https:', hostname, port: 443,
-      path: `${url.pathname}${url.search}`, method: 'GET',
-      headers, servername: hostname, rejectUnauthorized: true, agent: false,
-      lookup: (_host, _options, callback) => callback(null, address, family)
+      path: `${url.pathname}${url.search}`, method: 'GET', family,
+      headers, servername: isIP(hostname) ? undefined : hostname, rejectUnauthorized: true, agent: false,
+      lookup: (_host, options, callback) => options?.all
+        ? callback(null, [{ address, family }])
+        : callback(null, address, family)
     }, (res) => {
       const status = res.statusCode || 0;
       const location = res.headers.location;
