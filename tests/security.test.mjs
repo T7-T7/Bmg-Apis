@@ -263,6 +263,7 @@ test("Nox Core owns the usage completion RPC, retry policy and managed request l
   assert.ok(access.includes("completeManagedUsageTracking({"));
   assert.ok(access.includes("usageId: authorization.usageId"));
   assert.ok(access.includes("serverSecret,"));
+  assert.ok(access.includes("statusCode,"));
 
   const routes = [
     "../app/api/v1/ai/gemini/route.ts",
@@ -276,7 +277,6 @@ test("Nox Core owns the usage completion RPC, retry policy and managed request l
     assert.ok(!/rpc\(["\x27]bmg_complete_api_request/.test(route), path);
     assert.ok(!route.includes("p_usage_id:"), path);
     assert.equal(route.includes("p_server_secret"), false, path);
-    assert.ok(route.includes("statusCode: status"), path);
     assert.ok(route.includes("startedAt,"), path);
   }
 });
