@@ -1,5 +1,5 @@
 const content = `# NOX APIS
-> Official developer platform and API reference.
+> Developer API platform and reference for the three active services.
 
 - Website: https://nox.bmg-inc.web.id
 - Human-readable docs: https://nox.bmg-inc.web.id/docs
@@ -8,42 +8,63 @@ const content = `# NOX APIS
 - API catalog: https://nox.bmg-inc.web.id/apis
 - Service status: https://nox.bmg-inc.web.id/status
 
+## Common request rules
+
+- Base URL: https://nox.bmg-inc.web.id
+- Method: POST
+- Request Content-Type: application/json
+- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
+- External requests require a valid Nox API key.
+- Official website test pages are the only no-key exception; this exception is not for external applications.
+- Usage quotas and request rates depend on account, plan, key, and service. Do not assume a universal fixed rate.
+- Do not expose API keys in browser code or public repositories.
+
 ## Active AI APIs
 
 ### Gemini
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gemini
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- Required body field: prompt (string, 1–30000 characters)
-- Optional body fields: instruction (string), sessionId (string)
-- Rate limit: 30 requests per minute per API key
+- Endpoint: /api/v1/ai/gemini
+- Required: prompt, string, 1–30000 characters.
+- Optional: instruction, string.
+- Optional: sessionId, string returned by a previous response to continue a conversation.
+- Maximum HTTP body: 1 MB.
+- Success: JSON with success, response, sessionId, method, conversationId, responseId, and access.
 
 ### GPTFree
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gptfree
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- Required body field: message (string, 1–30000 characters)
-- Optional body field: history (array, maximum 20 messages)
+- Endpoint: /api/v1/ai/gptfree
+- Required: message, string, 1–30000 characters.
+- Optional: history, array of up to 20 objects with type (user, agent, assistant) and content (string).
+- Maximum HTTP body: 1 MB.
+- Success: JSON with success, response, provider, and access.
 
 ### Star X
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/star-x
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- Actions: edit-scene, generate-image, change-background, improve-lighting
-- HTTPS imageUrl required except for image generation
-- Prompt language: English only; maximum 4000 characters
-- Success response: binary image data
-- improve-lighting uses the provider's aiShadows / tool:ai-shadows function
+- Endpoint: /api/v1/ai/star-x
+- Maximum HTTP body: 4 MB.
+- Required action: edit-scene, generate-image, change-background, or improve-lighting.
+- imageUrl: public HTTPS image URL required for edit-scene, change-background, and improve-lighting; omitted for generate-image.
+- prompt: English text, maximum 4000 characters; required for edit-scene, change-background, and generate-image.
+- improve-lighting uses the provider's aiShadows tool and does not require prompt.
+- Success: binary image response (image/*), not JSON. Error responses are JSON.
 
-## Authentication
+## HTTP errors
 
-External requests require a valid Bearer API key. The official website testing flow is the only no-key exception and is checked using the configured website Origin. Website test pages must not show an API-key input. Origin is not cryptographic authentication; non-browser clients can forge it.
+- 400 invalid request.
+- 401 missing or invalid API key / Authorization header.
+- 403 account restriction or insufficient service scope.
+- 413 request body or text limit exceeded.
+- 429 rate limit or usage quota exceeded.
+- 502 upstream provider failure.
+- 503 service or authorization temporarily unavailable.
+
+## Authentication note
+
+The official website testing flow is checked using the configured website Origin. Origin is a browser-origin restriction, not cryptographic authentication; non-browser clients can forge it. External applications must use a Nox API key.
 
 ## Machine-readable contract
+
 - OpenAPI: https://nox.bmg-inc.web.id/api/openapi.json
 - Full documentation: https://nox.bmg-inc.web.id/docs.md
 
-Only endpoints explicitly listed in the OpenAPI specification and the active service documentation should be treated as available.
+Only endpoints explicitly listed in the OpenAPI specification and active service documentation should be treated as available.
 `;
 
 export async function GET() {
