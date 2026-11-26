@@ -41,6 +41,7 @@ async function authorize(request: NextRequest, token: string | null) {
     clientHash: () => clientHash(request),
     serverSecret: process.env.BMG_DEMO_RPC_SECRET,
   });
+  const result = access.authorization;
   if (!result.authorized) {
     const reason = result.reason;
     if (!token) {
