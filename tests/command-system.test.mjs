@@ -229,3 +229,14 @@ test("notification broadcast migration checks role and writes audit atomically",
   assert.ok(migration.includes("get diagnostics v_recipient_count = row_count"));
   assert.ok(!migration.includes("service_role"));
 });
+
+test("export audit events are recorded through a protected Nox command", () => {
+  const registry = read("../lib/core/commands/command-registry.ts");
+  const runtime = read("../lib/core/commands/admin-command-runtime.ts");
+  const ui = read("../components/admin-console.tsx");
+  assert.ok(registry.includes('"export.record": active("admin", "recordExport")'));
+  assert.ok(runtime.includes('supabase.rpc("bmg_admin_record_export"'));
+  assert.ok(runtime.includes('["audit", "requests", "users", "services", "keys", "incidents", "maintenance"]'));
+  assert.ok(ui.includes('runAdminCommand("export.record"'));
+  assert.ok(!ui.includes('supabase.from("audit_logs").insert'));
+});

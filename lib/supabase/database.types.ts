@@ -490,6 +490,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_record_export: {
+        Args: { p_dataset: string; p_format: string; p_rows: number }
+        Returns: Json
+      }
       bmg_admin_set_service_archived: {
         Args: { p_archived: boolean; p_service_id: string }
         Returns: Json

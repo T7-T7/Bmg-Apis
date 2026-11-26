@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import type { Json } from "@/lib/supabase/database.types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./admin-console.module.css";
 
@@ -208,7 +207,7 @@ export default function AdminConsole(){
   ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="nox-apis-"+selected.name+"-"+new Date().toISOString().slice(0,10)+"."+format;link.click();URL.revokeObjectURL(url);
-  void writeAudit("export.create","export",exportDataset,{format,rows:rows.length});
+  void runAdminCommand("export.record",{dataset:exportDataset,format,rows:rows.length}).catch((error)=>setError(error instanceof Error?error.message:"تعذر تسجيل عملية التصدير."));
  };
  const exportAuditLogs=(format:"json"|"csv")=>{
   const content=format==="json"?JSON.stringify(auditRows,null,2):[
@@ -235,11 +234,6 @@ export default function AdminConsole(){
   ].join("\n");
   const blob=new Blob([content],{type:format==="json"?"application/json;charset=utf-8":"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="bmg-analytics-"+analyticsDays+"d."+format;link.click();URL.revokeObjectURL(url);
- };
- const writeAudit=async(action:string,entityType:string,entityId:string|null,details:Record<string,unknown>={})=>{
-  if(!supabase||!user)return;
-  const {error}=await supabase.from("audit_logs").insert({actor_id:user.id,action,entity_type:entityType,entity_id:entityId,details:details as Json});
-  if(error)throw error;
  };
  const runAdminCommand=async<T=unknown>(command:string,input:Record<string,unknown>):Promise<T>=>{
   const response=await fetch("/api/admin/commands",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({command,input})});

@@ -6,6 +6,7 @@ const planned = (permission: AdminCommandRole, handler: string): CommandDefiniti
 
 export const ADMIN_COMMANDS = Object.freeze({
   "profile.update": active("admin", "updateProfile"),
+  "export.record": active("admin", "recordExport"),
   "profile.grant_admin": active("owner", "updateProfile"),
   "service.create": active("admin", "createService"),
   "service.update": active("admin", "updateService"),

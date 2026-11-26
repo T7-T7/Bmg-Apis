@@ -58,6 +58,22 @@ export async function createAdminCommandRuntime(): Promise<{
     return Object.freeze({ id: userData.user.id, role: profile.role as AdminRole });
   };
 
+  const recordExport: AdminCommandHandler = async (value) => {
+    const input = objectInput(value);
+    const dataset = enumValue(input.dataset, ["audit", "requests", "users", "services", "keys", "incidents", "maintenance"] as const, "dataset");
+    const format = enumValue(input.format, ["json", "csv"] as const, "format");
+    const rows = input.rows;
+    if (!Number.isSafeInteger(rows) || Number(rows) < 0 || Number(rows) > 100000) {
+      throw new Error("عدد صفوف التصدير غير صالح.");
+    }
+    const { data, error } = await supabase.rpc("bmg_admin_record_export", {
+      p_dataset: dataset, p_format: format, p_rows: Number(rows),
+    });
+    if (error) throw new Error(error.message);
+    if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("لم يتم تسجيل عملية التصدير.");
+    return data;
+  };
+
   const updateProfile: AdminCommandHandler = async (value) => {
     const input = objectInput(value);
     const userId = uuid(input.userId, "userId");
@@ -379,7 +395,7 @@ export async function createAdminCommandRuntime(): Promise<{
   return {
     authorize,
     handlers: Object.freeze({
-      updateProfile, saveAdminKey, deleteAdminKey,
+      updateProfile, recordExport, saveAdminKey, deleteAdminKey,
       listServiceVersions, rollbackServiceVersion, setServiceArchived,
       saveDependency, deleteDependency, broadcastNotification, createService, updateService, updatePlanLimits, updateAdminLimits,
       createIncident, changeIncident, addIncidentUpdate,
