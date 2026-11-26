@@ -11,6 +11,7 @@ type Invitation={id:string;organization_name:string;project_id:string|null;role:
 export default function NotificationsCenter(){
  const router=useRouter();
  const [db]=useState(()=>{try{return getSupabaseBrowserClient()}catch{return null}});
+ const client=db as any;
  const [user,setUser]=useState<string|null>(null);
  const [rows,setRows]=useState<Notification[]>([]);
  const [invitations,setInvitations]=useState<Invitation[]>([]);
@@ -24,7 +25,7 @@ export default function NotificationsCenter(){
   setLoading(true);setError("");
   const [{data:notifications,error:notificationError},{data:invites,error:invitationError}]=await Promise.all([
    db.from("user_notifications").select("id,title,body,type,read_at,created_at,metadata").eq("user_id",user).order("created_at",{ascending:false}).limit(200),
-   db.from("organization_invitations").select("id,organization_name,project_id,role,expires_at,created_at").eq("recipient_user_id",user).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).order("created_at",{ascending:false}).limit(50)
+   client.from("organization_invitations").select("id,organization_name,project_id,role,expires_at,created_at").eq("recipient_user_id",user).is("accepted_at",null).is("declined_at",null).is("revoked_at",null).order("created_at",{ascending:false}).limit(50)
   ]);
   if(notificationError){setError("تعذر تحميل الإشعارات: "+notificationError.message);setRows([])}else setRows((notifications||[]) as Notification[]);
   if(invitationError){setError(current=>current?current+" · تعذر تحميل الدعوات: "+invitationError.message:"تعذر تحميل الدعوات: "+invitationError.message);setInvitations([])}else setInvitations((invites||[]) as Invitation[]);
@@ -37,7 +38,7 @@ export default function NotificationsCenter(){
  const markRead=async(row:Notification)=>{if(!db||!user||row.read_at)return;const now=new Date().toISOString();const {error}=await db.from("user_notifications").update({read_at:now}).eq("id",row.id).eq("user_id",user);if(error)setError(error.message);else setRows(old=>old.map(x=>x.id===row.id?{...x,read_at:now}:x))};
  const markAll=async()=>{if(!db||!user||!unread)return;const now=new Date().toISOString();const {error}=await db.from("user_notifications").update({read_at:now}).eq("user_id",user).is("read_at",null);if(error)setError(error.message);else setRows(old=>old.map(x=>({...x,read_at:x.read_at||now})))};
  const remove=async(row:Notification)=>{if(!db||!user||!confirm("حذف هذا الإشعار؟"))return;const {error}=await db.from("user_notifications").delete().eq("id",row.id).eq("user_id",user);if(error)setError(error.message);else setRows(old=>old.filter(x=>x.id!==row.id))};
- const respondToInvitation=async(invitation:Invitation,accept:boolean)=>{if(!db)return;setBusyInvitation(invitation.id);setError("");const {error}=await db.rpc("bmg_respond_to_organization_invitation",{p_invitation_id:invitation.id,p_accept:accept});if(error)setError(error.message.includes("expired")?"انتهت صلاحية هذه الدعوة.":error.message.includes("no longer pending")?"لم تعد هذه الدعوة متاحة.": "تعذر معالجة الدعوة: "+error.message);else await load();setBusyInvitation("")};
+ const respondToInvitation=async(invitation:Invitation,accept:boolean)=>{if(!db)return;setBusyInvitation(invitation.id);setError("");const {error}=await client.rpc("bmg_respond_to_organization_invitation",{p_invitation_id:invitation.id,p_accept:accept});if(error)setError(error.message.includes("expired")?"انتهت صلاحية هذه الدعوة.":error.message.includes("no longer pending")?"لم تعد هذه الدعوة متاحة.": "تعذر معالجة الدعوة: "+error.message);else await load();setBusyInvitation("")};
  const roleLabel=(role:Invitation["role"])=>role==="admin"?"مدير المؤسسة":role==="developer"?"مطور":"مشاهد";
  return <section className={styles.page} dir="rtl">
   <header className={styles.header}><div><span>ACCOUNT INBOX</span><h1>البريد الوارد</h1><p>إشعارات الحساب والمنصة والتنبيهات الأمنية ودعوات المؤسسات والمشاريع.</p></div><button onClick={()=>void load()} disabled={loading}>تحديث</button></header>
