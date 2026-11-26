@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createManagedSupabaseRpc, type ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
+import type { ManagedSupabaseRpc } from "@/lib/core/managers/supabase-rpc-manager";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
 import { aiScenes, text2image, aiBackground, aiShadows } from "@/services/photoroom.mjs";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
-import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
+import { authorizeManagedServiceRequest } from "@/lib/core/managers/managed-access-manager";
 import { completeManagedUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
@@ -22,10 +22,9 @@ function fail(message: string, status: number) {
   if (status === 429 || status === 503) headers["Retry-After"] = "30";
   return NextResponse.json({ success: false, error: message, code }, { status, headers });
 }
-async function authorize(request: NextRequest, token: string | null, rpc: ManagedSupabaseRpc) {
+async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: fail("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
-  const result = await authorizeManagedRequest({
-    rpc,
+  const { rpc, authorization: result } = await authorizeManagedServiceRequest({
     token,
     serviceSlug: "star-x",
     clientHash: () => clientHash(request),
@@ -48,7 +47,7 @@ async function authorize(request: NextRequest, token: string | null, rpc: Manage
       : "مفتاح API غير صالح أو ملغى أو منتهي الصلاحية.";
     return { ok: false as const, response: fail(message, status) };
   }
-  return { ok: true as const, usageId: result.usageId };
+  return { ok: true as const, usageId: result.usageId, rpc };
 }
 
 async function completeUsage(id: number | null, status: number, startedAt: number, requestId: string, rpc: ManagedSupabaseRpc) {
@@ -95,9 +94,9 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
   let usageId: number | null = null;
   let rpc: ManagedSupabaseRpc | null = null;
   try {
-    rpc = createManagedSupabaseRpc();
-    const access = await authorize(request, apiKey.token, rpc);
+    const access = await authorize(request, apiKey.token);
     if (!access.ok) return access.response;
+    rpc = access.rpc;
     usageId = access.usageId;
     const options = { timeoutMs: 150000 };
     const result = action === "edit-scene"
