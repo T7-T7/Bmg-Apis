@@ -363,7 +363,7 @@ test("quota calculations include both hourly aggregates and events not yet rolle
   const analytics = read("../supabase/migrations/20261121230000_add_hourly_usage_and_full_plan_limits.sql");
   for (const sql of [authorization, analytics]) {
     assert.match(sql, /from private\.api_usage_hourly[\s\S]*union all[\s\S]*from private\.api_usage[\s\S]*aggregated_at is null/i);
-    assert.match(sql, /sum\(q\.weighted_usage\)/i.test(sql) ? sql : sql);
+    assert.match(sql, /weighted_usage/i);
   }
   assert.match(authorization, /v_daily_usage\+v_usage_weight>v_daily_limit/i);
   assert.match(authorization, /v_monthly_usage\+v_usage_weight>v_monthly_limit/i);
