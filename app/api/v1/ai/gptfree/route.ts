@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { executeManagedService, isWebsiteTestRequest, managedServiceOptions } from "@/lib/server/service-manager";
 import { createClient } from "@supabase/supabase-js";
 import { parseApiKeyAuthorization, createDemoClientHash } from "@/lib/core/managers/auth-manager";
+import { authorizeManagedRequest } from "@/lib/core/managers/authorization-manager";
 import { completeUsageTracking } from "@/lib/core/managers/usage-manager";
 import { PayloadTooLargeError, readJsonRequestBody } from "@/lib/core/managers/request-manager";
 
@@ -57,43 +58,39 @@ function clientHash(request: NextRequest) { return createDemoClientHash(request,
 async function authorize(request: NextRequest, token: string | null) {
   if (!token && !isWebsiteTestRequest(request)) return { ok: false as const, response: error("يلزم إرسال API Key صالح للطلبات الخارجية.", 401) };
   const db = supabase();
-  if (token) {
-    const { data, error: rpcError } = await db.rpc("bmg_authorize_api_request", {
-      p_key: token, p_service_slug: "gptfree", p_method: "POST", p_server_secret: process.env.BMG_DEMO_RPC_SECRET
-    });
-    if (rpcError) throw rpcError;
-    const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-    if (!result?.authorized) {
-      const reason = result?.reason;
-      const status = reason === "rate_limited" ? 429
-        : reason === "account_suspended" || reason === "insufficient_scope" ? 403
-        : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
-      const message = reason === "rate_limited" ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."
-        : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
-        : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
-        : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة."
-        : reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية استخدام هذه الخدمة."
-        : "مفتاح API غير صالح أو ملغى أو منتهي.";
+  const result = await authorizeManagedRequest({
+    rpc: async (procedure, args) => {
+      const { data, error: rpcError } = await db.rpc(procedure, args);
+      return { data, error: rpcError };
+    },
+    token,
+    serviceSlug: "gptfree",
+    clientHash: () => clientHash(request),
+    serverSecret: process.env.BMG_DEMO_RPC_SECRET,
+  });
+  if (!result.authorized) {
+    const reason = result.reason;
+    if (!token) {
+      const status = reason === "rate_limited" ? 429 : 503;
+      const message = reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية."
+        : reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.")
+        : "الخدمة غير متاحة حاليًا.";
       return { ok: false as const, response: error(message, status) };
     }
-    return { ok: true as const, usageId: Number(result.usage_id) || null };
-  }
-  const { data, error: rpcError } = await db.rpc("bmg_authorize_demo_request", {
-    p_client_hash: clientHash(request), p_service_slug: "gptfree", p_method: "POST",
-    p_server_secret: process.env.BMG_DEMO_RPC_SECRET
-  });
-  if (rpcError) throw rpcError;
-  const result = data as { authorized?: boolean; reason?: string; usage_id?: number; message?: string } | null;
-  if (!result?.authorized) {
-    const reason = result?.reason;
-    const status = reason === "rate_limited" ? 429 : 503;
-    const message = reason === "rate_limited" ? "وصلت إلى حد التجربة المجانية."
-      : reason === "maintenance" ? (result?.message || "الخدمة تحت الصيانة مؤقتًا.")
-      : "الخدمة غير متاحة حاليًا.";
+    const status = reason === "rate_limited" ? 429
+      : reason === "account_suspended" || reason === "insufficient_scope" ? 403
+      : reason === "maintenance" || reason === "service_unavailable" ? 503 : 401;
+    const message = reason === "rate_limited" ? "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."
+      : reason === "maintenance" ? (result.message || "الخدمة تحت الصيانة مؤقتًا.")
+      : reason === "service_unavailable" ? "الخدمة غير متاحة حاليًا."
+      : reason === "account_suspended" ? "تم إيقاف الحساب مؤقتًا. تواصل مع الإدارة."
+      : reason === "insufficient_scope" ? "مفتاح API لا يملك صلاحية استخدام هذه الخدمة."
+      : "مفتاح API غير صالح أو ملغى أو منتهي.";
     return { ok: false as const, response: error(message, status) };
   }
-  return { ok: true as const, usageId: Number(result.usage_id) || null };
+  return { ok: true as const, usageId: result.usageId };
 }
+
 async function firebaseRequest(url: string, body: Record<string, string | boolean>) {
   const response = await fetch(url, {
     method: "POST", headers: { "Content-Type": "application/json" },
