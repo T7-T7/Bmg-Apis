@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { executeRequestPipeline } from "@/lib/core/engine/executor";
+import type { ExecutionContext } from "@/lib/core/engine/executor";
 
 export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x";
 
@@ -122,7 +123,7 @@ function managerError(
 export async function executeManagedService(
   slug: ManagedServiceSlug,
   request: Request,
-  handler: () => Promise<Response>,
+  handler: (context: ExecutionContext) => Promise<Response>,
 ): Promise<Response> {
   const service = getManagedService(slug);
   if (!service) return managerError("الخدمة المطلوبة غير مسجلة.", 404, randomUUID());
@@ -130,7 +131,7 @@ export async function executeManagedService(
   return executeRequestPipeline({
     service,
     request,
-    handler: async () => handler(),
+    handler,
     managerName: "Nox Core",
     onMethodNotAllowed: (requestId) =>
       managerError("طريقة الطلب غير مدعومة لهذه الخدمة.", 405, requestId, service.slug),
