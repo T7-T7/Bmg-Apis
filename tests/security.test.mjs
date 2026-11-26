@@ -394,11 +394,20 @@ test("API key creation uses the database's fixed NOX key format", () => {
 test("API key deletion RPCs resolve auth helpers with an empty search path", () => {
   const migration = read("../supabase/migrations/20261126190000_fix_api_key_delete_auth_resolution.sql");
   assert.equal((migration.match(/set search_path = ''/g) || []).length, 2);
-  assert.equal((migration.match(/auth\.uid\(\)/g) || []).length, 2);
+  assert.equal((migration.match(/auth\.uid\(\)/g) || []).length, 3);
   assert.match(migration, /auth\.jwt\(\)/);
   assert.match(migration, /auth\.mfa_factors/);
   assert.match(migration, /aal2/);
   assert.match(migration, /private\.bmg_delete_api_key_internal\(p_id, v_actor, v_actor, false\)/);
   assert.match(migration, /private\.bmg_delete_api_key_internal\(p_id, null, v_actor, true\)/);
   assert.match(migration, /grant execute on function public\.bmg_delete_api_key\(uuid\) to authenticated/i);
+});
+
+
+test("API key update RPC resolves auth helpers with a restricted search path", () => {
+  const migration = read("../supabase/migrations/20261126200000_fix_api_key_update_auth_search_path.sql");
+  assert.match(migration, /auth\\.uid\\(\\)/);
+  assert.match(migration, /auth\\.jwt\\(\\)/);
+  assert.match(migration, /set search_path = ''/);
+  assert.match(migration, /grant execute on function public\\.bmg_update_api_key\\(uuid, text, timestamptz\\) to authenticated/i);
 });
