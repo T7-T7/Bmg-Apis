@@ -122,7 +122,7 @@ const specification = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "Nox API Key",
-        description: "إلزامي لكل طلبات API الخارجية. الاستثناء الوحيد طلبات الاختبار من صفحات موقع Nox الرسمية؛ لا تعرض صفحات الاختبار حقل API Key. أرسل المفتاح الخارجي في Authorization: Bearer YOUR_NOX_API_KEY."
+        description: "إلزامي لكل طلبات API الخارجية. المفاتيح الجديدة التي تصدرها Nox تتكون من البادئة nox_ تليها 52 خانة من الأحرف أو الأرقام أو underscore أو hyphen. أرسل المفتاح كاملًا دون تعديل في Authorization: Bearer YOUR_NOX_API_KEY. الاستثناء الوحيد طلبات الاختبار من صفحات موقع Nox الرسمية؛ لا تعرض صفحات الاختبار حقل API Key."
       }
     }
   }
