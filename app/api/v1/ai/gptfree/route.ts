@@ -175,7 +175,7 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" }
     });
   } catch (cause) {
-    if (rpc) await finishUsage(502);
+    if (finishUsage) await finishUsage(502);
     console.error("[Nox GPTFree API]", { requestId: context.requestId, error: cause instanceof Error ? cause.message : cause });
     return error("تعذر تنفيذ GPTFree حاليًا. تحقق من إعداد المفتاح وحاول لاحقًا.", 502);
   }
