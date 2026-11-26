@@ -172,8 +172,7 @@ async function getFirebaseToken() {
   });
 
   if (!res.ok) {
-    const errText = await readResponseTextBounded(res, 16 * 1024);
-    throw new Error(`Firebase anonymous auth failed (${res.status}): ${errText}`);
+    throw new Error(`Firebase anonymous auth failed (${res.status}).`);
   }
 
   const data = await res.json();
@@ -223,7 +222,9 @@ function mergeAlpha(originalBuffer, maskBuffer) {
       const err = proc.stderr?.toString() || 'ffmpeg alphamerge failed';
       throw new Error(`Cutout composition failed: ${err}`);
     }
-    return readFileSync(outPath);
+    const output = readFileSync(outPath);
+    if (output.length > MAX_IMAGE_BYTES) throw new RangeError('Processed image exceeds the 4 MB limit');
+    return output;
   } finally {
     if (existsSync(origPath)) unlinkSync(origPath);
     if (existsSync(maskPath)) unlinkSync(maskPath);
@@ -322,8 +323,7 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
     });
 
     if (!res.ok) {
-      const errText = await readResponseTextBounded(res, 16 * 1024);
-      throw new Error(`PhotoRoom AI tool ${toolId} failed (${res.status}): ${errText}`);
+      throw new Error(`PhotoRoom AI tool ${toolId} failed (${res.status}).`);
     }
 
     const text = await readResponseTextBounded(res);
@@ -333,8 +333,7 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
     let imageId = null;
     let generationId = null;
     let lastEventType = null;
-    let lastEventData = null;
-    let errorEvent = null;
+    let hasErrorEvent = false;
 
     for (const ev of events) {
       lastEventType = ev.event;
@@ -345,11 +344,9 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
       try { parsed = JSON.parse(dataStr); } catch {}
 
       if (parsed) {
-        lastEventData = parsed;
         if (parsed.generationId) generationId = parsed.generationId;
 
-        // لو فيه event اسمه error/failed
-        if (/error|fail|reject/i.test(ev.event)) errorEvent = { event: ev.event, data: parsed };
+        if (/error|fail|reject/i.test(ev.event)) hasErrorEvent = true;
 
         const url = findImageUrl(parsed);
         if (url) {
@@ -362,30 +359,11 @@ async function runAiTool(toolId, toolVersion, inputs, timeoutMs = 150000) {
 
     // خطة بديلة: regex على النص الخام كله
     if (!imageUrl) {
-      const m = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:png|jpe?g|webp)(?:\?[^\s"'<>\\]*)?/i);
-      if (m) {
-        imageUrl = m[0];
-        console.log(`[Fallback] رابط صورة من regex: ${imageUrl}`);
-      }
-    }
-
-    if (!imageUrl) {
-      // ============ طباعة الـ stream كامل للتشخيص ============
-      console.error(`\n========== FULL STREAM (${toolId}) ==========`);
-      console.error(`[length: ${text.length} chars, ${events.length} events]`);
-      console.error(text);
-      console.error(`========== END STREAM ==========`);
-      console.error(`Last event: ${lastEventType}`);
-      console.error(`Last data:  ${JSON.stringify(lastEventData)}`);
-      if (generationId) console.error(`generationId: ${generationId}`);
-      if (errorEvent) console.error(`Error event: ${JSON.stringify(errorEvent)}`);
-
-      let hint = '';
-      if (errorEvent) hint = ` — الأداة بعتت event فيه خطأ: ${JSON.stringify(errorEvent.data)}`;
-      else if (generationId) hint = ` — الـ stream خلص بدون رابط صورة (generationId=${generationId})`;
-      else hint = ' — مفيش حتى generationId في الـ stream';
-
-      throw new Error(`PhotoRoom stream ended with no image URL${hint}`);
+      console.error('[Star X] Provider stream completed without an image URL.', {
+        toolId, responseBytes: Buffer.byteLength(text), eventCount: events.length,
+        lastEventType, hasGenerationId: Boolean(generationId), hasErrorEvent
+      });
+      throw new Error('PhotoRoom stream ended without a valid image URL.');
     }
 
     // تحميل الصورة
@@ -436,16 +414,20 @@ export async function removeBg(input, options = {}) {
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`PhotoRoom segmentation failed (${res.status}): ${errText}`);
+    throw new Error(`PhotoRoom segmentation failed (${res.status}).`);
   }
 
-  const result = await res.json();
+  const resultText = await readResponseTextBounded(res, 6 * 1024 * 1024);
+  const result = JSON.parse(resultText);
   if (!result.b64_mask) throw new Error('PhotoRoom returned no segmentation mask');
 
   const maskBuffer = Buffer.from(result.b64_mask, 'base64');
+  if (maskBuffer.length > MAX_IMAGE_BYTES) throw new RangeError('Processed mask exceeds the 4 MB limit');
   let cutoutBuffer = null;
-  if (cutout) cutoutBuffer = mergeAlpha(originalBuffer, maskBuffer);
+  if (cutout) {
+    cutoutBuffer = mergeAlpha(originalBuffer, maskBuffer);
+    if (cutoutBuffer.length > MAX_IMAGE_BYTES) throw new RangeError('Processed image exceeds the 4 MB limit');
+  }
 
   return {
     status: true,
