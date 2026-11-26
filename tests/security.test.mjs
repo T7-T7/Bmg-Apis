@@ -379,3 +379,26 @@ test("usage completion is idempotent and cannot overwrite a completed usage reco
   assert.match(manager, /result\.completed !== true/);
   assert.match(manager, /onError\(lastError\)/);
 });
+
+test("API key creation uses the database's fixed NOX key format", () => {
+  const page = read("../components/approved-pages.tsx");
+  const migration = read("../supabase/migrations/20261125175134_api_key_prefix_nox_fixed_length.sql");
+  assert.match(page, /new Uint8Array\(39\)/);
+  assert.match(page, /const raw="nox_"\+token/);
+  assert.match(page, /replace\(\/\\\+\/g,"-"\)/);
+  assert.match(page, /replace\(\/\\\/\/g,"_"\)/);
+  assert.match(migration, /length\(p_key\) <> 56/);
+  assert.match(migration, /\^nox_\[A-Za-z0-9_-\]\{52\}\$/);
+});
+
+test("API key deletion RPCs resolve auth helpers with an empty search path", () => {
+  const migration = read("../supabase/migrations/20261126190000_fix_api_key_delete_auth_resolution.sql");
+  assert.equal((migration.match(/set search_path = ''/g) || []).length, 2);
+  assert.equal((migration.match(/auth\.uid\(\)/g) || []).length, 2);
+  assert.match(migration, /auth\.jwt\(\)/);
+  assert.match(migration, /auth\.mfa_factors/);
+  assert.match(migration, /aal2/);
+  assert.match(migration, /private\.bmg_delete_api_key_internal\(p_id, v_actor, v_actor, false\)/);
+  assert.match(migration, /private\.bmg_delete_api_key_internal\(p_id, null, v_actor, true\)/);
+  assert.match(migration, /grant execute on function public\.bmg_delete_api_key\(uuid\) to authenticated/i);
+});
