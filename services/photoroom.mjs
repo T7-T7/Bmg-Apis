@@ -23,7 +23,7 @@ const MAX_STREAM_BYTES = 1024 * 1024;
 const IMAGE_FETCH_TIMEOUT_MS = 12_000;
 const MAX_IMAGE_REDIRECTS = 3;
 
-function isPublicAddress(address) {
+export function isPublicAddress(address) {
   const version = isIP(address);
   if (version === 4) {
     const [a, b, c] = address.split('.').map(Number);
