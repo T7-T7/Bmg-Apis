@@ -93,14 +93,18 @@ test("all AI routes delegate usage completion and RPC contract to Nox Core", () 
   assert.ok(usage.includes("completeUsageTracking"));
   assert.ok(usage.includes("if (!usageId) return"));
   assert.ok(usage.includes("onError(lastError)"));
+  const access = read("../lib/core/managers/managed-access-manager.ts");
+  assert.ok(access.includes("completeManagedUsageTracking({"));
+  assert.ok(access.includes("serverSecret,"));
   for (const path of [
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
     "../app/api/v1/ai/star-x/route.ts",
   ]) {
     const route = read(path);
-    assert.ok(route.includes("completeManagedUsageTracking"), path);
-    assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
+    assert.ok(route.includes("access.completeUsage"), path);
+    assert.ok(!route.includes("completeManagedUsageTracking"), path);
+    assert.ok(!route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
     assert.ok(!/rpc\(["']bmg_complete_api_request/.test(route), path);
     assert.ok(!route.includes("p_usage_id:"), path);
   }
@@ -186,8 +190,8 @@ test("usage completion failures carry the originating Nox request id", () => {
     "../app/api/v1/ai/star-x/route.ts",
   ]) {
     const route = read(path);
-    assert.ok(route.includes("requestId: string"), path);
-    assert.ok(route.includes("{ requestId, error: cause instanceof Error"), path);
+    assert.match(route, /requestId:\s*context\.requestId/);
+    assert.ok(route.includes("error: cause instanceof Error ? cause.message : cause"), path);
     assert.ok(route.includes("context.requestId"), path);
   }
 });
