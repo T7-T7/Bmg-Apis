@@ -2,99 +2,169 @@ const documentation = `# NOX APIS — توثيق المطورين
 
 Official API reference: https://nox.bmg-inc.web.id
 
-تضم المنصة حاليًا ثلاث واجهات API تشغيلية للذكاء الاصطناعي. يتطلب الاستخدام الخارجي مفتاح API صالحًا في ترويسة Authorization. صفحات الاختبار الرسمية داخل الموقع تستخدم استثناء الاختبار ولا تعرض حقل API Key.
+تضم Nox ثلاث خدمات API تشغيلية: Gemini للمحادثات النصية، GPTFree للردود مع سجل محادثة، وStar X لتوليد الصور وتعديلها. تستخدم جميع الخدمات POST وJSON في الطلب، لكن استجابة Star X الناجحة تكون بيانات صورة ثنائية.
 
-## Gemini text generation
+## 1. البدء والمصادقة
 
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gemini
-- Content-Type: application/json
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- Rate limit: 30 requests per minute per API key.
-- prompt: required string, 1–30000 characters.
-- instruction: optional string.
-- sessionId: optional string returned by a previous response to continue a conversation.
+- Base URL: `https://nox.bmg-inc.web.id`
+- Method: `POST`
+- Content-Type: `application/json`
+- External authentication: `Authorization: Bearer YOUR_NOX_API_KEY`
 
-### Request body
+أنشئ مفتاح API من لوحة Nox واحفظه في متغير بيئة أو مخزن أسرار خادمي. لا تضع المفتاح في كود المتصفح أو مستودع عام. صفحات الاختبار الرسمية داخل الموقع هي الاستثناء الوحيد الذي يمكنه استخدام وضع الاختبار دون مفتاح؛ لا تستخدم هذا الاستثناء في التطبيقات الخارجية.
 
-\`\`\`json
+تُحسب الحصص ومعدلات الطلبات بحسب الحساب والخطة والمفتاح والخدمة. لا يوجد رقم موحد مضمون لكل الحسابات؛ راجع لوحة الاستخدام، وتعامل مع HTTP 429 عند بلوغ الحد.
+
+## 2. Gemini — توليد النص ومتابعة الجلسات
+
+- Endpoint: `POST /api/v1/ai/gemini`
+- Required: `prompt` — نص من 1 إلى 30,000 حرف.
+- Optional: `instruction` — تعليمات نصية لتوجيه الإجابة.
+- Optional: `sessionId` — معرّف الجلسة من استجابة سابقة لمتابعة المحادثة.
+- Maximum HTTP body: 1 MB.
+
+### Request
+
+```json
 {
   "prompt": "اشرح الفرق بين let و const",
   "instruction": "أجب باللغة العربية"
 }
-\`\`\`
+```
 
 ### cURL
 
-\`\`\`bash
+```bash
 curl -X POST "https://nox.bmg-inc.web.id/api/v1/ai/gemini" \
   -H "Authorization: Bearer YOUR_NOX_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"prompt":"Explain let vs const","instruction":"Answer in Arabic"}'
-\`\`\`
+  -d '{"prompt":"اشرح الفرق بين let و const","instruction":"أجب باللغة العربية"}'
+```
 
-## GPTFree text generation
+### Success response
 
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/gptfree
-- Content-Type: application/json
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- message: required string, 1–30000 characters.
-- history: optional array, maximum 20 messages. Each item contains type (user, agent, or assistant) and content.
+```json
+{
+  "success": true,
+  "response": "النص الناتج من النموذج",
+  "sessionId": "ENCRYPTED_SESSION_VALUE",
+  "method": "gemini-web",
+  "conversationId": null,
+  "responseId": null,
+  "access": "api_key"
+}
+```
 
-### Request body
+أرسل `sessionId` في الطلب التالي للحفاظ على سياق الجلسة. قيمة `method` توضح مسار التنفيذ الذي نجح.
 
-\`\`\`json
+## 3. GPTFree — توليد النص مع سجل محادثة
+
+- Endpoint: `POST /api/v1/ai/gptfree`
+- Required: `message` — نص من 1 إلى 30,000 حرف.
+- Optional: `history` — مصفوفة بحد أقصى 20 رسالة.
+- كل عنصر في `history` يحتوي `type` بقيمة `user` أو `agent` أو `assistant`، و`content` كنص.
+- Maximum HTTP body: 1 MB.
+
+### Request
+
+```json
 {
   "message": "اشرح REST API",
-  "history": []
+  "history": [
+    { "type": "user", "content": "ما معنى HTTP؟" },
+    { "type": "assistant", "content": "هو بروتوكول اتصال..." }
+  ]
 }
-\`\`\`
+```
 
-## Star X image tools
+### Success response
 
-- Method: POST
-- Endpoint: https://nox.bmg-inc.web.id/api/v1/ai/star-x
-- Content-Type: application/json
-- External authentication: Authorization: Bearer YOUR_NOX_API_KEY
-- Actions: edit-scene, generate-image, change-background, improve-lighting.
-- imageUrl: HTTPS image URL, required except for generate-image.
-- prompt: English only, up to 4000 characters.
-- Success response: binary image data (image/*), not JSON.
-- improve-lighting uses the provider's aiShadows / tool:ai-shadows function; the source has no separate native lighting function.
+```json
+{
+  "success": true,
+  "response": "النص الناتج",
+  "provider": "gptfree",
+  "access": "api_key"
+}
+```
 
-### Request body
+## 4. Star X — توليد الصور وتعديلها
 
-\`\`\`json
+- Endpoint: `POST /api/v1/ai/star-x`
+- Maximum HTTP body: 4 MB.
+- `action` مطلوب، والقيم المدعومة:
+  - `generate-image`: توليد صورة من وصف نصي؛ لا يحتاج `imageUrl`.
+  - `edit-scene`: تعديل مشهد داخل صورة؛ يحتاج `imageUrl` و`prompt`.
+  - `change-background`: تغيير خلفية الصورة؛ يحتاج `imageUrl` و`prompt`.
+  - `improve-lighting`: تحسين إضاءة الصورة؛ يحتاج `imageUrl` ولا يحتاج `prompt`.
+- `imageUrl` يجب أن يكون رابط HTTPS عامًا صالحًا عند الحاجة إليه.
+- `prompt` مطلوب لتوليد الصور وتعديل المشهد وتغيير الخلفية، وبحد أقصى 4,000 حرف.
+- التعليمات النصية في Star X يجب أن تكون باللغة الإنجليزية.
+- الاستجابة الناجحة بيانات صورة ثنائية (image/*)، وليست JSON. استخدم `response.blob()` في المتصفح أو `response.arrayBuffer()` في Node.js.
+
+### Request — generate image
+
+```json
 {
   "action": "generate-image",
   "prompt": "A cinematic photograph of a modern glass house beside a lake at sunset"
 }
-\`\`\`
+```
 
-## Authentication policy
+### Request — edit scene
 
-All external requests to the three API endpoints require a valid API key in the Authorization: Bearer header. The only no-key exception is the official website testing flow, which is checked using the configured website Origin. Website test pages must not display an API-key input.
+```json
+{
+  "action": "edit-scene",
+  "imageUrl": "https://example.com/source.jpg",
+  "prompt": "Add warm cinematic lighting and a natural mountain background"
+}
+```
 
-The Origin check is a browser-origin restriction, not cryptographic client authentication. Non-browser HTTP clients can forge an Origin header.
+### JavaScript response handling
 
-## HTTP errors
+```js
+const response = await fetch("https://nox.bmg-inc.web.id/api/v1/ai/star-x", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer " + process.env.NOX_API_KEY,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    action: "generate-image",
+    prompt: "A cinematic glass house beside a lake at sunset"
+  })
+});
 
-- 400: invalid request or missing required field.
-- 401: missing, invalid, or revoked API key.
-- 403: account or permission restriction.
-- 413: payload exceeds the endpoint limit.
-- 429: rate limit or quota exceeded.
-- 502: upstream provider did not return a valid response.
-- 503: service or API-key authorization is temporarily unavailable.
+if (!response.ok) {
+  const error = await response.json();
+  throw new Error(error.error || "Star X request failed");
+}
 
-## Machine-readable resources
+const image = await response.blob();
+```
 
-- OpenAPI JSON: https://nox.bmg-inc.web.id/api/openapi.json
-- Markdown documentation: https://nox.bmg-inc.web.id/docs.md
+## 5. أخطاء HTTP
+
+- 400: جسم JSON غير صالح أو حقل مطلوب مفقود أو قيمة غير مدعومة.
+- 401: ترويسة Authorization غير صحيحة أو مفتاح API مفقود/غير صالح.
+- 403: الحساب موقوف أو المفتاح لا يملك صلاحية الخدمة.
+- 413: تجاوز حد حجم الطلب أو حد النص المحدد للخدمة.
+- 429: تجاوز معدل الطلبات أو الحصة؛ افحص ترويسة Retry-After عند وجودها.
+- 502: فشل المزود الخارجي أو لم يُرجع نتيجة صالحة.
+- 503: الخدمة أو نظام التفويض غير متاح مؤقتًا.
+
+استجابات Gemini وGPTFree الناجحة بصيغة JSON. استجابة Star X الناجحة صورة ثنائية، بينما أخطاء Star X ترجع JSON يحتوي success=false وerror وcode.
+
+## موارد المطورين
+
+- OpenAPI 3.1: https://nox.bmg-inc.web.id/api/openapi.json
+- Markdown: https://nox.bmg-inc.web.id/docs.md
 - LLM index: https://nox.bmg-inc.web.id/llms.txt
+- API catalog: https://nox.bmg-inc.web.id/apis
+- Service status: https://nox.bmg-inc.web.id/status
 
-Only the three endpoints listed in this document are currently registered as active AI API services.
+لا تعتبر أي مسار غير مدرج في مواصفات OpenAPI أو هذا الدليل واجهة إنتاج متاحة.
 `;
 
 export async function GET() {
