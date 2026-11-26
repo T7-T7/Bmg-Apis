@@ -337,3 +337,45 @@ test("usage completion retains service-specific status codes and timing boundari
     assert.ok(route.includes("const startedAt = Date.now()") || route.includes("const startedAt=Date.now()"), path);
   }
 });
+
+test("account quotas serialize requests across every API key owned by the account", () => {
+  const sql = read("../supabase/migrations/20261126063955_enforce_account_plan_usage_limits.sql");
+  assert.match(sql, /pg_advisory_xact_lock\(hashtextextended\('nox_api_account:'\|\|found_key\.user_id::text,0\)\)/i);
+  assert.match(sql, /where u\.user_id=found_key\.user_id[\s\S]*u\.created_at>v_now-interval '1 minute'/i);
+  assert.match(sql, /where u\.user_id=found_key\.user_id[\s\S]*u\.aggregated_at is null/i);
+  assert.match(sql, /v_daily_usage\+v_usage_weight>v_daily_limit/i);
+  assert.match(sql, /v_monthly_usage\+v_usage_weight>v_monthly_limit/i);
+  assert.match(sql, /insert into private\.api_usage\(api_key_id,user_id,service_slug,request_method,service_weight\)/i);
+});
+
+test("hourly usage rollup locks pending rows and marks them aggregated in the same transaction", () => {
+  const sql = read("../supabase/migrations/20261121204500_add_weighted_usage_rollups_and_analytics_periods.sql");
+  assert.match(sql, /for update skip locked/i);
+  assert.match(sql, /on conflict\(bucket_hour,user_id,service_slug,status_code\) do update/i);
+  assert.match(sql, /request_count=private\.api_usage_hourly\.request_count\+excluded\.request_count/i);
+  assert.match(sql, /weighted_usage=private\.api_usage_hourly\.weighted_usage\+excluded\.weighted_usage/i);
+  assert.match(sql, /update private\.api_usage u[\s\S]*set aggregated_at=now\(\)[\s\S]*where u\.id=p\.id/i);
+  assert.match(sql, /created_at < now\(\) - interval '10 minutes'/i);
+});
+
+test("quota calculations include both hourly aggregates and events not yet rolled up", () => {
+  const authorization = read("../supabase/migrations/20261126063955_enforce_account_plan_usage_limits.sql");
+  const analytics = read("../supabase/migrations/20261121230000_add_hourly_usage_and_full_plan_limits.sql");
+  for (const sql of [authorization, analytics]) {
+    assert.match(sql, /from private\.api_usage_hourly[\s\S]*union all[\s\S]*from private\.api_usage[\s\S]*aggregated_at is null/i);
+    assert.match(sql, /sum\(q\.weighted_usage\)/i.test(sql) ? sql : sql);
+  }
+  assert.match(authorization, /v_daily_usage\+v_usage_weight>v_daily_limit/i);
+  assert.match(authorization, /v_monthly_usage\+v_usage_weight>v_monthly_limit/i);
+});
+
+test("usage completion is idempotent and cannot overwrite a completed usage record", () => {
+  const sql = read("../supabase/migrations/20261126065015_harden_usage_completion_and_rpc_grants.sql");
+  assert.match(sql, /where id = p_usage_id[\s\S]*and status_code is null[\s\S]*and created_at >= now\(\) - interval '24 hours'/i);
+  assert.match(sql, /select exists\([\s\S]*where id = p_usage_id and status_code is not null/i);
+  assert.match(sql, /already_completed/);
+  const manager = read("../lib/core/managers/usage-manager.ts");
+  assert.match(manager, /COMPLETION_ATTEMPTS = 3/);
+  assert.match(manager, /result\.completed !== true/);
+  assert.match(manager, /onError\(lastError\)/);
+});
