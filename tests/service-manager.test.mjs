@@ -148,7 +148,7 @@ test("all three services delegate Supabase authorization RPC execution to Nox Co
 
 test("authorization refactor keeps public denial mapping in each service route", () => {
   const expected = [
-    ["../app/api/v1/ai/gemini/route.ts", "تجاوزت حدود الاستخدام المسموح بها حسابك"],
+    ["../app/api/v1/ai/gemini/route.ts", "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."],
     ["../app/api/v1/ai/gptfree/route.ts", "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."],
     ["../app/api/v1/ai/star-x/route.ts", "تجاوزت حدود الاستخدام المسموح بها لحسابك أو مفتاحك."],
   ];
