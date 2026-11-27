@@ -21,6 +21,7 @@ test("API key authorization RPC requires the server secret and rejects the legac
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
     "../app/api/v1/ai/star-x/route.ts",
+    "../app/api/v1/ai/chatgpt/route.ts",
   ]) {
     const route = read(path);
     assert.ok(route.includes("serverSecret: process.env.BMG_DEMO_RPC_SECRET"), path);
@@ -39,7 +40,7 @@ test("protected routes are verified on the server before rendering", () => {
 
 test("server-only credentials are not referenced by browser application modules", () => {
   const roots = ["../app", "../components", "../lib/supabase"];
-  const forbidden = /process\.env\.(?:SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|BMG_DEMO_RPC_SECRET|GPTFREE_FIREBASE_API_KEY)/;
+  const forbidden = /process\.env\.(?:SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|BMG_DEMO_RPC_SECRET|GPTFREE_FIREBASE_API_KEY|CHATGPT_SESSION_SECRET|GEMINI_SESSION_SECRET)/;
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return entry.name === "api" && dir.endsWith("/app") ? [] : walk(path);
@@ -68,6 +69,7 @@ test("all no-key demo paths require the configured website origin and server-sid
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
     "../app/api/v1/ai/star-x/route.ts",
+    "../app/api/v1/ai/chatgpt/route.ts",
   ];
   for (const path of routes) {
     const route = read(path);
@@ -87,8 +89,9 @@ test("AI API routes enforce explicit bounded JSON request sizes", () => {
   const gemini = read("../app/api/v1/ai/gemini/route.ts");
   const gptfree = read("../app/api/v1/ai/gptfree/route.ts");
   const starX = read("../app/api/v1/ai/star-x/route.ts");
+  const chatgpt = read("../app/api/v1/ai/chatgpt/route.ts");
   const manager = read("../lib/core/managers/request-manager.ts");
-  for (const route of [gemini, gptfree]) {
+  for (const route of [gemini, gptfree, chatgpt]) {
     assert.ok(route.includes("1_048_576"));
     assert.ok(route.includes("readJsonRequestBody(request,"));
     assert.ok(route.includes("PayloadTooLargeError"));
@@ -312,6 +315,7 @@ test("Nox Core owns the usage completion RPC, retry policy and managed request l
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
     "../app/api/v1/ai/star-x/route.ts",
+    "../app/api/v1/ai/chatgpt/route.ts",
   ];
   for (const path of routes) {
     const route = read(path);
