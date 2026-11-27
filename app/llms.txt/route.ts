@@ -41,6 +41,16 @@ const content = `# NOX APIS
 - Maximum HTTP body: 1 MB.
 - Success: JSON with success, response, provider, and access.
 
+### ChatGPT
+- Endpoint: /api/v1/ai/chatgpt
+- Required: message, string, 1–30000 characters.
+- Optional: model, one of default, auto, gpt-4, gpt-3.5; default is default.
+- Optional: sessionId, encrypted value returned by a previous response to continue the same conversation.
+- Maximum HTTP body: 1 MB.
+- Success: JSON with result.message, sessionId, provider, model, and access.
+- Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.
+- Provider timeout: 300 seconds configured; actual Vercel execution is subject to the project's function-duration limit.
+
 ### Star X
 - Endpoint: /api/v1/ai/star-x
 - Maximum HTTP body: 4 MB.
