@@ -105,6 +105,9 @@ declare
   v_requests_per_minute integer;
   v_daily_limit bigint;
   v_monthly_limit bigint;
+  v_scope_rpm integer;
+  v_scope_daily bigint;
+  v_scope_monthly bigint;
   v_recent_count bigint;
   v_daily_usage bigint;
   v_monthly_usage bigint;
@@ -192,17 +195,17 @@ begin
   if v_project_override then
     v_scope:='project';
     select requests_per_minute,daily_weighted_limit,monthly_weighted_limit
-      into v_requests_per_minute,v_daily_limit,v_monthly_limit
+      into v_scope_rpm,v_scope_daily,v_scope_monthly
       from public.project_service_limits where project_id=v_project_id and service_slug=p_service_slug;
   elsif v_org_override then
     v_scope:='organization';
     select requests_per_minute,daily_weighted_limit,monthly_weighted_limit
-      into v_requests_per_minute,v_daily_limit,v_monthly_limit
+      into v_scope_rpm,v_scope_daily,v_scope_monthly
       from public.organization_service_limits where organization_id=v_org_id and service_slug=p_service_slug;
   else
     v_scope:=case when v_project_id is not null then 'project' when v_org_id is not null then 'organization' else null end;
     select requests_per_minute,daily_weighted_limit,monthly_weighted_limit
-      into v_requests_per_minute,v_daily_limit,v_monthly_limit
+      into v_scope_rpm,v_scope_daily,v_scope_monthly
       from public.api_scope_default_limits where service_slug=p_service_slug;
     -- A missing global row means scope limits are not configured; account/plan limits still apply.
     if not found then v_scope:=null; end if;
@@ -230,24 +233,24 @@ begin
     perform pg_advisory_xact_lock(hashtextextended('nox_api_org:'||v_org_id::text||':'||p_service_slug,0));
     select count(*) into v_recent_count from private.api_usage u
       where u.organization_id=v_org_id and u.service_slug=p_service_slug and u.created_at>v_now-interval '1 minute';
-    if v_recent_count>=v_requests_per_minute then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
-    if v_daily_limit is not null then
+    if v_recent_count>=v_scope_rpm then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
+    if v_scope_daily is not null then
       select coalesce(sum(x.weighted_usage),0)::bigint into v_daily_usage from (
         select h.weighted_usage from private.api_usage_hourly h
         where h.organization_id=v_org_id and h.service_slug=p_service_slug and h.bucket_hour>=date_trunc('day',v_now)
         union all select greatest(1,coalesce(u.service_weight,1))::bigint from private.api_usage u
         where u.organization_id=v_org_id and u.service_slug=p_service_slug and u.created_at>=date_trunc('day',v_now) and u.aggregated_at is null
       ) x;
-      if v_daily_usage+v_usage_weight>v_daily_limit then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
+      if v_daily_usage+v_usage_weight>v_scope_daily then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
     end if;
-    if v_monthly_limit is not null then
+    if v_scope_monthly is not null then
       select coalesce(sum(x.weighted_usage),0)::bigint into v_monthly_usage from (
         select h.weighted_usage from private.api_usage_hourly h
         where h.organization_id=v_org_id and h.service_slug=p_service_slug and h.bucket_hour>=date_trunc('month',v_now)
         union all select greatest(1,coalesce(u.service_weight,1))::bigint from private.api_usage u
         where u.organization_id=v_org_id and u.service_slug=p_service_slug and u.created_at>=date_trunc('month',v_now) and u.aggregated_at is null
       ) x;
-      if v_monthly_usage+v_usage_weight>v_monthly_limit then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
+      if v_monthly_usage+v_usage_weight>v_scope_monthly then return jsonb_build_object('authorized',false,'reason','rate_limited','limit_scope','organization'); end if;
     end if;
   elsif v_scope='project' then
     perform pg_advisory_xact_lock(hashtextextended('nox_api_project:'||v_project_id::text||':'||p_service_slug,0));
