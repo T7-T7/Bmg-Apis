@@ -4,6 +4,7 @@ import {useCallback,useEffect,useMemo,useState} from "react";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 import styles from "./workspaces-center.module.css";
 import OrganizationUsagePanel from "./organization-usage-panel";
+import OrganizationApiKeysPanel from "./organization-api-keys-panel";
 
 type Organization={id:string;name:string;kind:"individual"|"organization"|"company";owner_id:string;created_at:string;is_default_workspace:boolean};
 type Project={id:string;organization_id:string;name:string;slug:string;description:string;created_at:string};
@@ -30,7 +31,7 @@ export default function WorkspacesCenter(){
  const [inviteRole,setInviteRole]=useState<Invitation["role"]>("developer");
  const [inviteProject,setInviteProject]=useState("");
  const [myRole,setMyRole]=useState<Member["role"]|"">("");
- const [activeWorkspaceTab,setActiveWorkspaceTab]=useState<"overview"|"usage">("overview");
+ const [activeWorkspaceTab,setActiveWorkspaceTab]=useState<"overview"|"usage"|"api">("overview");
 
  const selectedOrg=useMemo(()=>organizations.find(x=>x.id===selectedOrgId)||null,[organizations,selectedOrgId]);
  useEffect(()=>{setActiveWorkspaceTab("overview")},[selectedOrgId]);
@@ -81,9 +82,10 @@ export default function WorkspacesCenter(){
    <div style={{display:"flex",gap:8,flexWrap:"wrap",margin:"12px 0"}}>
     <button type="button" aria-pressed={activeWorkspaceTab==="overview"} onClick={()=>setActiveWorkspaceTab("overview")} style={{padding:"9px 13px",borderRadius:9,border:"1px solid var(--border,#444)",background:activeWorkspaceTab==="overview"?"var(--accent,#7046d8)":"transparent",color:activeWorkspaceTab==="overview"?"#fff":"inherit"}}>المشاريع والأعضاء</button>
     <button type="button" aria-pressed={activeWorkspaceTab==="usage"} disabled={selectedOrg.is_default_workspace} onClick={()=>setActiveWorkspaceTab("usage")} style={{padding:"9px 13px",borderRadius:9,border:"1px solid var(--border,#444)",background:activeWorkspaceTab==="usage"?"var(--accent,#7046d8)":"transparent",color:activeWorkspaceTab==="usage"?"#fff":"inherit",opacity:selectedOrg.is_default_workspace ? 0.5 : 1}}>الاستهلاك والطلبات المتبقية</button>
-    {selectedOrg.is_default_workspace&&<small style={{alignSelf:"center",opacity:.7}}>استهلاك المساحة الافتراضية يظهر في صفحة استهلاك الحساب.</small>}
+    <button type="button" aria-pressed={activeWorkspaceTab==="api"} disabled={selectedOrg.is_default_workspace} onClick={()=>setActiveWorkspaceTab("api")} style={{padding:"9px 13px",borderRadius:9,border:"1px solid var(--border,#444)",background:activeWorkspaceTab==="api"?"var(--accent,#7046d8)":"transparent",color:activeWorkspaceTab==="api"?"#fff":"inherit",opacity:selectedOrg.is_default_workspace ? 0.5 : 1}}>مفاتيح API</button>
+    {selectedOrg.is_default_workspace&&<small style={{alignSelf:"center",opacity:.7}}>استهلاك ومفاتيح المساحة الافتراضية تُدار من صفحات الحساب.</small>}
    </div>
-   {activeWorkspaceTab==="usage"?<OrganizationUsagePanel organizationId={selectedOrg.id}/>:<>
+   {activeWorkspaceTab==="usage"?<OrganizationUsagePanel organizationId={selectedOrg.id}/>:activeWorkspaceTab==="api"?<OrganizationApiKeysPanel organizationId={selectedOrg.id}/>:<>
    <div className={styles.columns}>
     <section className={styles.panel}><div className={styles.sectionTitle}><div><h3>المشاريع</h3><p>كل مشروع مساحة مستقلة للمفاتيح والاستخدام.</p></div><span>{projects.length}</span></div>
      {projects.map(project=><article className={styles.project} key={project.id}><div><b>{project.name}</b><code>{project.slug}</code></div><p>{project.description||"لا يوجد وصف للمشروع."}</p></article>)}
