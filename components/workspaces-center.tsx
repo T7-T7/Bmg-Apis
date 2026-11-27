@@ -3,8 +3,9 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 import styles from "./workspaces-center.module.css";
+import OrganizationUsagePanel from "./organization-usage-panel";
 
-type Organization={id:string;name:string;kind:"individual"|"organization"|"company";owner_id:string;created_at:string};
+type Organization={id:string;name:string;kind:"individual"|"organization"|"company";owner_id:string;created_at:string;is_default_workspace:boolean};
 type Project={id:string;organization_id:string;name:string;slug:string;description:string;created_at:string};
 type Member={user_id:string;email:string|null;display_name:string|null;role:"owner"|"admin"|"developer"|"viewer";created_at:string};
 type Invitation={id:string;email:string;role:"admin"|"developer"|"viewer";project_id:string|null;expires_at:string;created_at:string};
@@ -29,11 +30,13 @@ export default function WorkspacesCenter(){
  const [inviteRole,setInviteRole]=useState<Invitation["role"]>("developer");
  const [inviteProject,setInviteProject]=useState("");
  const [myRole,setMyRole]=useState<Member["role"]|"">("");
+ const [activeWorkspaceTab,setActiveWorkspaceTab]=useState<"overview"|"usage">("overview");
 
  const selectedOrg=useMemo(()=>organizations.find(x=>x.id===selectedOrgId)||null,[organizations,selectedOrgId]);
+ useEffect(()=>{setActiveWorkspaceTab("overview")},[selectedOrgId]);
  const loadOrganizations=useCallback(async()=>{
   if(!db)return;
-  const {data,error}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});
+  const {data,error}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace").order("created_at",{ascending:true});
   if(error){setError("تعذر تحميل مساحات العمل: "+error.message);return}
   const list=(data||[]) as Organization[];
   setOrganizations(list);
@@ -54,14 +57,14 @@ export default function WorkspacesCenter(){
   setMyRole((myMembership.data?.role||"") as Member["role"]|"");
   setLoading(false);
  },[db,selectedOrgId,userId]);
- useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void db.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
+ useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void db.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
  useEffect(()=>{if(!selectedOrgId||!userId)return;const frame=window.requestAnimationFrame(()=>{void loadDetails()});return()=>window.cancelAnimationFrame(frame)},[selectedOrgId,userId,loadDetails]);
 
- async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await db.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await db.from("organizations").select("id,name,kind,owner_id,created_at").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
+ async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await db.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
  async function createProject(){if(!db||busy||!selectedOrgId)return;if(projectName.trim().length<2){setError("اكتب اسمًا للمشروع لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_create_project",{p_organization_id:selectedOrgId,p_name:projectName.trim(),p_description:projectDescription.trim()});if(error)setError("تعذر إنشاء المشروع: "+error.message);else{setProjectName("");setProjectDescription("");setNotice("تم إنشاء المشروع.");await loadDetails()}setBusy(false)}
  async function inviteMember(){if(!db||busy||!selectedOrgId)return;if(!inviteEmail.trim()){setError("أدخل بريد الحساب الذي تريد دعوته.");return}if(inviteProject&&inviteRole==="admin"){setError("دور مدير المؤسسة لا يمكن منحه لدعوة مشروع محدد.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_invite_organization_member",{p_organization_id:selectedOrgId,p_email:inviteEmail.trim().toLowerCase(),p_role:inviteRole,p_project_id:inviteProject||null});if(error)setError(error.message.includes("No registered account")?"لم نعثر على حساب مسجل بهذا البريد. يجب أن يكون العضو قد أنشأ حسابًا في المنصة أولًا.": "تعذر إنشاء الدعوة: "+error.message);else{setInviteEmail("");setNotice("تم إنشاء الدعوة وإرسال إشعار إلى البريد الوارد للحساب المستهدف.");await loadDetails()}setBusy(false)}
  const roleLabel=(role:string)=>({owner:"المالك",admin:"مدير",developer:"مطور",viewer:"مشاهد"}[role]||role);
- const kindLabel=(kind:string)=>kind==="individual"?"فردي":kind==="company"?"شركة":"مؤسسة";
+ const kindLabel=(org:Organization)=>org.is_default_workspace?"المساحة الشخصية الافتراضية":org.kind==="individual"?"مساحة شخصية إضافية":org.kind==="company"?"شركة":"مؤسسة";
  return <section className={styles.page} dir="rtl">
   <header className={styles.header}><div><span>WORKSPACES & PROJECTS</span><h1>المؤسسات والمشاريع</h1><p>أنشئ مساحات عمل، ونظّم المشاريع، وأدر وصول أعضاء فريقك.</p></div><button onClick={()=>{void loadOrganizations();void loadDetails()}} disabled={busy||loading}>تحديث</button></header>
   {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}
@@ -71,10 +74,16 @@ export default function WorkspacesCenter(){
   </section>
   <section className={styles.workspaceSection}>
    <div className={styles.sectionTitle}><div><h2>مساحات العمل الخاصة بك</h2><p>اختر المساحة التي تريد إدارة مشاريعها وأعضائها.</p></div><span>{organizations.length} مساحة</span></div>
-   {loading&&!organizations.length?<div className={styles.empty}>جارٍ تحميل مساحات العمل…</div>:organizations.length?<div className={styles.orgGrid}>{organizations.map(org=><button key={org.id} className={selectedOrgId===org.id?styles.orgSelected:styles.orgCard} onClick={()=>setSelectedOrgId(org.id)}><span>{kindLabel(org.kind)}</span><b>{org.name}</b><small>{org.owner_id===userId?"أنت المالك":"عضو في المساحة"}</small></button>)}</div>:<div className={styles.empty}>لم يتم العثور على مساحة عمل. أعد تحميل الصفحة.</div>}
+   {loading&&!organizations.length?<div className={styles.empty}>جارٍ تحميل مساحات العمل…</div>:organizations.length?<div className={styles.orgGrid}>{organizations.map(org=><button key={org.id} className={selectedOrgId===org.id?styles.orgSelected:styles.orgCard} onClick={()=>setSelectedOrgId(org.id)}><span>{kindLabel(org)}</span><b>{org.name}</b><small>{org.owner_id===userId?"أنت المالك":"عضو في المساحة"}</small></button>)}</div>:<div className={styles.empty}>لم يتم العثور على مساحة عمل. أعد تحميل الصفحة.</div>}
   </section>
   {selectedOrg&&<section className={styles.workspaceDetails}>
-   <div className={styles.selectedHeader}><div><span>{kindLabel(selectedOrg.kind)}</span><h2>{selectedOrg.name}</h2><p>دورك في هذه المساحة: <b>{roleLabel(myRole||"غير محدد")}</b></p></div><span className={styles.memberCount}>{members.length} أعضاء</span></div>
+   <div className={styles.selectedHeader}><div><span>{kindLabel(selectedOrg)}</span><h2>{selectedOrg.name}</h2><p>دورك في هذه المساحة: <b>{roleLabel(myRole||"غير محدد")}</b></p></div><span className={styles.memberCount}>{members.length} أعضاء</span></div>
+   <div style={{display:"flex",gap:8,flexWrap:"wrap",margin:"12px 0"}}>
+    <button type="button" aria-pressed={activeWorkspaceTab==="overview"} onClick={()=>setActiveWorkspaceTab("overview")} style={{padding:"9px 13px",borderRadius:9,border:"1px solid var(--border,#444)",background:activeWorkspaceTab==="overview"?"var(--accent,#7046d8)":"transparent",color:activeWorkspaceTab==="overview"?"#fff":"inherit"}}>المشاريع والأعضاء</button>
+    <button type="button" aria-pressed={activeWorkspaceTab==="usage"} disabled={selectedOrg.is_default_workspace} onClick={()=>setActiveWorkspaceTab("usage")} style={{padding:"9px 13px",borderRadius:9,border:"1px solid var(--border,#444)",background:activeWorkspaceTab==="usage"?"var(--accent,#7046d8)":"transparent",color:activeWorkspaceTab==="usage"?"#fff":"inherit",opacity:selectedOrg.is_default_workspace?.5:1}}>الاستهلاك والطلبات المتبقية</button>
+    {selectedOrg.is_default_workspace&&<small style={{alignSelf:"center",opacity:.7}}>استهلاك المساحة الافتراضية يظهر في صفحة استهلاك الحساب.</small>}
+   </div>
+   {activeWorkspaceTab==="usage"?<OrganizationUsagePanel organizationId={selectedOrg.id}/>:<>
    <div className={styles.columns}>
     <section className={styles.panel}><div className={styles.sectionTitle}><div><h3>المشاريع</h3><p>كل مشروع مساحة مستقلة للمفاتيح والاستخدام.</p></div><span>{projects.length}</span></div>
      {projects.map(project=><article className={styles.project} key={project.id}><div><b>{project.name}</b><code>{project.slug}</code></div><p>{project.description||"لا يوجد وصف للمشروع."}</p></article>)}
@@ -91,6 +100,7 @@ export default function WorkspacesCenter(){
     {invitations.map(invite=><article className={styles.member} key={invite.id}><div><b>{invite.email}</b><small>{invite.project_id?"مشروع محدد":"كل المؤسسة"} · تنتهي {new Date(invite.expires_at).toLocaleDateString("ar-EG")}</small></div><span>{roleLabel(invite.role)}</span></article>)}
     {!invitations.length&&!loading&&<p className={styles.muted}>لا توجد دعوات معلقة.</p>}
    </section>
+   </>}
   </section>}
  </section>;
 }
