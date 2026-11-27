@@ -288,6 +288,14 @@ test("usage completion database window covers Star X provider and route deadline
   assert.match(migration, /create or replace function public\.bmg_complete_api_request\(\s*p_usage_id bigint,\s*p_status_code integer,\s*p_latency_ms integer,\s*p_server_secret text/s);
 });
 
+test("ChatGPT route duration fits the 300-second usage completion window", () => {
+  const migration = read("../supabase/migrations/20261127151000_chatgpt_usage_completion_window.sql");
+  const route = read("../app/api/v1/ai/chatgpt/route.ts");
+  assert.match(migration, /p_latency_ms > 300000/);
+  assert.match(route, /maxDuration = 300/);
+  assert.match(route, /300_000/);
+});
+
 test("usage completion rejects missing or negative database acknowledgements", () => {
   const manager = read("../lib/core/managers/usage-manager.ts");
   assert.match(manager, /result === null/);
