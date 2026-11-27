@@ -673,6 +673,7 @@ export type Database = {
         Returns: Json
       }
       bmg_create_organization: { Args: { p_kind: string; p_name: string }; Returns: string }
+      bmg_delete_organization: { Args: { p_organization_id: string }; Returns: boolean }
       bmg_create_project: { Args: { p_description?: string; p_name: string; p_organization_id: string }; Returns: string }
       bmg_invite_organization_member: { Args: { p_email: string; p_organization_id: string; p_project_id?: string | null; p_role: string }; Returns: string }
       bmg_list_organization_members: { Args: { p_organization_id: string }; Returns: { created_at: string; display_name: string | null; email: string | null; role: string; user_id: string }[] }
