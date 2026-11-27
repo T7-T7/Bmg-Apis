@@ -127,15 +127,7 @@ begin
 end;
 $function$;
 
-create or replace function public.bmg_delete_organization(p_organization_id uuid)
-returns boolean
-language sql
-security definer
-set search_path=''
-as $function$
-  select public.bmg_archive_organization(p_organization_id);
-$function$;
-
+-- bmg_delete_organization remains the delayed physical-deletion RPC.
 revoke all on function public.bmg_archive_organization(uuid) from public,anon;
 revoke all on function public.bmg_delete_organization(uuid) from public,anon;
 grant execute on function public.bmg_archive_organization(uuid) to authenticated;
