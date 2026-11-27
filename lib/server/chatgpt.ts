@@ -287,7 +287,7 @@ export async function askChatGPT(input: {
       if (buffer.trim().startsWith("data:")) {
         const payload = buffer.trim().slice(5).trim();
         if (payload && payload !== "[DONE]") {
-          try { readMessage(JSON.parse(payload) as Record<string, any>, state); } catch { /* Ignore final malformed frame. */ }
+          try { readMessage(JSON.parse(payload) as Record<string, unknown>, state); } catch { /* Ignore final malformed frame. */ }
         }
       }
     } catch (cause) {
