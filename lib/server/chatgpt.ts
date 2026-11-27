@@ -111,7 +111,7 @@ function cleanSpecialTags(value: string) {
     .trim();
 }
 
-function readMessage(data: Record<string, any>, state: {
+function readMessage(data: Record<string, unknown>, state: {
   text: string;
   chatId: string | null;
   assistantMessageId: string | null;
@@ -119,20 +119,35 @@ function readMessage(data: Record<string, any>, state: {
   lastOp: string | null;
 }) {
   if (typeof data.conversation_id === "string") state.chatId = data.conversation_id;
-  const path = data.p !== undefined ? data.p : state.lastPath;
-  const operation = data.o !== undefined ? data.o : state.lastOp;
-  if (data.p !== undefined) state.lastPath = data.p;
-  if (data.o !== undefined) state.lastOp = data.o;
+  const path = typeof data.p === "string" ? data.p : state.lastPath;
+  const operation = typeof data.o === "string" ? data.o : state.lastOp;
+  if (typeof data.p === "string") state.lastPath = data.p;
+  if (typeof data.o === "string") state.lastOp = data.o;
 
-  if (operation === "add" && data.v?.message?.author?.role === "assistant") {
-    state.assistantMessageId = typeof data.v.message.id === "string" ? data.v.message.id : state.assistantMessageId;
-    const parts = data.v.message.content?.parts;
-    if (Array.isArray(parts) && typeof parts[0] === "string") state.text = parts[0];
+  if (operation === "add" && data.v && typeof data.v === "object") {
+    const message = (data.v as Record<string, unknown>).message;
+    if (message && typeof message === "object") {
+      const item = message as Record<string, unknown>;
+      const author = item.author && typeof item.author === "object"
+        ? item.author as Record<string, unknown>
+        : null;
+      if (author?.role === "assistant") {
+        if (typeof item.id === "string") state.assistantMessageId = item.id;
+        const content = item.content && typeof item.content === "object"
+          ? item.content as Record<string, unknown>
+          : null;
+        const parts = content?.parts;
+        if (Array.isArray(parts) && typeof parts[0] === "string") state.text = parts[0];
+      }
+    }
   } else if (operation === "patch" && Array.isArray(data.v)) {
-    for (const patch of data.v) {
-      if (patch?.o === "append" && typeof patch.v === "string" && String(patch.p || "").startsWith("/message/content/parts/")) {
+    for (const entry of data.v as unknown[]) {
+      if (!entry || typeof entry !== "object") continue;
+      const patch = entry as Record<string, unknown>;
+      const patchPath = typeof patch.p === "string" ? patch.p : "";
+      if (patch.o === "append" && typeof patch.v === "string" && patchPath.startsWith("/message/content/parts/")) {
         state.text += patch.v;
-      } else if (patch?.o === "replace" && typeof patch.v === "string" && String(patch.p || "").startsWith("/message/content/parts/")) {
+      } else if (patch.o === "replace" && typeof patch.v === "string" && patchPath.startsWith("/message/content/parts/")) {
         state.text = patch.v;
       }
     }
@@ -262,7 +277,7 @@ export async function askChatGPT(input: {
           const payload = trimmed.slice(5).trim();
           if (!payload || payload === "[DONE]") continue;
           try {
-            readMessage(JSON.parse(payload) as Record<string, any>, state);
+            readMessage(JSON.parse(payload) as Record<string, unknown>, state);
           } catch {
             // Ignore malformed or non-JSON SSE frames.
           }
