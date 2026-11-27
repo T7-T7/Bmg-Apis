@@ -416,9 +416,9 @@ export type Database = {
         Relationships: []
       }
       organizations: {
-        Row: { created_at: string; id: string; kind: string; name: string; owner_id: string; updated_at: string }
-        Insert: { created_at?: string; id?: string; kind: string; name: string; owner_id: string; updated_at?: string }
-        Update: { created_at?: string; id?: string; kind?: string; name?: string; owner_id?: string; updated_at?: string }
+        Row: { created_at: string; id: string; is_default_workspace: boolean; kind: string; name: string; owner_id: string; updated_at: string }
+        Insert: { created_at?: string; id?: string; is_default_workspace?: boolean; kind: string; name: string; owner_id: string; updated_at?: string }
+        Update: { created_at?: string; id?: string; is_default_workspace?: boolean; kind?: string; name?: string; owner_id?: string; updated_at?: string }
         Relationships: []
       }
       project_members: {
@@ -615,6 +615,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_get_scope_pool_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: { requests_per_minute: number | null; daily_weighted_limit: number | null; monthly_weighted_limit: number | null; updated_at: string | null }[]
+      }
+      bmg_admin_set_scope_pool_limits: {
+        Args: { p_requests_per_minute: number | null; p_daily_weighted_limit: number | null; p_monthly_weighted_limit: number | null }
+        Returns: undefined
+      }
+      bmg_get_organization_usage: {
+        Args: { p_organization_id: string; p_days?: number }
+        Returns: Json
+      }
       bmg_admin_set_scope_default_limits: {
         Args: {
           p_service_slug: string
