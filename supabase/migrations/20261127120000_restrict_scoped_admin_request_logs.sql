@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.bmg_admin_get_request_logs(integer,integer,text,uuid,text,integer,integer,uuid,uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.bmg_admin_get_request_logs(integer,integer,text,uuid,text,integer,integer,uuid,uuid) TO authenticated;
