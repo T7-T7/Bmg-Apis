@@ -49,7 +49,7 @@ const content = `# NOX APIS
 - Maximum HTTP body: 1 MB.
 - Success: JSON with result.message, sessionId, provider, model, and access.
 - Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.
-- Provider timeout: 300 seconds configured; actual Vercel execution is subject to the project's function-duration limit.
+- Vercel route limit: 300 seconds. ChatGPT stream timeout: 260 seconds, reserving time for authorization, session bootstrap, and usage completion.
 
 ### Star X
 - Endpoint: /api/v1/ai/star-x
