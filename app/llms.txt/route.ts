@@ -24,7 +24,7 @@ const content = `# NOX APIS
 - Nox servers operate the API layer and manage requests, authentication, quotas, and usage records. Some model execution may use specialized upstream model/runtime providers behind the Nox API.
 - Nox is the service provider and API operator; this documentation does not claim that every model or inference workload is self-hosted on Nox hardware.
 
-## Active AI APIs
+## Registered AI APIs
 
 ### Gemini
 - Endpoint: /api/v1/ai/gemini
@@ -48,7 +48,7 @@ const content = `# NOX APIS
 - Optional: sessionId, encrypted value returned by a previous response to continue the same conversation.
 - Maximum HTTP body: 1 MB.
 - Success: JSON with result.message, sessionId, provider, model, and access.
-- Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.
+- Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.\n- Status: maintenance until the Vercel deployment containing this route is published.
 - Vercel route limit: 300 seconds. ChatGPT stream timeout: 260 seconds, reserving time for authorization, session bootstrap, and usage completion.
 
 ### Star X
