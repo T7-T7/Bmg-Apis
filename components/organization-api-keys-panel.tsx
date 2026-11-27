@@ -46,9 +46,10 @@ export default function OrganizationApiKeysPanel({organizationId,archived=false}
   ]);
   if(projectResult.error)setError(projectResult.error.message);else{
    const membership=memberResult.data?.role||"";
+   const isWorkspaceOwner=organizationResult.data?.owner_id===user.id;
    const projectMemberships=projectMemberResult.data||[];
    const allowed=(projectResult.data||[]).filter(project=>
-    ["owner","admin"].includes(membership)||
+    isWorkspaceOwner||["owner","admin"].includes(membership)||
     projectMemberships.some(item=>item.project_id===project.id&&["owner","developer"].includes(item.role))
    ) as Project[];
    setProjects(allowed);
