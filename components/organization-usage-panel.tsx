@@ -46,7 +46,7 @@ export default function OrganizationUsagePanel({organizationId}:{organizationId:
     <button type="button" onClick={()=>void load()} disabled={loading} style={{padding:"9px 12px",borderRadius:8,border:"1px solid var(--border,#444)",background:"transparent",color:"inherit"}}>تحديث</button>
    </div>
   </header>
-  <p style={muted}>عدد الطلبات الفعلية يظهر منفصلًا. المتبقي من الحصة محسوب بوحدات الاستهلاك الموزون، لأن وزن الطلب يختلف حسب الخدمة.</p>
+  <p style={muted}>عدد الطلبات الفعلية يظهر منفصلًا. المتبقي من الحصة محسوب بوحدات الاستهلاك الموزون، لأن وزن الطلب يختلف حسب الخدمة. يبدأ اليوم والشهر وفق توقيت UTC.</p>
   {error&&<div role="alert" style={{padding:12,borderRadius:9,background:"rgba(220,50,50,.12)"}}>تعذر تحميل الاستهلاك: {error}</div>}
   {loading&&!data?<p role="status">جارٍ تحميل بيانات الاستهلاك…</p>:data&&<>
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
