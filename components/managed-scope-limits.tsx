@@ -5,7 +5,7 @@ import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 
 type Organization={id:string;name:string;kind:string};
 type Project={id:string;organization_id:string;name:string;slug:string};
-type LimitRow={organization_id?:string;project_id?:string;service_slug:string;requests_per_minute:number;daily_weighted_limit:number|null;monthly_weighted_limit:number|null;updated_at?:string;updated_by?:string|null};
+type LimitRow={organization_id?:string;project_id?:string;service_slug:string;requests_per_minute:number;daily_weighted_limit:number|null;monthly_weighted_limit:number|null;updated_at?:string;updated_by?:string|null;source?:Scope;isOverride?:boolean};
 type FormValue={requests_per_minute:string;daily_weighted_limit:string;monthly_weighted_limit:string};
 type Scope="global"|"organization"|"project";
 const emptyForm:FormValue={requests_per_minute:"60",daily_weighted_limit:"",monthly_weighted_limit:""};
@@ -57,12 +57,31 @@ export default function ManagedScopeLimits(){
   if(scope==="organization"&&!orgId){setRows([]);return}
   if(scope==="project"&&(!orgId||!projectId)){setRows([]);return}
   setBusy(true);setError("");
-  const result=scope==="global"
-   ?await db.from("api_scope_default_limits").select("service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").order("service_slug")
-   :scope==="organization"
-    ?await db.from("organization_service_limits").select("organization_id,service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").eq("organization_id",orgId).order("service_slug")
-    :await db.from("project_service_limits").select("project_id,service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").eq("project_id",projectId).order("service_slug");
-  if(result.error)setError(result.error.message);else setRows((result.data||[]) as LimitRow[]);
+  const [globalResult,orgResult,projectResult]=await Promise.all([
+   db.from("api_scope_default_limits").select("service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").order("service_slug"),
+   orgId?db.from("organization_service_limits").select("organization_id,service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").eq("organization_id",orgId):Promise.resolve({data:[],error:null}),
+   projectId?db.from("project_service_limits").select("project_id,service_slug,requests_per_minute,daily_weighted_limit,monthly_weighted_limit,updated_at,updated_by").eq("project_id",projectId):Promise.resolve({data:[],error:null})
+  ]);
+  const failed=[globalResult,orgResult,projectResult].find(x=>x.error);
+  if(failed?.error){setError(failed.error.message);setBusy(false);return}
+  const globals=(globalResult.data||[]) as LimitRow[];
+  const orgs=(orgResult.data||[]) as LimitRow[];
+  const projectRows=(projectResult.data||[]) as LimitRow[];
+  const globalMap=new Map(globals.map(x=>[x.service_slug,x]));
+  const orgMap=new Map(orgs.map(x=>[x.service_slug,x]));
+  const projectMap=new Map(projectRows.map(x=>[x.service_slug,x]));
+  const slugs=new Set([...globalMap.keys(),...orgMap.keys(),...projectMap.keys()]);
+  const effective:LimitRow[]=[];
+  for(const slug of slugs){
+   const row=scope==="global"?globalMap.get(slug)
+    :scope==="organization"?(orgMap.get(slug)||globalMap.get(slug))
+    :(projectMap.get(slug)||orgMap.get(slug)||globalMap.get(slug));
+   if(!row)continue;
+   const source=projectMap.has(slug)&&scope==="project"?"project":orgMap.has(slug)&&scope!=="global"?"organization":"global";
+   effective.push({...row,source,isOverride:scope==="project"?projectMap.has(slug):scope==="organization"?orgMap.has(slug):true});
+  }
+  effective.sort((x,y)=>x.service_slug.localeCompare(y.service_slug));
+  setRows(effective);
   setBusy(false);
  },[db,scope,orgId,projectId]);
 
@@ -156,23 +175,23 @@ export default function ManagedScopeLimits(){
    </div>
    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
     <button type="button" style={buttonStyle} disabled={busy||!canSave} onClick={()=>void save()}>حفظ الحدود</button>
-    {scope!=="global"&&<button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy||!selectedRow||!orgId||(scope==="project"&&!projectId)} onClick={()=>void clearOverride()}>إزالة الاستثناء والعودة للموروث</button>}
+    {scope!=="global"&&<button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy||!selectedRow?.isOverride||!orgId||(scope==="project"&&!projectId)} onClick={()=>void clearOverride()}>إزالة الاستثناء والعودة للموروث</button>}
     <button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy} onClick={()=>void loadRows()}>تحديث</button>
    </div>
    <small>آخر تحديث: {selectedRow?.updated_at?new Date(selectedRow.updated_at).toLocaleString("ar-EG"):"لا يوجد إعداد محفوظ لهذه الخدمة في هذا النطاق"}</small>
   </div>
   <div style={{overflowX:"auto"}}>
    <table style={{width:"100%",borderCollapse:"collapse"}}>
-    <thead><tr><th style={{textAlign:"right",padding:9}}>الخدمة</th><th style={{textAlign:"right",padding:9}}>RPM</th><th style={{textAlign:"right",padding:9}}>اليومي</th><th style={{textAlign:"right",padding:9}}>الشهري</th><th style={{textAlign:"right",padding:9}}>آخر تحديث</th></tr></thead>
+    <thead><tr><th style={{textAlign:"right",padding:9}}>الخدمة</th><th style={{textAlign:"right",padding:9}}>RPM</th><th style={{textAlign:"right",padding:9}}>اليومي</th><th style={{textAlign:"right",padding:9}}>الشهري</th><th style={{textAlign:"right",padding:9}}>المصدر</th><th style={{textAlign:"right",padding:9}}>آخر تحديث</th></tr></thead>
     <tbody>
      {rows.map(x=><tr key={x.service_slug}>
       <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{services.find(s=>s.slug===x.service_slug)?.name||x.service_slug}</td>
       <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.requests_per_minute}</td>
       <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.daily_weighted_limit??"—"}</td>
       <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.monthly_weighted_limit??"—"}</td>
-      <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.updated_at?new Date(x.updated_at).toLocaleString("ar-EG"):"—"}</td>
+      <td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.source==="project"?"استثناء المشروع":x.source==="organization"?"استثناء المؤسسة":"الحدود العامة"}</td><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.updated_at?new Date(x.updated_at).toLocaleString("ar-EG"):"—"}</td>
      </tr>)}
-     {!rows.length&&<tr><td colSpan={5} style={{padding:12,textAlign:"center"}}>{scope!=="global"&&(!orgId||(scope==="project"&&!projectId))?"اختر النطاق لعرض إعداداته.":"لا توجد حدود محفوظة لهذا النطاق بعد."}</td></tr>}
+     {!rows.length&&<tr><td colSpan={6} style={{padding:12,textAlign:"center"}}>{scope!=="global"&&(!orgId||(scope==="project"&&!projectId))?"اختر النطاق لعرض إعداداته.":"لا توجد حدود محفوظة لهذا النطاق بعد."}</td></tr>}
     </tbody>
    </table>
   </div>
