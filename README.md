@@ -16,14 +16,14 @@
 - **التصميم:** واجهة عربية RTL، وضع داكن، متجاوبة مع الهاتف وسطح المكتب.
 - **لا يتم تعديل مخطط Supabase أو سياسات RLS عند تشغيل الواجهة.**
 
-## الخدمات النشطة
+## الخدمات المسجلة
 
-| الخدمة | الطريقة | المسار | المصدر |
+| الخدمة | الطريقة | المسار | المصدر | الحالة |
 |---|---|---|---|
-| عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini |
-| GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree |
-| ChatGPT | POST | `/api/v1/ai/chatgpt` | ChatGPT Web (unofficial) |
-| Star X | POST | `/api/v1/ai/star-x` | PhotoRoom AI tools |
+| عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini | نشط |
+| GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree | نشط |
+| ChatGPT | POST | `/api/v1/ai/chatgpt` | ChatGPT Web (unofficial) | بانتظار نشر Vercel |
+| Star X | POST | `/api/v1/ai/star-x` | PhotoRoom AI tools | نشط |
 
 لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.
 
