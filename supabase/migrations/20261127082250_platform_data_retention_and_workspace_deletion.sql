@@ -1,6 +1,7 @@
 begin;
 
 alter table public.organizations
+  add column if not exists archived_at timestamptz,
   add column if not exists deletion_requested_at timestamptz,
   add column if not exists purge_after timestamptz,
   add column if not exists deletion_was_archived boolean not null default false;
