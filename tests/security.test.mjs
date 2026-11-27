@@ -291,9 +291,10 @@ test("usage completion database window covers Star X provider and route deadline
 test("ChatGPT route duration fits the 300-second usage completion window", () => {
   const migration = read("../supabase/migrations/20261127151000_chatgpt_usage_completion_window.sql");
   const route = read("../app/api/v1/ai/chatgpt/route.ts");
+  const client = read("../lib/server/chatgpt.ts");
   assert.match(migration, /p_latency_ms > 300000/);
   assert.match(route, /maxDuration = 300/);
-  assert.match(route, /300_000/);
+  assert.match(client, /TIMEOUT_MS = 260_000/);
 });
 
 test("usage completion rejects missing or negative database acknowledgements", () => {
