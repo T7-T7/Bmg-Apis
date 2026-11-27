@@ -32,8 +32,8 @@ function jsonError(message: string, status: number) {
 function clientHash(request: NextRequest) {
   return createDemoClientHash(
     request,
-    process.env.CHATGPT_SESSION_SECRET || process.env.GEMINI_SESSION_SECRET,
-    "CHATGPT_SESSION_SECRET أو GEMINI_SESSION_SECRET غير مضبوط.",
+    process.env.CHATGPT_SESSION_SECRET,
+    "CHATGPT_SESSION_SECRET غير مضبوط (32 حرفًا على الأقل).",
   );
 }
 

@@ -42,9 +42,9 @@ const baseHeaders: Record<string, string> = {
 };
 
 function sessionKey() {
-  const secret = process.env.CHATGPT_SESSION_SECRET || process.env.GEMINI_SESSION_SECRET;
+  const secret = process.env.CHATGPT_SESSION_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error("CHATGPT_SESSION_SECRET أو GEMINI_SESSION_SECRET غير مضبوط (32 حرفًا على الأقل).");
+    throw new Error("CHATGPT_SESSION_SECRET غير مضبوط (32 حرفًا على الأقل).",
   }
   return createHash("sha256").update(secret, "utf8").digest();
 }

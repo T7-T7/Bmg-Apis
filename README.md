@@ -71,7 +71,7 @@ npm run dev
 | `GEMINI_SESSION_SECRET` | سر خادمي لتشفير جلسات Gemini |
 | `BMG_DEMO_RPC_SECRET` | السر الخادمي المطابق لإعداد RPC |
 | `GEMINI_TIMEOUT_MS` | مهلة Gemini؛ اختياري |
-| `CHATGPT_SESSION_SECRET` | سر خادمي لتشفير جلسات ChatGPT؛ يمكن استخدام `GEMINI_SESSION_SECRET` بدلًا منه |
+| `CHATGPT_SESSION_SECRET` | سر خادمي مستقل وإلزامي لتشفير جلسات ChatGPT وبصمة تجربة الخدمة (32 حرفًا على الأقل) |
 
 لا تستخدم `service_role` أو أي سر خادمي في متغير يبدأ بـ `NEXT_PUBLIC_`.
 

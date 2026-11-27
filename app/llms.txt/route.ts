@@ -1,5 +1,5 @@
 const content = `# NOX APIS
-> Nox is the API service provider for developers. It operates the unified API layer, authentication, API keys, access controls, usage quotas, request handling, and service coordination for three active AI services.
+> Nox is the API service provider for developers. It operates the unified API layer, authentication, API keys, access controls, usage quotas, request handling, and service coordination for four active services: Gemini, GPTFree, ChatGPT, and Star X image tools.
 
 - Website: https://nox.bmg-inc.web.id
 - Human-readable docs: https://nox.bmg-inc.web.id/docs
