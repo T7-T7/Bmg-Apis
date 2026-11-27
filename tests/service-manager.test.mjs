@@ -4,9 +4,9 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-test("server service manifest contains the three immutable registered services", () => {
+test("server service manifest contains the four immutable registered services", () => {
   const manager = read("../lib/server/service-manager.ts");
-  for (const slug of ['"aql-gemini"', "gptfree", '"star-x"']) assert.ok(manager.includes(slug));
+  for (const slug of ['"aql-gemini"', "gptfree", '"star-x"', '"chatgpt"']) assert.ok(manager.includes(slug));
   assert.ok(manager.includes("Object.freeze"));
   assert.ok(manager.includes("getManagedService"));
   assert.ok(manager.includes("listManagedServices"));
@@ -18,9 +18,9 @@ test("server service manifest contains the three immutable registered services",
 test("registered services have unique routes and bounded runtime metadata", () => {
   const manager = read("../lib/server/service-manager.ts");
   const routes = [...manager.matchAll(/route: "(\/api\/v1\/ai\/[^"]+)"/g)].map((match) => match[1]);
-  assert.equal(routes.length, 3);
+  assert.equal(routes.length, 4);
   assert.equal(new Set(routes).size, routes.length);
-  for (const duration of ["maxDuration: 60", "maxDuration: 120", "maxDuration: 180"]) {
+  for (const duration of ["maxDuration: 60", "maxDuration: 120", "maxDuration: 180", "maxDuration: 300"]) {
     assert.ok(manager.includes(duration));
   }
 });
@@ -30,6 +30,7 @@ test("all registered API routes delegate through the compatibility adapter", () 
     ["../app/api/v1/ai/gemini/route.ts", 'executeManagedService("aql-gemini", request'],
     ["../app/api/v1/ai/gptfree/route.ts", 'executeManagedService("gptfree", request'],
     ["../app/api/v1/ai/star-x/route.ts", 'executeManagedService("star-x", request'],
+    ["../app/api/v1/ai/chatgpt/route.ts", 'executeManagedService("chatgpt", request'],
   ];
   for (const [path, call] of routes) {
     const source = read(path);
@@ -78,6 +79,7 @@ test("shared auth manager preserves supported bearer formats and demo fingerprin
     "../app/api/v1/ai/gemini/route.ts",
     "../app/api/v1/ai/gptfree/route.ts",
     "../app/api/v1/ai/star-x/route.ts",
+    "../app/api/v1/ai/chatgpt/route.ts",
   ]) {
     const route = read(path);
     assert.ok(route.includes("parseApiKeyAuthorization"), path);
@@ -129,7 +131,7 @@ test("shared request manager enforces byte limits while preserving route-specifi
   }
 });
 
-test("all three services delegate Supabase authorization RPC execution to Nox Core", () => {
+test("all four services delegate Supabase authorization RPC execution to Nox Core", () => {
   const authorization = read("../lib/core/managers/authorization-manager.ts");
   const access = read("../lib/core/managers/managed-access-manager.ts");
   for (const fragment of [
