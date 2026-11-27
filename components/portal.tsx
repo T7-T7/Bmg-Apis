@@ -21,6 +21,7 @@ let authSnapshotUser:User|null=null;
 const SERVICES:ApiService[]=[
  {slug:"aql-gemini",name:"Gemini",description:"توليد النصوص والمحادثات باستخدام Gemini مع تعليمات مخصصة واستمرار الجلسات.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gemini",http_method:"POST",status:"active"},
  {slug:"gptfree",name:"GPTFree",description:"توليد الردود النصية مع سجل محادثة مستمر عبر GPTFree.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/gptfree",http_method:"POST",status:"active"},
+ {slug:"chatgpt",name:"ChatGPT",description:"محادثات نصية مستمرة عبر واجهة ChatGPT Web غير الرسمية.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/chatgpt",http_method:"POST",status:"active"},
  {slug:"star-x",name:"Star X",description:"تعديل المشهد وتوليد الصور واستبدال الخلفية وتحسين الإضاءة.",category:"ذكاء اصطناعي",endpoint_path:"/api/v1/ai/star-x",http_method:"POST",status:"active"},
 
 ];
