@@ -15,7 +15,7 @@ function timeoutFor(deadline: number) {
   return Math.max(1, Math.min(CONFIG.timeout, remaining));
 }
 
-type SessionState = { cookie?: string; resume?: unknown[]; resumeArray?: unknown[]; uid?: string; instruction?: string; interactionId?: string };
+type SessionState = { cookie?: string; resume?: unknown[]; resumeArray?: unknown[]; uid?: string; instruction?: string; interactionId?: string; history?: unknown[] };
 type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-api" | "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
 
 const hex = (bytes: number) => randomBytes(bytes).toString("hex");
@@ -34,7 +34,7 @@ function pack(value: unknown) {
 }
 
 function unpack(value?: string): SessionState | null {
-  if (!value || value.length > 12_000) return null;
+  if (!value || value.length > 48_000) return null;
   try {
     const packed = Buffer.from(value, "base64url");
     if (packed.length < 29) return null;
@@ -45,7 +45,7 @@ function unpack(value?: string): SessionState | null {
     decipher.setAuthTag(tag);
     const plaintext = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     const parsed = JSON.parse(plaintext.toString("utf8"));
-    if (!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.resume) && !Array.isArray(parsed.resumeArray) && typeof parsed.interactionId !== "string")) return null;
+    if (!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.resume) && !Array.isArray(parsed.resumeArray) && typeof parsed.interactionId !== "string" && !Array.isArray(parsed.history))) return null;
     return parsed as SessionState;
   } catch { return null; }
 }
@@ -203,25 +203,29 @@ async function bootstrap(deadline: number) {
 async function askGeminiOfficialApi(input: {
   prompt: string;
   instruction?: string;
-  previousInteractionId?: string;
+  history?: unknown[];
 }): Promise<GeminiResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
 
   const model = process.env.GEMINI_MODEL?.trim() || "gemini-4-hydrogen";
+  const history = [...(input.history || []), {
+    type: "user_input",
+    content: [{ type: "text", text: input.prompt }],
+  }];
   const body: Record<string, unknown> = {
     model,
-    input: input.prompt,
-    store: true,
+    input: history,
+    store: false,
   };
   if (input.instruction) body.system_instruction = input.instruction;
-  if (input.previousInteractionId) body.previous_interaction_id = input.previousInteractionId;
 
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "x-goog-api-key": apiKey,
+      "Api-Revision": "2026-05-20",
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(45_000),
@@ -241,23 +245,28 @@ async function askGeminiOfficialApi(input: {
   const result = payload as {
     id?: unknown;
     output_text?: unknown;
+    steps?: unknown[];
     output?: Array<{ type?: unknown; content?: Array<{ type?: unknown; text?: unknown }> }>;
   };
+  const steps = Array.isArray(result.steps) ? result.steps : [];
   const outputText = typeof result.output_text === "string"
     ? result.output_text
-    : (result.output || [])
-        .filter((step) => step.type === "model_output")
-        .flatMap((step) => step.content || [])
+    : steps
+        .filter((step) => step && typeof step === "object" && (step as { type?: unknown }).type === "model_output")
+        .flatMap((step) => ((step as { content?: Array<{ type?: unknown; text?: unknown }> }).content || []))
         .filter((part) => part.type === "text" && typeof part.text === "string")
         .map((part) => part.text as string)
         .join("");
 
   if (!outputText.trim()) throw new Error("Gemini API returned no text output.");
   const interactionId = typeof result.id === "string" ? result.id : "";
+  const nextHistory = [...history, ...steps];
+  while (nextHistory.length > 2 && JSON.stringify(nextHistory).length > 24_000) nextHistory.splice(0, 2);
+  const sessionId = pack({ history: nextHistory, instruction: input.instruction });
   return {
     success: true,
     response: cleanText(outputText),
-    sessionId: interactionId ? pack({ interactionId, instruction: input.instruction }) : "",
+    sessionId,
     method: "gemini-api",
     conversationId: interactionId || null,
     responseId: interactionId || null,
@@ -276,7 +285,7 @@ export async function askGemini(input: { prompt: string; instruction?: string; s
     return askGeminiOfficialApi({
       prompt,
       instruction,
-      previousInteractionId: previous?.interactionId,
+      history: previous?.history,
     });
   }
 
