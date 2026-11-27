@@ -416,9 +416,9 @@ export type Database = {
         Relationships: []
       }
       organizations: {
-        Row: { created_at: string; id: string; is_default_workspace: boolean; kind: string; name: string; owner_id: string; updated_at: string }
-        Insert: { created_at?: string; id?: string; is_default_workspace?: boolean; kind: string; name: string; owner_id: string; updated_at?: string }
-        Update: { created_at?: string; id?: string; is_default_workspace?: boolean; kind?: string; name?: string; owner_id?: string; updated_at?: string }
+        Row: { archived_at: string | null; created_at: string; id: string; is_default_workspace: boolean; kind: string; name: string; owner_id: string; updated_at: string }
+        Insert: { archived_at?: string | null; created_at?: string; id?: string; is_default_workspace?: boolean; kind: string; name: string; owner_id: string; updated_at?: string }
+        Update: { archived_at?: string | null; created_at?: string; id?: string; is_default_workspace?: boolean; kind?: string; name?: string; owner_id?: string; updated_at?: string }
         Relationships: []
       }
       project_members: {
@@ -673,6 +673,7 @@ export type Database = {
         Returns: Json
       }
       bmg_create_organization: { Args: { p_kind: string; p_name: string }; Returns: string }
+      bmg_archive_organization: { Args: { p_organization_id: string }; Returns: boolean }
       bmg_delete_organization: { Args: { p_organization_id: string }; Returns: boolean }
       bmg_create_project: { Args: { p_description?: string; p_name: string; p_organization_id: string }; Returns: string }
       bmg_invite_organization_member: { Args: { p_email: string; p_organization_id: string; p_project_id?: string | null; p_role: string }; Returns: string }
