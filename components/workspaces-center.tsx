@@ -6,7 +6,7 @@ import styles from "./workspaces-center.module.css";
 import OrganizationUsagePanel from "./organization-usage-panel";
 import OrganizationApiKeysPanel from "./organization-api-keys-panel";
 
-type Organization={id:string;name:string;kind:"individual"|"organization"|"company";owner_id:string;created_at:string;is_default_workspace:boolean;archived_at:string|null};
+type Organization={id:string;name:string;kind:"individual"|"organization"|"company";owner_id:string;created_at:string;is_default_workspace:boolean;archived_at:string|null;deletion_requested_at:string|null;purge_after:string|null;deletion_was_archived:boolean};
 type Project={id:string;organization_id:string;name:string;slug:string;description:string;created_at:string};
 type Member={user_id:string;email:string|null;display_name:string|null;role:"owner"|"admin"|"developer"|"viewer";created_at:string};
 type Invitation={id:string;email:string;role:"admin"|"developer"|"viewer";project_id:string|null;expires_at:string;created_at:string};
@@ -37,7 +37,7 @@ export default function WorkspacesCenter(){
  useEffect(()=>{setActiveWorkspaceTab("overview")},[selectedOrgId]);
  const loadOrganizations=useCallback(async()=>{
   if(!db)return;
-  const {data,error}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at").order("created_at",{ascending:true});
+  const {data,error}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});
   if(error){setError("تعذر تحميل مساحات العمل: "+error.message);return}
   const list=(data||[]) as Organization[];
   setOrganizations(list);
@@ -58,10 +58,10 @@ export default function WorkspacesCenter(){
   setMyRole((myMembership.data?.role||"") as Member["role"]|"");
   setLoading(false);
  },[db,selectedOrgId,userId]);
- useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void db.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
+ useEffect(()=>{let alive=true;if(!db){setError("إعدادات الاتصال بقاعدة البيانات غير مكتملة.");setLoading(false);return}void db.auth.getUser().then(async({data,error})=>{if(!alive)return;if(error||!data.user){window.location.assign("/login");return}setUserId(data.user.id);const {data:orgs,error:orgError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});if(!alive)return;if(orgError)setError(orgError.message);else{const list=(orgs||[]) as Organization[];setOrganizations(list);if(list.length)setSelectedOrgId(list[0].id)}setLoading(false)});return()=>{alive=false}},[db]);
  useEffect(()=>{if(!selectedOrgId||!userId)return;const frame=window.requestAnimationFrame(()=>{void loadDetails()});return()=>window.cancelAnimationFrame(frame)},[selectedOrgId,userId,loadDetails]);
 
- async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await db.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
+ async function createOrganization(){if(!db||busy)return;if(orgName.trim().length<2){setError("اكتب اسمًا لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {data,error}=await db.rpc("bmg_create_organization",{p_name:orgName.trim(),p_kind:orgKind});if(error)setError("تعذر إنشاء مساحة العمل: "+error.message);else{setOrgName("");setNotice("تم إنشاء مساحة العمل ومشروعها الافتراضي.");const {data:orgs}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});setOrganizations((orgs||[]) as Organization[]);if(data)setSelectedOrgId(String(data))}setBusy(false)}
  async function createProject(){if(!db||busy||!selectedOrgId||selectedOrg?.archived_at)return;if(projectName.trim().length<2){setError("اكتب اسمًا للمشروع لا يقل عن حرفين.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_create_project",{p_organization_id:selectedOrgId,p_name:projectName.trim(),p_description:projectDescription.trim()});if(error)setError("تعذر إنشاء المشروع: "+error.message);else{setProjectName("");setProjectDescription("");setNotice("تم إنشاء المشروع.");await loadDetails()}setBusy(false)}
  async function archiveOrganization(){
   if(!db||busy||!selectedOrg||selectedOrg.is_default_workspace||selectedOrg.archived_at||selectedOrg.owner_id!==userId)return;
@@ -72,7 +72,7 @@ export default function WorkspacesCenter(){
   if(error)setError("تعذرت أرشفة مساحة العمل: "+error.message);
   else if(!data)setError("هذه المساحة مؤرشفة بالفعل.");
   else{
-   const {data:orgs,error:loadError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at").order("created_at",{ascending:true});
+   const {data:orgs,error:loadError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});
    if(loadError)setError("تمت الأرشفة، لكن تعذر تحديث القائمة: "+loadError.message);
    const list=(orgs||[]) as Organization[];
    setOrganizations(list);
@@ -82,9 +82,41 @@ export default function WorkspacesCenter(){
   }
   setBusy(false);
  }
+ async function deleteOrganization(){
+  if(!db||busy||!selectedOrg||selectedOrg.is_default_workspace||selectedOrg.owner_id!==userId||selectedOrg.deletion_requested_at)return;
+  const confirmed=window.confirm("سيتم إيقاف مساحة العمل «"+selectedOrg.name+"» فورًا وإلغاء مفاتيح API والدعوات. ستُحذف المساحة ومشاريعها نهائيًا خلال 4 أيام كحد أقصى، ولن تبقى سجلاتها بعد ذلك. ستعود الحصة فورًا للمساحات النشطة. هل تريد المتابعة؟");
+  if(!confirmed)return;
+  setBusy(true);setError("");setNotice("");
+  const {data,error}=await db.rpc("bmg_delete_organization",{p_organization_id:selectedOrg.id});
+  if(error)setError("تعذر طلب حذف مساحة العمل: "+error.message);
+  else if(!data)setError("يوجد طلب حذف سابق لهذه المساحة.");
+  else{
+   const {data:orgs,error:loadError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});
+   if(loadError)setError("تم تسجيل طلب الحذف، لكن تعذر تحديث القائمة: "+loadError.message);
+   else setOrganizations((orgs||[]) as Organization[]);
+   setNotice("تم إيقاف المساحة وإلغاء مفاتيحها. سيُنفّذ الحذف النهائي خلال 4 أيام كحد أقصى، وعادت حصتها للمساحات النشطة.");
+  }
+  setBusy(false);
+ }
+ async function cancelOrganizationDeletion(){
+  if(!db||busy||!selectedOrg||selectedOrg.owner_id!==userId||!selectedOrg.deletion_requested_at)return;
+  const confirmed=window.confirm("إلغاء طلب الحذف؟ لن تعود مفاتيح API التي أُلغيت؛ ستحتاج إلى إنشاء مفاتيح جديدة. إذا كانت المساحة مؤرشفة قبل طلب الحذف فستظل مؤرشفة.");
+  if(!confirmed)return;
+  setBusy(true);setError("");setNotice("");
+  const {data,error}=await db.rpc("bmg_cancel_organization_deletion",{p_organization_id:selectedOrg.id});
+  if(error)setError("تعذر إلغاء طلب الحذف: "+error.message);
+  else if(!data)setError("لا يوجد طلب حذف نشط لإلغائه.");
+  else{
+   const {data:orgs,error:loadError}=await db.from("organizations").select("id,name,kind,owner_id,created_at,is_default_workspace,archived_at,deletion_requested_at,purge_after,deletion_was_archived").order("created_at",{ascending:true});
+   if(loadError)setError("تم إلغاء طلب الحذف، لكن تعذر تحديث القائمة: "+loadError.message);
+   else setOrganizations((orgs||[]) as Organization[]);
+   setNotice("تم إلغاء طلب الحذف. مفاتيح API السابقة تظل ملغاة لأسباب أمنية.");
+  }
+  setBusy(false);
+ }
  async function inviteMember(){if(!db||busy||!selectedOrgId||selectedOrg?.archived_at)return;if(!inviteEmail.trim()){setError("أدخل بريد الحساب الذي تريد دعوته.");return}if(inviteProject&&inviteRole==="admin"){setError("دور مدير المؤسسة لا يمكن منحه لدعوة مشروع محدد.");return}setBusy(true);setError("");setNotice("");const {error}=await db.rpc("bmg_invite_organization_member",{p_organization_id:selectedOrgId,p_email:inviteEmail.trim().toLowerCase(),p_role:inviteRole,p_project_id:inviteProject||null});if(error)setError(error.message.includes("No registered account")?"لم نعثر على حساب مسجل بهذا البريد. يجب أن يكون العضو قد أنشأ حسابًا في المنصة أولًا.": "تعذر إنشاء الدعوة: "+error.message);else{setInviteEmail("");setNotice("تم إنشاء الدعوة وإرسال إشعار إلى البريد الوارد للحساب المستهدف.");await loadDetails()}setBusy(false)}
  const roleLabel=(role:string)=>({owner:"المالك",admin:"مدير",developer:"مطور",viewer:"مشاهد"}[role]||role);
- const kindLabel=(org:Organization)=>org.archived_at?"مساحة مؤرشفة":org.is_default_workspace?"المساحة الشخصية الافتراضية":org.kind==="individual"?"مساحة شخصية إضافية":org.kind==="company"?"شركة":"مؤسسة";
+ const kindLabel=(org:Organization)=>org.deletion_requested_at?"حذف مجدول":org.archived_at?"مساحة مؤرشفة":org.is_default_workspace?"المساحة الشخصية الافتراضية":org.kind==="individual"?"مساحة شخصية إضافية":org.kind==="company"?"شركة":"مؤسسة";
  return <section className={styles.page} dir="rtl">
   <header className={styles.header}><div><span>WORKSPACES & PROJECTS</span><h1>المؤسسات والمشاريع</h1><p>أنشئ مساحات عمل، ونظّم المشاريع، وأدر وصول أعضاء فريقك.</p></div><button onClick={()=>{void loadOrganizations();void loadDetails()}} disabled={busy||loading}>تحديث</button></header>
   {error&&<div className={styles.error}>{error}</div>}{notice&&<div className={styles.notice}>{notice}</div>}
@@ -122,7 +154,15 @@ export default function WorkspacesCenter(){
     {invitations.map(invite=><article className={styles.member} key={invite.id}><div><b>{invite.email}</b><small>{invite.project_id?"مشروع محدد":"كل المؤسسة"} · تنتهي {new Date(invite.expires_at).toLocaleDateString("ar-EG")}</small></div><span>{roleLabel(invite.role)}</span></article>)}
     {!invitations.length&&!loading&&<p className={styles.muted}>لا توجد دعوات معلقة.</p>}
    </section>
-   {selectedOrg.archived_at&&<section className={styles.panel}><h3>مساحة مؤرشفة</h3><p className={styles.muted}>تم إيقاف مفاتيح API وإخراج هذه المساحة من توزيع الحصة. المشاريع وسجلات الاستهلاك محفوظة للعرض، ولا يمكن إنشاء مشاريع أو مفاتيح أو دعوات جديدة.</p></section>}
+   {selectedOrg.archived_at&&!selectedOrg.deletion_requested_at&&<section className={styles.panel}><h3>مساحة مؤرشفة</h3><p className={styles.muted}>تم إيقاف مفاتيح API وإخراج هذه المساحة من توزيع الحصة. لا يمكن إنشاء مشاريع أو مفاتيح أو دعوات جديدة. تُحذف المساحة المؤرشفة وبياناتها نهائيًا بعد 4 أيام كحد أقصى من تاريخ الأرشفة.</p></section>}
+   {selectedOrg.deletion_requested_at&&<section className={styles.panel} style={{border:"1px solid rgba(220,70,70,.45)"}}>
+    <h3>حذف مجدول</h3><p className={styles.muted}>المساحة متوقفة الآن، ومفاتيح API والدعوات أُلغيت. موعد الحذف النهائي: {selectedOrg.purge_after?new Date(selectedOrg.purge_after).toLocaleString("ar-EG"):"خلال 4 أيام كحد أقصى"}. ستُحذف المشاريع وسجلاتها التابعة نهائيًا.</p>
+    {selectedOrg.owner_id===userId&&<button type="button" disabled={busy} onClick={()=>void cancelOrganizationDeletion()} style={{padding:"10px 14px",border:0,borderRadius:9,background:"var(--accent,#7046d8)",color:"#fff"}}>{busy?"جارٍ التنفيذ…":"إلغاء طلب الحذف"}</button>}
+   </section>}
+   {selectedOrg.owner_id===userId&&!selectedOrg.is_default_workspace&&!selectedOrg.deletion_requested_at&&<section className={styles.panel} style={{border:"1px solid rgba(220,70,70,.45)"}}>
+    <div className={styles.sectionTitle}><div><h3>حذف مساحة العمل</h3><p>يتوقف استخدامها فورًا، وتُلغى مفاتيحها ودعواتها، ثم تُحذف المساحة ومشاريعها نهائيًا خلال 4 أيام كحد أقصى. تعود حصتها فورًا للمساحات النشطة.</p></div></div>
+    <button type="button" disabled={busy} onClick={()=>void deleteOrganization()} style={{padding:"10px 14px",border:0,borderRadius:9,background:"#a83232",color:"#fff"}}>{busy?"جارٍ التنفيذ…":"حذف مساحة العمل"}</button>
+   </section>}
    {selectedOrg.owner_id===userId&&!selectedOrg.is_default_workspace&&!selectedOrg.archived_at&&<section className={styles.panel} style={{border:"1px solid rgba(220,70,70,.45)"}}>
     <div className={styles.sectionTitle}><div><h3>أرشفة مساحة العمل</h3><p>توقف هذه المساحة عن استقبال الطلبات وتُلغى مفاتيحها. تبقى المشاريع وسجلات الاستهلاك محفوظة، وتعود حصتها إلى بقية المساحات النشطة فورًا.</p></div></div>
     <button type="button" disabled={busy} onClick={()=>void archiveOrganization()} style={{padding:"10px 14px",border:0,borderRadius:9,background:"#a83232",color:"#fff"}}>{busy?"جارٍ التنفيذ…":"أرشفة مساحة العمل"}</button>
