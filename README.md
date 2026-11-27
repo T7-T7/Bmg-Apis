@@ -22,6 +22,7 @@
 |---|---|---|---|
 | عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini |
 | GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree |
+| ChatGPT | POST | `/api/v1/ai/chatgpt` | ChatGPT Web (unofficial) |
 | Star X | POST | `/api/v1/ai/star-x` | PhotoRoom AI tools |
 
 لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.
@@ -70,6 +71,7 @@ npm run dev
 | `GEMINI_SESSION_SECRET` | سر خادمي لتشفير جلسات Gemini |
 | `BMG_DEMO_RPC_SECRET` | السر الخادمي المطابق لإعداد RPC |
 | `GEMINI_TIMEOUT_MS` | مهلة Gemini؛ اختياري |
+| `CHATGPT_SESSION_SECRET` | سر خادمي لتشفير جلسات ChatGPT؛ يمكن استخدام `GEMINI_SESSION_SECRET` بدلًا منه |
 
 لا تستخدم `service_role` أو أي سر خادمي في متغير يبدأ بـ `NEXT_PUBLIC_`.
 
