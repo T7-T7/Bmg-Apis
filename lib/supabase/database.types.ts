@@ -74,6 +74,41 @@ export type Database = {
         }
         Relationships: []
       }
+      api_scope_default_limits: {
+        Row: {
+          service_slug: string
+          requests_per_minute: number
+          daily_weighted_limit: number | null
+          monthly_weighted_limit: number | null
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          service_slug: string
+          requests_per_minute: number
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          service_slug?: string
+          requests_per_minute?: number
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_scope_default_limits_service_slug_fkey"
+            columns: ["service_slug"]
+            isOneToOne: true
+            referencedRelation: "api_services"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       api_service_dependencies: {
         Row: {
           created_at: string
@@ -580,6 +615,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_set_scope_default_limits: {
+        Args: {
+          p_service_slug: string
+          p_requests_per_minute: number
+          p_daily_weighted_limit?: number | null
+          p_monthly_weighted_limit?: number | null
+        }
+        Returns: Json
+      }
+      bmg_admin_clear_organization_service_limits: {
+        Args: { p_organization_id: string; p_service_slug: string }
+        Returns: Json
+      }
+      bmg_admin_clear_project_service_limits: {
+        Args: { p_project_id: string; p_service_slug: string }
+        Returns: Json
+      }
       bmg_admin_set_organization_service_limits: {
         Args: {
           p_organization_id: string
