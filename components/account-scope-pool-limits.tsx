@@ -47,7 +47,7 @@ export default function AccountScopePoolLimits(){
   setBusy(false);
  }
  return <section dir="rtl" style={{display:"grid",gap:14,padding:"4px 0 20px",borderBottom:"1px solid var(--border,#333)",marginBottom:18}}>
-  <div><h2 style={{margin:"0 0 6px"}}>الحصة المشتركة للمؤسسات والمساحات الإضافية</h2><p style={{fontSize:13,opacity:.75,margin:0}}>تحدد الإدارة إجمالي الحصة لكل حساب. يوزعها النظام بالتساوي على المؤسسات والشركات والمساحات الشخصية الإضافية التابعة لمالك الحساب. المساحة الشخصية الافتراضية مستثناة. قبل حفظ تخصيص مخصص، يستخدم النظام حدود الخطة كحصة افتراضية مستقلة لهذه المساحات.</p></div>
+  <div><h2 style={{margin:"0 0 6px"}}>الحصة المشتركة للمؤسسات والمساحات الإضافية</h2><p style={{fontSize:13,opacity:.75,margin:0}}>تحدد الإدارة إجمالي الحصة لكل حساب. يوزعها النظام بالتساوي على المؤسسات والشركات والمساحات الشخصية الإضافية التابعة لمالك الحساب. المساحة الشخصية الافتراضية مستثناة. القيم الفارغة ترث حدود الخطة أو حدود الإدارة الافتراضية؛ والقيمة التي تدخلها تستبدل الحد المقابل فقط.</p></div>
   {error&&<div role="alert" style={{padding:10,borderRadius:8,background:"rgba(220,50,50,.12)"}}>{error}</div>}
   {notice&&<div role="status" style={{padding:10,borderRadius:8,background:"rgba(40,160,100,.12)"}}>{notice}</div>}
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12}}>
@@ -56,6 +56,6 @@ export default function AccountScopePoolLimits(){
    <label style={field}>الحد الإجمالي الشهري الموزون<input style={input} type="number" min="1" step="1" placeholder="غير مفعل" value={form.monthly_weighted_limit} onChange={e=>setForm(v=>({...v,monthly_weighted_limit:e.target.value}))}/></label>
   </div>
   <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><button type="button" disabled={busy} onClick={()=>void save()} style={{padding:"10px 14px",border:0,borderRadius:9,background:"var(--accent,#7046d8)",color:"#fff"}}>حفظ الحصة المشتركة</button><button type="button" disabled={busy} onClick={()=>void load()} style={{padding:"10px 14px",border:"1px solid var(--border,#444)",borderRadius:9,background:"transparent",color:"inherit"}}>تحديث</button>{updatedAt&&<small style={{opacity:.7}}>آخر تحديث: {new Date(updatedAt).toLocaleString("ar-EG")}</small>}</div>
-  <small style={{opacity:.7}}>التوزيع يستخدم أعدادًا صحيحة؛ إذا تبقى جزء بعد القسمة، يذهب الطلب الزائد إلى المساحات الأقدم أولًا. ترك الحقول فارغة قبل أول حفظ يعني استخدام حدود الخطة الافتراضية؛ أما بعد حفظ إعداد مخصص، فالحقل الفارغ يعطل هذا النوع من الحدود.</small>
+  <small style={{opacity:.7}}>التوزيع يستخدم أعدادًا صحيحة؛ إذا تبقى جزء بعد القسمة، يذهب الطلب الزائد إلى المساحات الأقدم أولًا. ترك أي حقل فارغ يعيد استخدام حد الخطة أو الإدارة الافتراضي لذلك الحقل، ولا يعطل بقية الحدود.</small>
  </section>;
 }
