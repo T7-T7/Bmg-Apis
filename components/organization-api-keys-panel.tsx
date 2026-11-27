@@ -37,11 +37,12 @@ export default function OrganizationApiKeysPanel({organizationId}:{organizationI
   const {data:{user},error:userError}=await db.auth.getUser();
   if(userError||!user){setError("انتهت جلسة الحساب. سجّل الدخول مجددًا.");setLoading(false);return}
   setUserId(user.id);
-  const [projectResult,keyResult,memberResult,projectMemberResult]=await Promise.all([
+  const [projectResult,keyResult,memberResult,projectMemberResult,organizationResult]=await Promise.all([
    db.from("projects").select("id,name").eq("organization_id",organizationId).order("created_at",{ascending:true}),
    db.rpc("bmg_list_organization_api_keys",{p_organization_id:organizationId}),
    db.from("organization_members").select("role").eq("organization_id",organizationId).eq("user_id",user.id).maybeSingle(),
-   db.from("project_members").select("project_id,role").eq("user_id",user.id)
+   db.from("project_members").select("project_id,role").eq("user_id",user.id),
+   db.from("organizations").select("owner_id").eq("id",organizationId).maybeSingle()
   ]);
   if(projectResult.error)setError(projectResult.error.message);else{
    const membership=memberResult.data?.role||"";
@@ -55,7 +56,7 @@ export default function OrganizationApiKeysPanel({organizationId}:{organizationI
   }
   if(keyResult.error)setError(current=>current?current+" · "+keyResult.error.message:keyResult.error.message);
   else setKeys((keyResult.data||[]) as ApiKey[]);
-  setRole((memberResult.data?.role||"") as string);
+  setRole((memberResult.data?.role||(organizationResult.data?.owner_id===user.id?"owner":"")) as string);
   setLoading(false);
  },[db,organizationId]);
  useEffect(()=>{void load()},[load]);
