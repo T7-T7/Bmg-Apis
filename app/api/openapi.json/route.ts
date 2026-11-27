@@ -61,6 +61,68 @@ const specification = {
         }
       }
     },
+    "/api/v1/ai/chatgpt": {
+      post: {
+        tags: ["AI"],
+        operationId: "generateChatGPTResponse",
+        summary: "إنشاء رد باستخدام ChatGPT",
+        description: "واجهة محادثة نصية تديرها Nox مع متابعة الجلسات عبر sessionId مشفر. يعتمد التنفيذ على واجهة ChatGPT Web داخلية غير رسمية وليست OpenAI API الرسمية؛ قد تتغير أو تتوقف دون إشعار. الحد الأقصى للرسالة 30000 حرف وجسم الطلب 1 MB. مهلة انتظار المزود 300 ثانية، مع خضوع مدة التنفيذ الفعلية لحدود Vercel وخطة المشروع.",
+        security: [{ NoxApiKey: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                required: ["message"],
+                properties: {
+                  message: { type: "string", minLength: 1, maxLength: 30000, description: "الرسالة النصية المراد إرسالها." },
+                  model: { type: "string", enum: ["default", "auto", "gpt-4", "gpt-3.5"], default: "default" },
+                  sessionId: { type: "string", maxLength: 12000, description: "معرّف جلسة مشفر من استجابة سابقة لمتابعة المحادثة." }
+                }
+              },
+              example: { message: "اشرح الفرق بين let و const", model: "default" }
+            }
+          }
+        },
+        responses: {
+          "200": {
+            description: "تم إنشاء الرد بنجاح.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["success", "result", "sessionId", "provider", "model"],
+                  properties: {
+                    success: { type: "boolean", const: true },
+                    result: {
+                      type: "object",
+                      required: ["think", "message"],
+                      properties: { think: { type: "string" }, message: { type: "string" } }
+                    },
+                    sessionId: { type: "string" },
+                    citations: { type: "array", items: {} },
+                    raw: { type: "string" },
+                    provider: { type: "string", const: "chatgpt" },
+                    model: { type: "string" },
+                    access: { type: "string", enum: ["api_key", "demo"] }
+                  }
+                }
+              }
+            }
+          },
+          "400": { description: "طلب غير صالح أو قيمة model غير مدعومة." },
+          "401": { description: "مفتاح API المرسل غير صالح أو ملغى." },
+          "403": { description: "الحساب موقوف أو المفتاح لا يملك صلاحية الخدمة." },
+          "413": { description: "تجاوز message الحد الأقصى البالغ 30000 حرف أو جسم الطلب 1 MB." },
+          "429": { description: "تجاوز حد الطلبات أو الحصة." },
+          "502": { description: "تعذر الحصول على رد من ChatGPT." },
+          "504": { description: "انتهت مهلة انتظار ChatGPT." },
+          "503": { description: "الخدمة أو التحقق من المفتاح غير متاح مؤقتًا." }
+        }
+      }
+    },
     "/api/v1/ai/gemini": {
       post: {
         tags: ["AI"],
