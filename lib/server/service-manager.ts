@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { executeRequestPipeline } from "@/lib/core/engine/executor";
 import type { ExecutionContext } from "@/lib/core/engine/executor";
 
-export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x";
+export type ManagedServiceSlug = "aql-gemini" | "gptfree" | "star-x" | "chatgpt";
 
 export type ManagedServiceDefinition = Readonly<{
   slug: ManagedServiceSlug;
@@ -56,6 +56,17 @@ export const SERVICE_REGISTRY: Readonly<Record<ManagedServiceSlug, ManagedServic
       authorization: "supabase-rpc",
       capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
       upstream: "Star X (PhotoRoom AI tools)",
+    }),
+    chatgpt: Object.freeze({
+      slug: "chatgpt",
+      category: "ai",
+      method: "POST",
+      runtime: "nodejs",
+      maxDuration: 300,
+      route: "/api/v1/ai/chatgpt",
+      authorization: "supabase-rpc",
+      capabilities: Object.freeze(["api-key", "demo", "usage-tracking"] as const),
+      upstream: "ChatGPT Web (unofficial anonymous endpoint)",
     }),
   });
 
