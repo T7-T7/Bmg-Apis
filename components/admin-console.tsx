@@ -22,7 +22,8 @@ type ServiceDependency = {id:string;service_id:string;depends_on_service_id:stri
 type AdminKey = {id:string;userId:string;displayName:string|null;email:string|null;label:string;keyPrefix:string;scopes:string[];createdAt:string;lastUsedAt:string|null;expiresAt:string|null;revokedAt:string|null};
 type ServiceVersion = {id:string;version:number;snapshot:Record<string,unknown>;changeNote:string;createdBy:string|null;createdAt:string};
 type AdminLimit = {id:boolean;requests_per_minute:number;max_api_keys:number;daily_weighted_limit:number;monthly_weighted_limit:number};
-type AdminRequestLog = {id:number;userId:string|null;displayName:string|null;email:string|null;keyLabel:string|null;service:string;method:string;status:number|null;latency:number|null;weight:number;createdAt:string};
+type AdminRequestLog = {id:number;userId:string|null;displayName:string|null;email:string|null;keyLabel:string|null;service:string;method:string;status:number|null;latency:number|null;weight:number;createdAt:string;organizationId:string|null;projectId:string|null};
+type ScopeOrganization={id:string;name:string}; type ScopeProject={id:string;organization_id:string;name:string};
 type AdminRequestLogsResponse = {items:AdminRequestLog[];total:number;page:number;pageSize:number;totalPages:number;hours:number};
 type AdminAnalytics = {periodDays:number;hourly:{hour:string;requests:number;weightedUsage:number}[];totals:{requests:number;weightedUsage:number;errors:number;successRate:number|null;avgLatency:number|null;measuredRequests:number};daily:{date:string;requests:number;weightedUsage:number;errors:number;avgLatency:number|null}[];services:{slug:string;name:string;requests:number;weightedUsage:number;errors:number}[];users:{userId:string;name:string;email:string|null;requests:number;weightedUsage:number;errors:number}[];statuses:{statusCode:number;requests:number}[];peakHours:{hour:number;requests:number}[];recent:{id:number;userId:string;service:string;method:string;status:number|null;latency:number|null;createdAt:string}[]};
 const TABS: {id:Tab;label:string}[] = [
@@ -78,6 +79,10 @@ export default function AdminConsole(){
  const [requestLogsUser,setRequestLogsUser]=useState("");
  const [requestLogsResult,setRequestLogsResult]=useState("all");
  const [requestLogsStatus,setRequestLogsStatus]=useState("");
+ const [requestLogsOrganization,setRequestLogsOrganization]=useState("");
+ const [requestLogsProject,setRequestLogsProject]=useState("");
+ const [scopeOrganizations,setScopeOrganizations]=useState<ScopeOrganization[]>([]);
+ const [scopeProjects,setScopeProjects]=useState<ScopeProject[]>([]);
  const [auditRows,setAuditRows]=useState<AdminAuditEntry[]>([]);
  const [auditRowsTotal,setAuditRowsTotal]=useState(0);
  const [auditRowsPage,setAuditRowsPage]=useState(1);
@@ -162,7 +167,8 @@ export default function AdminConsole(){
    const {data,error}=await supabase.rpc("bmg_admin_get_request_logs",{
     p_page:page,p_page_size:25,p_service:requestLogsService||undefined,
     p_user_id:requestLogsUser||undefined,p_result:requestLogsResult,
-    p_status_code:requestLogsStatus?Number(requestLogsStatus):undefined,p_hours:requestLogsHours
+    p_status_code:requestLogsStatus?Number(requestLogsStatus):undefined,p_hours:requestLogsHours,
+    p_organization_id:requestLogsOrganization||undefined,p_project_id:requestLogsProject||undefined
    });
    if(error)throw error;
    const result=data as unknown as AdminRequestLogsResponse;
@@ -170,7 +176,7 @@ export default function AdminConsole(){
    setRequestLogsPage(result.page||page);setRequestLogsTotalPages(result.totalPages||1);
   }catch(e){setError(e instanceof Error?e.message:"تعذر تحميل سجلات الطلبات.");}
   finally{setBusy(false);}
- },[supabase,requestLogsService,requestLogsUser,requestLogsResult,requestLogsStatus,requestLogsHours]);
+ },[supabase,requestLogsService,requestLogsUser,requestLogsResult,requestLogsStatus,requestLogsHours,requestLogsOrganization,requestLogsProject]);
  useEffect(()=>{if(tab==="analytics"&&ready&&user&&["admin","owner"].includes(role))void loadRequestLogs(1)},[tab,ready,user,role,loadRequestLogs]);
  const loadAuditLogs=useCallback(async(page:number=1)=>{
   if(!supabase)return;
@@ -482,14 +488,14 @@ export default function AdminConsole(){
      <div className={styles.formGrid}>
       <label>الفترة<select value={requestLogsHours} onChange={e=>{setRequestLogsHours(Number(e.target.value));setRequestLogsPage(1)}}><option value="1">آخر ساعة</option><option value="6">آخر 6 ساعات</option><option value="24">آخر 24 ساعة</option></select></label>
       <label>الخدمة<select value={requestLogsService} onChange={e=>{setRequestLogsService(e.target.value);setRequestLogsPage(1)}}><option value="">كل الخدمات</option>{services.map(x=><option key={x.id} value={x.slug}>{x.name}</option>)}</select></label>
-      <label>المستخدم<select value={requestLogsUser} onChange={e=>{setRequestLogsUser(e.target.value);setRequestLogsPage(1)}}><option value="">كل المستخدمين</option>{profiles.map(x=><option key={x.id} value={x.id}>{x.display_name||x.email||x.id}</option>)}</select></label>
+      <label>المستخدم<select value={requestLogsUser} onChange={e=>{setRequestLogsUser(e.target.value);setRequestLogsPage(1)}}><option value="">كل المستخدمين</option>{profiles.map(x=><option key={x.id} value={x.id}>{x.display_name||x.email||x.id}</option>)}</select></label>\n      <label>المؤسسة<select value={requestLogsOrganization} onChange={e=>{setRequestLogsOrganization(e.target.value);setRequestLogsProject("");setRequestLogsPage(1)}}><option value="">كل المؤسسات</option>{scopeOrganizations.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>\n      <label>المشروع<select value={requestLogsProject} onChange={e=>{setRequestLogsProject(e.target.value);setRequestLogsPage(1)}}><option value="">كل المشاريع</option>{scopeProjects.filter(x=>!requestLogsOrganization||x.organization_id===requestLogsOrganization).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
       <label>النتيجة<select value={requestLogsResult} onChange={e=>{setRequestLogsResult(e.target.value);setRequestLogsPage(1)}}><option value="all">كل الطلبات</option><option value="success">ناجحة</option><option value="error">فاشلة</option></select></label>
       <label>HTTP Status<input type="number" min="100" max="599" placeholder="كل الحالات" value={requestLogsStatus} onChange={e=>{setRequestLogsStatus(e.target.value);setRequestLogsPage(1)}}/></label>
-      <div className={styles.actions}><button className={styles.primary} onClick={()=>void loadRequestLogs(1)} disabled={busy}>تطبيق الفلاتر</button><button onClick={()=>{setRequestLogsService("");setRequestLogsUser("");setRequestLogsResult("all");setRequestLogsStatus("");setRequestLogsHours(24);setRequestLogsPage(1)}}>إعادة ضبط</button></div>
+      <div className={styles.actions}><button className={styles.primary} onClick={()=>void loadRequestLogs(1)} disabled={busy}>تطبيق الفلاتر</button><button onClick={()=>{setRequestLogsService("");setRequestLogsUser("");setRequestLogsOrganization("");setRequestLogsProject("");setRequestLogsResult("all");setRequestLogsStatus("");setRequestLogsHours(24);setRequestLogsPage(1)}}>إعادة ضبط</button></div>
      </div>
      <div className={styles.toolbar}><strong>{requestLogsTotal.toLocaleString("en-US")} طلب</strong><span className={styles.hint}>الصفحة {requestLogsPage} من {requestLogsTotalPages}</span></div>
-     <div className={styles.tableWrap}><table><thead><tr><th>التوقيت</th><th>المستخدم</th><th>المفتاح</th><th>الخدمة / Method</th><th>HTTP</th><th>الزمن</th><th>الوزن</th></tr></thead><tbody>
-      {requestLogs.map(x=><tr key={x.id}><td>{date(x.createdAt)}</td><td><b>{x.displayName||"حساب"}</b><small>{x.email||x.userId||"—"}</small></td><td>{x.keyLabel||"—"}</td><td><b>{x.service}</b><small dir="ltr">{x.method}</small></td><td>{x.status??"—"}</td><td>{x.latency===null?"—":x.latency+" ms"}</td><td>{x.weight}</td></tr>)}
+     <div className={styles.tableWrap}><table><thead><tr><th>التوقيت</th><th>المستخدم</th><th>المفتاح</th><th>المؤسسة / المشروع</th><th>الخدمة / Method</th><th>HTTP</th><th>الزمن</th><th>الوزن</th></tr></thead><tbody>
+      {requestLogs.map(x=><tr key={x.id}><td>{date(x.createdAt)}</td><td><b>{x.displayName||"حساب"}</b><small>{x.email||x.userId||"—"}</small></td><td>{x.keyLabel||"—"}</td><td><small>{scopeOrganizations.find(o=>o.id===x.organizationId)?.name||x.organizationId||"—"}</small><small>{scopeProjects.find(p=>p.id===x.projectId)?.name||x.projectId||"كل المشاريع"}</small></td><td><b>{x.service}</b><small dir="ltr">{x.method}</small></td><td>{x.status??"—"}</td><td>{x.latency===null?"—":x.latency+" ms"}</td><td>{x.weight}</td></tr>)}
      </tbody></table></div>
      {!requestLogs.length&&<p className={styles.empty}>لا توجد طلبات مطابقة للفلاتر في الفترة المحددة.</p>}
      <div className={styles.actions}><button disabled={busy||requestLogsPage<=1} onClick={()=>void loadRequestLogs(requestLogsPage-1)}>السابق</button><button disabled={busy||requestLogsPage>=requestLogsTotalPages} onClick={()=>void loadRequestLogs(requestLogsPage+1)}>التالي</button></div>
