@@ -10,7 +10,7 @@ const field:React.CSSProperties={display:"grid",gap:6,minWidth:0};
 const input:React.CSSProperties={width:"100%",padding:"10px 12px",border:"1px solid var(--border,#34343b)",borderRadius:9,background:"var(--input,#17171d)",color:"inherit"};
 const muted:React.CSSProperties={fontSize:13,opacity:.72};
 const cell:React.CSSProperties={padding:10,borderBottom:"1px solid var(--border,#333)",fontSize:13,textAlign:"right"};
-export default function OrganizationApiKeysPanel({organizationId}:{organizationId:string}){
+export default function OrganizationApiKeysPanel({organizationId,archived=false}:{organizationId:string;archived?:boolean}){
  const [db]=useState(()=>{try{return getSupabaseBrowserClient()}catch{return null}});
  const [userId,setUserId]=useState("");
  const [role,setRole]=useState("");
@@ -116,12 +116,13 @@ export default function OrganizationApiKeysPanel({organizationId}:{organizationI
   {notice&&<div role="status" style={{padding:11,borderRadius:9,background:"rgba(40,160,100,.12)"}}>{notice}</div>}
   <section style={{border:"1px solid var(--border,#34343b)",borderRadius:12,padding:14,display:"grid",gap:12}}>
    <h4 style={{margin:0}}>إنشاء مفتاح للمؤسسة</h4>
+   {archived&&<p style={muted}>هذه المساحة مؤرشفة؛ لا يمكن إنشاء مفاتيح جديدة. يمكنك مراجعة المفاتيح الملغاة وسجلها.</p>}
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
     <label style={field}>اسم المفتاح<input style={input} value={label} onChange={e=>setLabel(e.target.value)} maxLength={64} placeholder="مثال: خدمة الإنتاج"/></label>
     <label style={field}>المشروع<select style={input} value={projectId} onChange={e=>setProjectId(e.target.value)} disabled={!projects.length}><option value="">اختر مشروعًا</option>{projects.map(project=><option key={project.id} value={project.id}>{project.name}</option>)}</select></label>
     <label style={field}>الصلاحية<select style={input} value={expiry} onChange={e=>setExpiry(e.target.value)}><option value="7">7 أيام</option><option value="30">30 يومًا</option><option value="90">90 يومًا</option><option value="365">سنة</option><option value="never">دون انتهاء</option></select></label>
    </div>
-   <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><button type="button" disabled={busy||!label.trim()||!projectId||loading} onClick={()=>void beginMfa({kind:"create"})} style={{padding:"10px 14px",border:0,borderRadius:9,background:"var(--accent,#7046d8)",color:"#fff"}}>إنشاء مفتاح</button><small style={muted}>يتطلب تحققًا حديثًا بالمصادقة الثنائية.</small></div>
+   <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><button type="button" disabled={archived||busy||!label.trim()||!projectId||loading} onClick={()=>void beginMfa({kind:"create"})} style={{padding:"10px 14px",border:0,borderRadius:9,background:"var(--accent,#7046d8)",color:"#fff"}}>{archived?"المساحة مؤرشفة":"إنشاء مفتاح"}</button><small style={muted}>يتطلب تحققًا حديثًا بالمصادقة الثنائية.</small></div>
    {!projects.length&&!loading&&<p style={muted}>لا توجد مشاريع تملك صلاحية إنشاء مفاتيح لها في هذه المؤسسة.</p>}
    {createdKey&&<div style={{display:"grid",gap:8,padding:12,borderRadius:9,border:"1px solid var(--border,#444)"}}><b>المفتاح الجديد — انسخه الآن</b><code dir="ltr" style={{overflowWrap:"anywhere"}}>{createdKey}</code><button type="button" onClick={()=>void navigator.clipboard.writeText(createdKey)} style={{justifySelf:"start",padding:"8px 12px",borderRadius:8,border:"1px solid var(--border,#444)",background:"transparent",color:"inherit"}}>نسخ المفتاح</button></div>}
   </section>
