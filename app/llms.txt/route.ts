@@ -48,7 +48,7 @@ const content = `# NOX APIS
 - Optional: sessionId, encrypted value returned by a previous response to continue the same conversation.
 - Maximum HTTP body: 1 MB.
 - Success: JSON with result.message, sessionId, provider, model, and access.
-- Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.\n- Status: maintenance until the Vercel deployment containing this route is published.
+- Provider transport: unofficial internal ChatGPT Web endpoint; not the official OpenAI API and may change without notice.\n- Status: active on the current Vercel production deployment.
 - Vercel route limit: 300 seconds. ChatGPT stream timeout: 260 seconds, reserving time for authorization, session bootstrap, and usage completion.
 
 ### Star X

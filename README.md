@@ -22,7 +22,7 @@
 |---|---|---|---|
 | عقل — Gemini | POST | `/api/v1/ai/gemini` | Gemini | نشط |
 | GPTFree | POST | `/api/v1/ai/gptfree` | GPTFree | نشط |
-| ChatGPT | POST | `/api/v1/ai/chatgpt` | ChatGPT Web (unofficial) | بانتظار نشر Vercel |
+| ChatGPT | POST | `/api/v1/ai/chatgpt` | ChatGPT Web (unofficial) | نشط |
 | Star X | POST | `/api/v1/ai/star-x` | PhotoRoom AI tools | نشط |
 
 لا تعرض الواجهة خدمات مستقبلية على أنها متاحة. أي خدمة غير موجودة في قائمة الخدمات النشطة لا تعد جزءاً من واجهات الإنتاج.

@@ -292,7 +292,7 @@ export async function askChatGPT(input: {
       }
     } catch (cause) {
       if (!state.text.trim()) {
-        if (controller.signal.aborted) throw new Error("ChatGPT request timed out after 300 seconds.");
+        if (controller.signal.aborted) throw new Error("ChatGPT request timed out after 260 seconds.");
         throw cause;
       }
     } finally {
