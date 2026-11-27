@@ -87,10 +87,11 @@ export default function WorkspacesCenter(){
    </div>
    {activeWorkspaceTab==="usage"?<OrganizationUsagePanel organizationId={selectedOrg.id}/>:activeWorkspaceTab==="api"?<OrganizationApiKeysPanel organizationId={selectedOrg.id}/>:<>
    <div className={styles.columns}>
-    <section className={styles.panel}><div className={styles.sectionTitle}><div><h3>المشاريع</h3><p>كل مشروع مساحة مستقلة للمفاتيح والاستخدام.</p></div><span>{projects.length}</span></div>
+    <section className={styles.panel}><div className={styles.sectionTitle}><div><h3>المشاريع</h3><p>تُنظّم المشاريع مفاتيح API؛ وجميع مشاريع المساحة الواحدة تتشارك حصتها.</p></div><span>{projects.length}</span></div>
      {projects.map(project=><article className={styles.project} key={project.id}><div><b>{project.name}</b><code>{project.slug}</code></div><p>{project.description||"لا يوجد وصف للمشروع."}</p></article>)}
      {!projects.length&&!loading&&<p className={styles.muted}>لا توجد مشاريع بعد.</p>}
-     {["owner","admin","developer"].includes(myRole)&&<div className={styles.formBlock}><h4>إنشاء مشروع</h4><input value={projectName} onChange={e=>setProjectName(e.target.value)} maxLength={100} placeholder="اسم المشروع"/><textarea value={projectDescription} onChange={e=>setProjectDescription(e.target.value)} maxLength={500} rows={2} placeholder="وصف مختصر (اختياري)"/><button disabled={busy||projectName.trim().length<2} onClick={()=>void createProject()}>إنشاء المشروع</button></div>}
+     {selectedOrg.is_default_workspace&&<p className={styles.muted}>المساحة الشخصية الافتراضية مخصصة لمشروعها الافتراضي فقط؛ أنشئ مساحة شخصية إضافية إذا احتجت مشاريع أخرى.</p>}
+     {!selectedOrg.is_default_workspace&&["owner","admin","developer"].includes(myRole)&&<div className={styles.formBlock}><h4>إنشاء مشروع</h4><input value={projectName} onChange={e=>setProjectName(e.target.value)} maxLength={100} placeholder="اسم المشروع"/><textarea value={projectDescription} onChange={e=>setProjectDescription(e.target.value)} maxLength={500} rows={2} placeholder="وصف مختصر (اختياري)"/><button disabled={busy||projectName.trim().length<2} onClick={()=>void createProject()}>إنشاء المشروع</button></div>}
     </section>
     <section className={styles.panel}><div className={styles.sectionTitle}><div><h3>أعضاء المؤسسة</h3><p>الأدوار الحالية وصلاحيات الوصول.</p></div><span>{members.length}</span></div>
      {members.map(member=><article className={styles.member} key={member.user_id}><div><b>{member.display_name||member.email||"عضو"}</b><small>{member.email||member.user_id.slice(0,8)}</small></div><span>{roleLabel(member.role)}</span></article>)}
