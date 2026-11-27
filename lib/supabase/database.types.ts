@@ -627,6 +627,14 @@ export type Database = {
         Args: { p_organization_id: string; p_days?: number }
         Returns: Json
       }
+      bmg_list_organization_api_keys: {
+        Args: { p_organization_id: string }
+        Returns: { id: string; user_id: string; user_name: string | null; user_email: string | null; label: string; key_prefix: string; created_at: string; last_used_at: string | null; expires_at: string | null; revoked_at: string | null; project_id: string | null; project_name: string | null }[]
+      }
+      bmg_revoke_organization_api_key: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       bmg_admin_set_scope_default_limits: {
         Args: {
           p_service_slug: string
