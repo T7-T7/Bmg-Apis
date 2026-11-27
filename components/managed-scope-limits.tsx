@@ -74,16 +74,7 @@ export default function ManagedScopeLimits(){
   if(result.error)setError(result.error.message);else{setNotice("تم حفظ حدود النطاق وتسجيل التغيير في سجل التدقيق.");await loadRows()}
   setBusy(false);
  }
- async function remove(){
-  if(!db||!orgId||!serviceSlug||(scope==="project"&&!projectId))return;
-  if(!confirm("إزالة إعداد الحد لهذه الخدمة؟ سيعود النطاق إلى الحد الأعلى الموروث من المستويات الأخرى."))return;
-  setBusy(true);setError("");setNotice("");
-  const result=scope==="organization"
-   ?await db.from("organization_service_limits").delete().eq("organization_id",orgId).eq("service_slug",serviceSlug)
-   :await db.from("project_service_limits").delete().eq("project_id",projectId).eq("service_slug",serviceSlug);
-  if(result.error)setError(result.error.message);else{setNotice("تمت إزالة الحد المخصص.");await loadRows()}
-  setBusy(false);
- }
+
  return <section style={{display:"grid",gap:14}}>
   <div><h2>حدود المؤسسات والمشاريع</h2><p>تُطبق الحدود المخصصة بالإضافة إلى حدود الحساب والاشتراك؛ لا يلغي حد المؤسسة أو المشروع الحدود الأعلى الأخرى. اترك حد اليوم أو الشهر فارغًا لتعطيله في هذا النطاق.</p></div>
   {error&&<div role="alert" style={{padding:12,borderRadius:9,background:"rgba(220,50,50,.12)"}}>{error}</div>}
@@ -101,13 +92,13 @@ export default function ManagedScopeLimits(){
     <label style={fieldStyle}>Daily weighted limit<input style={inputStyle} type="number" min="1" step="1" placeholder="بدون حد مخصص" value={form.daily_weighted_limit} onChange={e=>setForm(v=>({...v,daily_weighted_limit:e.target.value}))}/></label>
     <label style={fieldStyle}>Monthly weighted limit<input style={inputStyle} type="number" min="1" step="1" placeholder="بدون حد مخصص" value={form.monthly_weighted_limit} onChange={e=>setForm(v=>({...v,monthly_weighted_limit:e.target.value}))}/></label>
    </div>
-   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" style={buttonStyle} disabled={busy||!orgId||!serviceSlug||(scope==="project"&&!projectId)} onClick={()=>void save()}>حفظ الحدود</button><button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy||!rows.some(x=>x.service_slug===serviceSlug)} onClick={()=>void remove()}>إزالة الحد المخصص</button><button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy} onClick={()=>void loadRows()}>تحديث</button></div>
+   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" style={buttonStyle} disabled={busy||!orgId||!serviceSlug||(scope==="project"&&!projectId)} onClick={()=>void save()}>حفظ الحدود</button><button type="button" style={{...buttonStyle,background:"transparent",color:"inherit"}} disabled={busy} onClick={()=>void loadRows()}>تحديث</button></div>
    <small>آخر تحديث: {rows.find(x=>x.service_slug===serviceSlug)?.updated_at?new Date(rows.find(x=>x.service_slug===serviceSlug)!.updated_at!).toLocaleString("ar-EG"):"لا يوجد إعداد مخصص لهذه الخدمة"}</small>
   </div>
   <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{textAlign:"right",padding:9}}>الخدمة</th><th style={{textAlign:"right",padding:9}}>RPM</th><th style={{textAlign:"right",padding:9}}>اليومي</th><th style={{textAlign:"right",padding:9}}>الشهري</th><th style={{textAlign:"right",padding:9}}>آخر تحديث</th></tr></thead><tbody>
    {rows.map(x=><tr key={x.service_slug}><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{services.find(s=>s.slug===x.service_slug)?.name||x.service_slug}</td><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.requests_per_minute}</td><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.daily_weighted_limit??"—"}</td><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.monthly_weighted_limit??"—"}</td><td style={{padding:9,borderTop:"1px solid var(--border, #333)"}}>{x.updated_at?new Date(x.updated_at).toLocaleString("ar-EG"):"—"}</td></tr>)}
    {!rows.length&&<tr><td colSpan={5} style={{padding:12,textAlign:"center"}}>لا توجد حدود مخصصة محفوظة لهذا النطاق.</td></tr>}
   </tbody></table></div>
-  <p style={{opacity:.75,fontSize:13}}>كل عملية حفظ تمر عبر RPC إداري يتحقق من صلاحية المشرف/المالك ويسجل المنفذ والتوقيت في audit_logs. إزالة السجل المخصص تعيد الاعتماد على الحدود الموروثة.</p>
+  <p style={{opacity:.75,fontSize:13}}>كل عملية حفظ تمر عبر RPC إداري يتحقق من صلاحية المشرف/المالك ويسجل المنفذ والتوقيت في audit_logs. القيم الفارغة تلغي حد الاستهلاك اليومي أو الشهري المخصص فقط؛ ويظل حد RPM محفوظًا.</p>
  </section>;
 }
