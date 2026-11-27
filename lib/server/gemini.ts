@@ -15,8 +15,8 @@ function timeoutFor(deadline: number) {
   return Math.max(1, Math.min(CONFIG.timeout, remaining));
 }
 
-type SessionState = { cookie: string; resume?: unknown[]; resumeArray?: unknown[]; uid: string; instruction?: string };
-type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
+type SessionState = { cookie?: string; resume?: unknown[]; resumeArray?: unknown[]; uid?: string; instruction?: string; interactionId?: string };
+type GeminiResult = { success: true; response: string; sessionId: string; method: "gemini-api" | "gemini-web" | "gemini-fallback"; conversationId: string | null; responseId: string | null };
 
 const hex = (bytes: number) => randomBytes(bytes).toString("hex");
 
@@ -45,7 +45,7 @@ function unpack(value?: string): SessionState | null {
     decipher.setAuthTag(tag);
     const plaintext = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     const parsed = JSON.parse(plaintext.toString("utf8"));
-    if (!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.resume) && !Array.isArray(parsed.resumeArray))) return null;
+    if (!parsed || typeof parsed !== "object" || (!Array.isArray(parsed.resume) && !Array.isArray(parsed.resumeArray) && typeof parsed.interactionId !== "string")) return null;
     return parsed as SessionState;
   } catch { return null; }
 }
@@ -199,11 +199,87 @@ async function bootstrap(deadline: number) {
   return value;
 }
 
+
+async function askGeminiOfficialApi(input: {
+  prompt: string;
+  instruction?: string;
+  previousInteractionId?: string;
+}): Promise<GeminiResult> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+  const model = process.env.GEMINI_MODEL?.trim() || "gemini-4-hydrogen";
+  const body: Record<string, unknown> = {
+    model,
+    input: input.prompt,
+    store: true,
+  };
+  if (input.instruction) body.system_instruction = input.instruction;
+  if (input.previousInteractionId) body.previous_interaction_id = input.previousInteractionId;
+
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(45_000),
+    cache: "no-store",
+  });
+
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const details = payload && typeof payload === "object"
+      ? (payload as { error?: { message?: unknown } }).error?.message
+      : null;
+    const message = typeof details === "string" ? details.slice(0, 300) : "HTTP " + response.status;
+    throw new Error("Gemini API request failed (" + response.status + "): " + message);
+  }
+
+  if (!payload || typeof payload !== "object") throw new Error("Gemini API returned an invalid response.");
+  const result = payload as {
+    id?: unknown;
+    output_text?: unknown;
+    output?: Array<{ type?: unknown; content?: Array<{ type?: unknown; text?: unknown }> }>;
+  };
+  const outputText = typeof result.output_text === "string"
+    ? result.output_text
+    : (result.output || [])
+        .filter((step) => step.type === "model_output")
+        .flatMap((step) => step.content || [])
+        .filter((part) => part.type === "text" && typeof part.text === "string")
+        .map((part) => part.text as string)
+        .join("");
+
+  if (!outputText.trim()) throw new Error("Gemini API returned no text output.");
+  const interactionId = typeof result.id === "string" ? result.id : "";
+  return {
+    success: true,
+    response: cleanText(outputText),
+    sessionId: interactionId ? pack({ interactionId, instruction: input.instruction }) : "",
+    method: "gemini-api",
+    conversationId: interactionId || null,
+    responseId: interactionId || null,
+  };
+}
+
 export async function askGemini(input: { prompt: string; instruction?: string; sessionId?: string }): Promise<GeminiResult> {
   const deadline = Date.now() + REQUEST_BUDGET_MS;
   const prompt = input.prompt.trim();
   const previous = unpack(input.sessionId);
   const instruction = input.instruction?.trim() || previous?.instruction || "";
+
+  // Prefer Google's supported Gemini API when its server-side key is configured.
+  // The legacy Gemini Web transport remains available only as a compatibility fallback.
+  if (process.env.GEMINI_API_KEY) {
+    return askGeminiOfficialApi({
+      prompt,
+      instruction,
+      previousInteractionId: previous?.interactionId,
+    });
+  }
+
   const preferFallback = Boolean(previous?.resumeArray || instruction);
 
   const runPrimary = async () => {
