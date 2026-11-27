@@ -125,15 +125,15 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
       },
     });
   } catch (cause) {
-    if (finishUsage) await finishUsage(502);
     const message = cause instanceof Error ? cause.message : "Unknown ChatGPT error";
     const timeout = /timed out|timeout|aborted/i.test(message);
+    if (finishUsage) await finishUsage(timeout ? 504 : 502);
     console.error("[Nox ChatGPT API]", {
       requestId: context.requestId,
       errorName: cause instanceof Error ? cause.name : "UnknownError",
       error: message.slice(0, 240),
     });
-    return jsonError(timeout ? "انتهت مهلة انتظار ChatGPT بعد 300 ثانية." : "تعذر الحصول على رد من ChatGPT حاليًا.", timeout ? 504 : 502);
+    return jsonError(timeout ? "انتهت مهلة انتظار ChatGPT بعد 260 ثانية." : "تعذر الحصول على رد من ChatGPT حاليًا.", timeout ? 504 : 502);
   }
 }
 
