@@ -452,12 +452,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_service_limits: {
-        Row: { project_id: string; requests_per_minute: number; service_slug: string; updated_at: string; updated_by: string | null }
-        Insert: { project_id: string; requests_per_minute: number; service_slug: string; updated_at?: string; updated_by?: string | null }
-        Update: { project_id?: string; requests_per_minute?: number; service_slug?: string; updated_at?: string; updated_by?: string | null }
-        Relationships: []
-      }
       projects: {
         Row: { created_at: string; created_by: string; description: string; id: string; name: string; organization_id: string; slug: string; updated_at: string }
         Insert: { created_at?: string; created_by: string; description?: string; id?: string; name: string; organization_id: string; slug: string; updated_at?: string }
