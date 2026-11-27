@@ -392,6 +392,66 @@ export type Database = {
         Update: { created_at?: string; project_id?: string; role?: string; user_id?: string }
         Relationships: []
       }
+      organization_service_limits: {
+        Row: {
+          daily_weighted_limit: number | null
+          monthly_weighted_limit: number | null
+          organization_id: string
+          requests_per_minute: number
+          service_slug: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          organization_id: string
+          requests_per_minute: number
+          service_slug: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          organization_id?: string
+          requests_per_minute?: number
+          service_slug?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      project_service_limits: {
+        Row: {
+          daily_weighted_limit: number | null
+          monthly_weighted_limit: number | null
+          project_id: string
+          requests_per_minute: number
+          service_slug: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          project_id: string
+          requests_per_minute: number
+          service_slug: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          daily_weighted_limit?: number | null
+          monthly_weighted_limit?: number | null
+          project_id?: string
+          requests_per_minute?: number
+          service_slug?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       project_service_limits: {
         Row: { project_id: string; requests_per_minute: number; service_slug: string; updated_at: string; updated_by: string | null }
         Insert: { project_id: string; requests_per_minute: number; service_slug: string; updated_at?: string; updated_by?: string | null }
@@ -526,6 +586,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bmg_admin_set_organization_service_limits: {
+        Args: {
+          p_organization_id: string
+          p_service_slug: string
+          p_requests_per_minute: number
+          p_daily_weighted_limit?: number | null
+          p_monthly_weighted_limit?: number | null
+        }
+        Returns: Json
+      }
+      bmg_admin_set_project_service_limits: {
+        Args: {
+          p_project_id: string
+          p_service_slug: string
+          p_requests_per_minute: number
+          p_daily_weighted_limit?: number | null
+          p_monthly_weighted_limit?: number | null
+        }
+        Returns: Json
+      }
       bmg_create_organization: { Args: { p_kind: string; p_name: string }; Returns: string }
       bmg_create_project: { Args: { p_description?: string; p_name: string; p_organization_id: string }; Returns: string }
       bmg_invite_organization_member: { Args: { p_email: string; p_organization_id: string; p_project_id?: string | null; p_role: string }; Returns: string }
