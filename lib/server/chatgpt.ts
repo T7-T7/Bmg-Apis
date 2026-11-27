@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID }
 const HOME = "https://android.chat.openai.com";
 const REQUIREMENTS_URL = HOME + "/backend-anon/sentinel/chat-requirements";
 const CONVERSATION_URL = HOME + "/backend-anon/f/conversation";
-const TIMEOUT_MS = 300_000;
+const TIMEOUT_MS = 260_000;
 const MAX_SESSION_LENGTH = 12_000;
 const USER_AGENT = "ChatGPT/1.2026.181 (Android 16; Neo/1.0; build 2222222)";
 
@@ -224,7 +224,7 @@ export async function askChatGPT(input: {
   };
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(new Error("ChatGPT request timed out after 300 seconds.")), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(new Error("ChatGPT request timed out after 260 seconds.")), TIMEOUT_MS);
   const state = {
     text: "",
     chatId: session.chatId,
