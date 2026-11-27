@@ -51,10 +51,6 @@ async function handlePost(request: NextRequest, context: ExecutionContext) {
  if(data.instruction!==undefined&&typeof data.instruction!=="string")return jsonError("الحقل instruction يجب أن يكون نصًا.",400);
  if(data.sessionId!==undefined&&typeof data.sessionId!=="string")return jsonError("الحقل sessionId يجب أن يكون نصًا.",400);
  const startedAt=Date.now();let finishUsage: ((statusCode: number) => Promise<void>) | null = null;try{const access=await authorize(request,apiKey.token);if(!access.ok)return access.response??jsonError("الخدمة غير متاحة حاليًا.",503);finishUsage=(statusCode)=>access.completeUsage({statusCode,startedAt,onError:(cause)=>console.error("[Nox usage completion]",{requestId:context.requestId,error:cause instanceof Error?cause.message:cause})});
- if(!process.env.GEMINI_API_KEY){
-   await finishUsage(503);
-   return jsonError("خدمة Gemini غير مهيأة. يلزم ضبط GEMINI_API_KEY على الخادم.",503);
- }
  const response=await askGemini({prompt:data.prompt,instruction:typeof data.instruction==="string"?data.instruction:undefined,sessionId:typeof data.sessionId==="string"?data.sessionId:undefined});
  await finishUsage(200);
  return NextResponse.json({...response,access:apiKey.token ? "api_key" : "demo"},{headers:{"Access-Control-Allow-Origin":"*","Cache-Control":"no-store","X-Max-Prompt-Length":String(MAX_PROMPT_CHARS)}})
