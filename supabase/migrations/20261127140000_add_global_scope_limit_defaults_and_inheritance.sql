@@ -19,7 +19,7 @@ create or replace function public.bmg_admin_set_scope_default_limits(
   p_service_slug text, p_requests_per_minute integer,
   p_daily_weighted_limit bigint default null, p_monthly_weighted_limit bigint default null
 ) returns jsonb
-language plpgsql security invoker set search_path=pg_catalog,public,private
+language plpgsql security definer set search_path=pg_catalog,public,private
 as $function$
 declare v_actor uuid:=auth.uid(); v_row public.api_scope_default_limits%rowtype;
 begin
@@ -49,7 +49,7 @@ end;
 $function$;
 
 create or replace function public.bmg_admin_clear_organization_service_limits(p_organization_id uuid,p_service_slug text)
-returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,private
+returns jsonb language plpgsql security definer set search_path=pg_catalog,public,private
 as $function$
 declare v_actor uuid:=auth.uid(); v_row public.organization_service_limits%rowtype;
 begin
@@ -65,7 +65,7 @@ end;
 $function$;
 
 create or replace function public.bmg_admin_clear_project_service_limits(p_project_id uuid,p_service_slug text)
-returns jsonb language plpgsql security invoker set search_path=pg_catalog,public,private
+returns jsonb language plpgsql security definer set search_path=pg_catalog,public,private
 as $function$
 declare v_actor uuid:=auth.uid(); v_row public.project_service_limits%rowtype;
 begin
