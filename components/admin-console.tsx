@@ -160,6 +160,7 @@ export default function AdminConsole(){
   finally{setBusy(false);}
  },[supabase,analyticsDays,analyticsService,analyticsUser,analyticsCategory,analyticsStatus]);
  useEffect(()=>{if(tab==="analytics"&&ready&&user&&["admin","owner"].includes(role))void loadAnalytics()},[tab,ready,user,role,loadAnalytics]);
+ useEffect(()=>{if(!supabase||!ready||!["admin","owner"].includes(role))return;let active=true;Promise.all([supabase.from("organizations").select("id,name").order("name"),supabase.from("projects").select("id,organization_id,name").order("name")]).then(([o,p])=>{if(!active)return;if(o.error||p.error){setError(o.error?.message||p.error?.message||"تعذر تحميل المؤسسات والمشاريع.");return}setScopeOrganizations((o.data||[]) as ScopeOrganization[]);setScopeProjects((p.data||[]) as ScopeProject[])});return()=>{active=false}},[supabase,ready,role]);
  const loadRequestLogs=useCallback(async(page:number=1)=>{
   if(!supabase)return;
   setBusy(true);setError("");
